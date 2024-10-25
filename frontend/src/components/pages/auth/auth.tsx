@@ -1,14 +1,8 @@
-import { useState, useEffect } from "react";
-import BackgroundDots from "../../ui/backgroundDots";
+import BackgroundDots from "@/components/ui/backgroundDots";
 import { GithubIcon } from "lucide-react";
 
 export default function Auth() {
-  const [mounted, setMounted] = useState(false);
   const clientID = import.meta.env.VITE_GITHUB_CLIENT_ID;
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   const handleLogin = async () => {
     window.location.href = `https://github.com/login/oauth/authorize?client_id=${clientID}&scope=read:user,repo`;
@@ -16,7 +10,7 @@ export default function Auth() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-900 text-white p-4 relative overflow-hidden">
-      {mounted && <BackgroundDots />}
+      <BackgroundDots />
 
       <div className="w-full max-w-md z-10">
         <div className="text-center mb-12">

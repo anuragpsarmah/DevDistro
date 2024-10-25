@@ -1,35 +1,42 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import axios from "axios";
-import BackgroundDots from "../../ui/backgroundDots";
+import BackgroundDots from "@/components/ui/backgroundDots";
+import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
+import { user } from "@/utils/atom";
+import { useRecoilState } from "recoil";
 
 export default function LoginValidation() {
-  const [mounted, setMounted] = useState(false);
+  const [, setActiveUser] = useRecoilState(user);
+  const { toast } = useToast();
+  const navigate = useNavigate();
   const url = new URL(window.location.href);
   const githubCode = url.searchParams.get("code");
 
   useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
     const validateLogin = async () => {
-      const response = await axios.get(
-        `http://localhost:3000/api/auth/githubLogin?code=${githubCode}`
-      );
+      try {
+        const response = await axios.get(
+          `http://localhost:3000/api/auth/githubLogin?code=${githubCode}`
+        );
 
-      console.log(response);
+        setActiveUser(response.data.data);
+        navigate("/profile-selection");
+      } catch (error) {
+        console.log(error);
+        toast({
+          description: "Your message has been sent.",
+        });
+        navigate("/authentication");
+      }
     };
 
-    try {
-      validateLogin();
-    } catch (error) {
-      console.log(error);
-    }
+    validateLogin();
   }, []);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-900 text-white p-4 relative overflow-hidden">
-      {mounted && <BackgroundDots />}
+      <BackgroundDots />
     </div>
   );
 }
