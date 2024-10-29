@@ -1,5 +1,3 @@
-import React from "react";
-
 export default function BackgroundDots() {
   const dots = [
     { top: "12%", left: "85%", size: "5px" },
