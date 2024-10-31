@@ -13,7 +13,7 @@ import { Menu, X } from "lucide-react";
 interface SidebarContentProps {
   activeTab: string;
   setActiveTab: (tabName: string) => void;
-  logout: () => Promise<void>;
+  logout?: () => Promise<void>;
 }
 
 interface SidebarProps {
@@ -21,7 +21,7 @@ interface SidebarProps {
   setIsSidebarOpen: (val: boolean) => void;
   activeTab: string;
   setActiveTab: (tabName: string) => void;
-  logout: () => Promise<void>;
+  logout?: () => Promise<void>;
 }
 
 const sidebarItems = [

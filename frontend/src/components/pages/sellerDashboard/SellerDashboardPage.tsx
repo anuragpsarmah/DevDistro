@@ -3,13 +3,13 @@ import BackgroundDots from "@/components/ui/backgroundDots";
 import Sidebar from "./components/sidebar";
 import GeneralStatistics from "./components/dashboardOverview";
 
-interface ProfileSelectionPageProps {
-  logout: () => Promise<void>;
+interface SellerDashboardPageProps {
+  logout?: () => Promise<void>;
 }
 
 export default function SellerDashboardPage({
   logout,
-}: ProfileSelectionPageProps) {
+}: SellerDashboardPageProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("Dashboard Overview");
 
