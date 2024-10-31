@@ -2,7 +2,7 @@ import { ReactNode, useEffect } from "react";
 import { user } from "@/utils/atom";
 import { useRecoilState } from "recoil";
 import { useNavigate } from "react-router-dom";
-import { useAuthValidationQuery, useLogoutQuery } from "@/hooks/ApiQueries";
+import { useAuthValidationQuery, useLogoutQuery } from "@/hooks/apiQueries";
 import BackgroundDots from "../ui/backgroundDots";
 
 interface AuthValidatorProps {

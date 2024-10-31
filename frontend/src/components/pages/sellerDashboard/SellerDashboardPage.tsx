@@ -1,11 +1,11 @@
 import { useState } from "react";
 import BackgroundDots from "@/components/ui/backgroundDots";
 import Sidebar from "./components/sidebar";
-import GeneralStatistics from "./components/generalStatistics";
+import GeneralStatistics from "./components/dashboardOverview";
 
 export default function SellerDashboardPage() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState("General Statistics");
+  const [activeTab, setActiveTab] = useState("Dashboard Overview");
 
   return (
     <div className="flex h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white relative overflow-hidden">
@@ -19,11 +19,11 @@ export default function SellerDashboardPage() {
       />
 
       <main className="flex-1 p-8 overflow-auto relative z-10">
-        {activeTab === "General Statistics" && <GeneralStatistics />}
-        {activeTab === "Profile" && <></>}
-        {activeTab === "Project Listings" && <></>}
-        {activeTab === "Orders" && <></>}
-        {activeTab === "Payments" && <></>}
+        {activeTab === "Dashboard Overview" && <GeneralStatistics />}
+        {activeTab === "Account Settings" && <></>}
+        {activeTab === "Manage Projects" && <></>}
+        {activeTab === "Order History" && <></>}
+        {activeTab === "Billing & Payments" && <></>}
       </main>
     </div>
   );

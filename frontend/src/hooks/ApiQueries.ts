@@ -10,7 +10,6 @@ const useAuthValidationQuery = () => {
       const response = await axios.get(`${backend_uri}/auth/authValidation`, {
         withCredentials: true,
       });
-      console.log(response.data);
       return response.data;
     },
   });
@@ -29,4 +28,40 @@ const useLogoutQuery = () => {
   });
 };
 
-export { useAuthValidationQuery, useLogoutQuery };
+const useCommonSalesInformationQuery = () => {
+  return useQuery({
+    queryKey: ["commonSalesInformationQuery"],
+    queryFn: async () => {
+      const response = await axios.get(
+        `${backend_uri}/sales/getCommonSalesInformation`,
+        {
+          withCredentials: true,
+        }
+      );
+      return response.data;
+    },
+  });
+};
+
+const useYearlySalesInformationQuery = (year: number) => {
+  return useQuery({
+    queryKey: ["yearlySalesInformationQuery", year],
+    queryFn: async ({ queryKey }) => {
+      const [, year] = queryKey;
+      const response = await axios.get(
+        `${backend_uri}/sales/getYearlySalesInformation?year=${year}`,
+        {
+          withCredentials: true,
+        }
+      );
+      return response.data;
+    },
+  });
+};
+
+export {
+  useAuthValidationQuery,
+  useLogoutQuery,
+  useCommonSalesInformationQuery,
+  useYearlySalesInformationQuery,
+};

@@ -34,8 +34,10 @@ app.get("/health", (req: Request, res: Response) => {
 /* routes */
 import { authRouter } from "./routes/auth.routes";
 import { profileRouter } from "./routes/profile.routes";
+import { salesRouter } from "./routes/sales.routes";
 
 app.use("/api/auth", authRouter);
 app.use("/api/profile", profileRouter);
+app.use("/api/sales", salesRouter);
 
 export default app;

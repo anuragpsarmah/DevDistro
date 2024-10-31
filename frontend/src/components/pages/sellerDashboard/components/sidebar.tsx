@@ -23,11 +23,11 @@ interface SidebarProps {
 }
 
 const sidebarItems = [
-  { icon: BarChart2, label: "General Statistics" },
-  { icon: User, label: "Profile" },
-  { icon: PlusSquare, label: "Project Listings" },
-  { icon: ShoppingCart, label: "Orders" },
-  { icon: CreditCard, label: "Payments" },
+  { icon: BarChart2, label: "Dashboard Overview" },
+  { icon: User, label: "Account Settings" },
+  { icon: PlusSquare, label: "Manage Projects" },
+  { icon: ShoppingCart, label: "Order History" },
+  { icon: CreditCard, label: "Billing & Payments" },
 ];
 
 export default function Sidebar({
