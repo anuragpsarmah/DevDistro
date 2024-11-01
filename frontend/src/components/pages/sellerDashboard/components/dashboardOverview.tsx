@@ -164,6 +164,18 @@ export default function DashboardOverview() {
           <div ref={chartContainerRef}>
             <ChartContainer config={chartConfig}>
               <BarChart data={chartData} margin={{ right: 60, left: 30 }}>
+                <defs>
+                  <linearGradient
+                    id="salesGradient"
+                    x1="0"
+                    y1="0"
+                    x2="0"
+                    y2="1"
+                  >
+                    <stop offset="0%" stopColor="#60A5FA" />
+                    <stop offset="100%" stopColor="#A855F7" />
+                  </linearGradient>
+                </defs>
                 <CartesianGrid
                   vertical={false}
                   stroke="rgba(255, 255, 255, 0.1)"
@@ -185,7 +197,7 @@ export default function DashboardOverview() {
                   cursor={false}
                   content={<ChartTooltipContent indicator="dashed" />}
                 />
-                <Bar dataKey="sales" fill="var(--color-sales)" radius={4} />
+                <Bar dataKey="sales" fill="url(#salesGradient)" radius={4} />
               </BarChart>
             </ChartContainer>
           </div>

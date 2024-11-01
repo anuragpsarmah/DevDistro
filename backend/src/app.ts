@@ -31,13 +31,25 @@ app.get("/health", (req: Request, res: Response) => {
   return;
 });
 
+/* server memory */
+app.get("/memory", (req, res) => {
+  const used = process.memoryUsage();
+  response(res, 200, "", {
+    heapTotal: `${Math.round((used.heapTotal / 1024 / 1024) * 100) / 100} MB`,
+    heapUsed: `${Math.round((used.heapUsed / 1024 / 1024) * 100) / 100} MB`,
+  });
+  return;
+});
+
 /* routes */
 import { authRouter } from "./routes/auth.routes";
 import { profileRouter } from "./routes/profile.routes";
 import { salesRouter } from "./routes/sales.routes";
+import { citiesRouter } from "./routes/cities.routes";
 
 app.use("/api/auth", authRouter);
 app.use("/api/profile", profileRouter);
 app.use("/api/sales", salesRouter);
+app.use("/api/cities", citiesRouter);
 
 export default app;

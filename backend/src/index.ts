@@ -1,7 +1,8 @@
 import dotenv from "dotenv";
-import dbConnect from "./db/db-connect";
+import dbConnect from "./initializations/db-connect";
 import app from "./app";
 import logger from "./logger/winston.logger";
+import { trieInitialization } from "./initializations/trie-initialization";
 
 dotenv.config();
 
@@ -9,6 +10,8 @@ const PORT = process.env.PORT ? Number(process.env.PORT) : 3000;
 const DBretiers = process.env.RETRIES ? Number(process.env.RETRIES) : 3;
 
 (async () => {
+  await trieInitialization();
+
   let retries = DBretiers;
   while (retries--) {
     logger.info("Trying to connect DB");
