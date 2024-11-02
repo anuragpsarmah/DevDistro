@@ -3,18 +3,11 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import serveIndex from "serve-index";
 import loggerMiddleware from "./middlewares/logger.middleware";
-import logAuthorization from "./middlewares/logAuth.middleware";
 import response from "./utils/response.util";
 
 const app = express();
 
 /* global middlewares */
-app.use(
-  "/logs",
-  logAuthorization,
-  express.static("logs"),
-  serveIndex("logs", { icons: true, view: "details" })
-);
 app.use(
   cors({
     origin: [process.env.FRONTEND_URI as string, "http://localhost:5173"],

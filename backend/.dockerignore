@@ -1,0 +1,18 @@
+# Ignore node modules and local environment files
+node_modules
+*.log
+.env
+.env.sample
+
+# Ignore TypeScript source files after build
+src/**/*.ts
+
+# Ignore build output (if any exists locally)
+dist
+
+# Ignore editor and OS-specific files
+.vscode
+.idea
+.DS_Store
+*.cache
+*.tmp
