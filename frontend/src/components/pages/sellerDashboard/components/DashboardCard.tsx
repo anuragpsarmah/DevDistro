@@ -1,4 +1,4 @@
-import { Skeleton } from "@/components/ui/skeleton";
+import { DashboardCardSkeleton } from "./Skeletons";
 
 interface DashboardCardProps {
   title: string;
@@ -12,12 +12,7 @@ export const DashboardCard: React.FC<DashboardCardProps> = ({
   isLoading = false,
 }) => {
   if (isLoading) {
-    return (
-      <div className="bg-gray-800 rounded-xl p-6 shadow-lg">
-        <Skeleton className="h-5 w-24 mb-2 bg-gray-700" />
-        <Skeleton className="h-8 w-32 bg-gray-700" />
-      </div>
-    );
+    return <DashboardCardSkeleton />;
   }
 
   return (

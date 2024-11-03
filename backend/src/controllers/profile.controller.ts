@@ -3,6 +3,7 @@ import asyncHandler from "../utils/asyncHandler.util";
 import ApiError from "../utils/ApiError.util";
 import { User } from "../models/user.model";
 import response from "../utils/response.util";
+import { SiteReview } from "../models/siteReview.model";
 
 const getProfileInformation = asyncHandler(
   async (req: Request, res: Response) => {
@@ -66,6 +67,27 @@ const updateProfileInformation = asyncHandler(
         user.location = location;
         user.profile_visibility = profile_visibility;
         await user.save();
+
+        if (review_stars >= 4 && review_description.length > 120) {
+          const featuredUserReview = await SiteReview.findOne({
+            username: req.user.username,
+          });
+
+          if (featuredUserReview) {
+            featuredUserReview.job_role = job_role;
+            featuredUserReview.review_description = review_description;
+            featuredUserReview.review_stars = review_stars;
+            await featuredUserReview.save();
+          } else {
+            await SiteReview.create({
+              username: req.user.username,
+              profile_image_url: req.user.profileImageUrl,
+              job_role,
+              review_description,
+              review_stars,
+            });
+          }
+        }
 
         response(res, 200, "User profile information updated successfully");
       } catch (error) {

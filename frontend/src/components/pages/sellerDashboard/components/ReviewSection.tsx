@@ -28,7 +28,9 @@ export const ReviewSection: React.FC<ReviewSectionProps> = ({
         onChange={onReviewChange}
         className="bg-gray-700 text-gray-300 border-gray-600 focus:ring-0 focus:border-white focus:border-[0.5px] transition-colors h-32 resize-none"
       />
-      <p className="text-sm text-gray-400 mt-1">
+      <p
+        className={`text-sm mt-1 ${MAX_REVIEW_LENGTH - review.length <= 10 ? "text-red-400" : "text-gray-400"}`}
+      >
         {review.length}/{MAX_REVIEW_LENGTH} characters
       </p>
     </div>
@@ -49,5 +51,8 @@ export const ReviewSection: React.FC<ReviewSectionProps> = ({
         ))}
       </div>
     </div>
+    <p className="text-sm text-gray-400 mt-1">
+      <i>Your review may be featured on our landing page!</i>
+    </p>
   </div>
 );

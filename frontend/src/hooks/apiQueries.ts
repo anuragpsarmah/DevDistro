@@ -73,10 +73,23 @@ const useProfileInformationQuery = () => {
   });
 };
 
+const useFeaturedReviewQuery = () => {
+  return useQuery({
+    queryKey: ["featuredReviewQuery"],
+    queryFn: async () => {
+      const response = await axios.get(
+        `${backend_uri}/reviews/getFeaturedReviews`
+      );
+      return response.data;
+    },
+  });
+};
+
 export {
   useAuthValidationQuery,
   useLogoutQuery,
   useCommonSalesInformationQuery,
   useYearlySalesInformationQuery,
   useProfileInformationQuery,
+  useFeaturedReviewQuery,
 };

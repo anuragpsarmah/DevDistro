@@ -1,4 +1,8 @@
-import { ChartDataObject, CommonSalesInformation } from "./types";
+import {
+  ChartDataObject,
+  CommonSalesInformation,
+  ProfileInformation,
+} from "./types";
 
 export const INITIAL_CHART_DATA: ChartDataObject[] = [
   { month: "January", sales: 0 },
@@ -39,3 +43,14 @@ export const JOB_ROLES = [
 
 export const MAX_REVIEW_LENGTH = 200;
 export const CITY_SEARCH_DELAY = 500;
+
+export const INITIAL_PROFILE_INFORMATION_DATA: ProfileInformation = {
+  username: "",
+  name: "",
+  profileImageUrl: "",
+  jobRole: "",
+  location: "",
+  reviewDescription: "",
+  reviewStar: 0,
+  profileVisibility: true,
+};

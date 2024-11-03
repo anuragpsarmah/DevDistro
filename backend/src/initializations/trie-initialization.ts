@@ -8,7 +8,7 @@ const cityTrie = new Trie();
 const loadCitiesData = () => {
   return new Promise((resolve, reject) => {
     const results: { city: string; iso2: string }[] = [];
-    fs.createReadStream("./data/filtered_cities.csv")
+    fs.createReadStream("./data/world_city_data.csv")
       .pipe(csv.parse({ columns: true, trim: true }))
       .on("data", (data) => {
         results.push({

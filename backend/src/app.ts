@@ -39,10 +39,12 @@ import { authRouter } from "./routes/auth.routes";
 import { profileRouter } from "./routes/profile.routes";
 import { salesRouter } from "./routes/sales.routes";
 import { citiesRouter } from "./routes/cities.routes";
+import { reviewRouter } from "./routes/reviews.routes";
 
 app.use("/api/auth", authRouter);
 app.use("/api/profile", profileRouter);
 app.use("/api/sales", salesRouter);
+app.use("/api/reviews", reviewRouter);
 app.use("/api/cities", citiesRouter);
 
 export default app;

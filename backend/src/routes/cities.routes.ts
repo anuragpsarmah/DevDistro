@@ -4,7 +4,7 @@ import { rateLimit } from "express-rate-limit";
 
 const limiter = rateLimit({
   windowMs: 1000,
-  limit: 5,
+  limit: 3,
 });
 
 export const citiesRouter = Router();
