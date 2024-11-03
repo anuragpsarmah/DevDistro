@@ -1,8 +1,8 @@
 import { useState } from "react";
 import BackgroundDots from "@/components/ui/backgroundDots";
-import Sidebar from "./components/sidebar";
-import AccountSettingsTab from "./components/accountSettingsTab";
-import DashboardOverviewTab from "./components/dashboardOverviewTab";
+import Sidebar from "./components/Sidebar";
+import AccountSettingsTab from "./tabs/AccountSettingsTab";
+import DashboardOverviewTab from "./tabs/DashboardOverviewTab";
 import { useNavigate } from "react-router-dom";
 
 interface SellerDashboardPageProps {

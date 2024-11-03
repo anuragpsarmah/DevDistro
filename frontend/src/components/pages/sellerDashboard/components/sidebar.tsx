@@ -139,7 +139,7 @@ function SidebarContent({
       </nav>
       <div className="p-4 space-y-3 border-t border-gray-700">
         <button
-          className="w-full py-2 px-4 text-gray-300 hover:text-white font-medium rounded-md transition-all duration-300 ease-in-out bg-gray-700 flex items-center justify-center gap-2"
+          className="w-full py-2 px-4 text-gray-300 hover:text-white font-medium rounded-md transition-all duration-300 ease-in-out bg-gray-700 flex items-center justify-center gap-2 hover:bg-gray-600"
           onClick={onSwitchToBuyer}
         >
           <Repeat className="h-5 w-5" />

@@ -1,6 +1,6 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import axios from "axios";
-import { useToast } from "./use-toast";
+import { successToast, errorToast } from "@/components/ui/customToast";
 
 type ProfileUpdateData = {
   job_role: string;
@@ -13,9 +13,6 @@ type ProfileUpdateData = {
 const backend_uri = import.meta.env.VITE_BACKEND_URI;
 
 const useProfileUpdateMutation = () => {
-  const queryClient = useQueryClient();
-  const { toast } = useToast();
-
   return useMutation({
     mutationFn: async (data: ProfileUpdateData) => {
       const response = await axios.put(
@@ -26,17 +23,10 @@ const useProfileUpdateMutation = () => {
       return response.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["useProfileInformationQuery"],
-      });
-      toast({
-        description: "Profile updated successfully.",
-      });
+      successToast("Profile updated successfully");
     },
-    onError: () => {
-      toast({
-        description: "Something went wrong. Try again Later.",
-      });
+    onError: (error) => {
+      errorToast(error.message || "Failed to update profile");
     },
   });
 };
