@@ -11,6 +11,7 @@ import {
   useYearlySalesInformationQuery,
 } from "@/hooks/apiQueries";
 import Chart from "./chart";
+import { useToast } from "@/hooks/use-toast";
 
 interface chartDataObject {
   month: string;
@@ -41,7 +42,7 @@ export default function DashboardOverviewTab() {
     { month: "November", sales: 0 },
     { month: "December", sales: 0 },
   ]);
-
+  const { toast } = useToast();
   const currentYear = new Date().getFullYear();
   const startYear = 2024;
   const years = Array.from(
@@ -59,10 +60,16 @@ export default function DashboardOverviewTab() {
       total_sales: 0,
     });
 
-  const { data: commonInformationData } = useCommonSalesInformationQuery();
-  const { data: yearlySalesInformationData } = useYearlySalesInformationQuery(
-    parseInt(selectedYear)
-  );
+  const {
+    data: commonInformationData,
+    isLoading: commonInformationLoading,
+    isError: commonInformationError,
+  } = useCommonSalesInformationQuery();
+  const {
+    data: yearlySalesInformationData,
+    isLoading: yearlySalesInformationLoading,
+    isError: yearlySalesInformationError,
+  } = useYearlySalesInformationQuery(parseInt(selectedYear));
 
   useEffect(() => {
     if (chartContainerRef.current) {
@@ -72,7 +79,7 @@ export default function DashboardOverviewTab() {
   }, []);
 
   useEffect(() => {
-    if (commonInformationData) {
+    if (!commonInformationLoading && !commonInformationError) {
       setCommonSalesInformation({
         active_projects: commonInformationData.data.active_projects,
         best_seller: commonInformationData.data.best_seller,
@@ -80,10 +87,20 @@ export default function DashboardOverviewTab() {
         total_sales: commonInformationData.data.total_sales,
       });
     }
-  }, [commonInformationData]);
+    if (!commonInformationLoading && commonInformationError) {
+      toast({
+        description: "Error fetching data. Try again Later.",
+      });
+    }
+  }, [
+    commonInformationData,
+    commonInformationLoading,
+    commonInformationError,
+    toast,
+  ]);
 
   useEffect(() => {
-    if (yearlySalesInformationData) {
+    if (!yearlySalesInformationLoading && !yearlySalesInformationError) {
       const updatedChartData = chartData.map((item, index) => {
         if (index < yearlySalesInformationData.data.monthly_sales.length) {
           return {
@@ -95,7 +112,18 @@ export default function DashboardOverviewTab() {
       });
       setChartData(updatedChartData);
     }
-  }, [yearlySalesInformationData]);
+    if (!yearlySalesInformationLoading && yearlySalesInformationError) {
+      toast({
+        description: "Error fetching data. Try again Later.",
+      });
+    }
+  }, [
+    yearlySalesInformationData,
+    yearlySalesInformationLoading,
+    yearlySalesInformationError,
+    toast,
+    chartData,
+  ]);
 
   return (
     <div className="space-y-6 mt-6 lg:mt-0 md:mt-0">

@@ -23,8 +23,10 @@ const getProfileInformation = asyncHandler(
           name: req.user.name,
           profileImageUrl: req.user.profileImageUrl,
           jobRole: user.job_role,
+          location: user.location,
           reviewDescription: user.review_description,
-          reviewStart: user.review_stars,
+          reviewStar: user.review_stars,
+          profileVisibility: user.profile_visibility,
         });
       } catch (error) {
         throw new ApiError("Internal Server Error", 500, {}, error);
@@ -38,7 +40,13 @@ const getProfileInformation = asyncHandler(
 const updateProfileInformation = asyncHandler(
   async (req: Request, res: Response) => {
     if (req.user) {
-      const { job_role, review_description, review_stars } = req.body;
+      const {
+        job_role,
+        review_description,
+        review_stars,
+        location,
+        profile_visibility,
+      } = req.body;
 
       try {
         const user = await User.findOne({ username: req.user.username });
@@ -55,6 +63,8 @@ const updateProfileInformation = asyncHandler(
         user.job_role = job_role;
         user.review_description = review_description;
         user.review_stars = review_stars;
+        user.location = location;
+        user.profile_visibility = profile_visibility;
         await user.save();
 
         response(res, 200, "User profile information updated successfully");

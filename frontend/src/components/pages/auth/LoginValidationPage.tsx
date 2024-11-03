@@ -26,7 +26,7 @@ export default function LoginValidationPage() {
       } catch (error) {
         console.log(error);
         toast({
-          description: "Your message has been sent.",
+          description: "Error validating login",
         });
         navigate("/authentication");
       }

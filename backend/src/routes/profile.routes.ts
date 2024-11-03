@@ -3,7 +3,7 @@ import { sessionValidation } from "../middlewares/sessionValidation.middlewares"
 import {
   getProfileInformation,
   updateProfileInformation,
-} from "../controllers/userProfile.controller";
+} from "../controllers/profile.controller";
 
 export const profileRouter = Router();
 

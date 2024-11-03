@@ -1,33 +1,45 @@
-# Use an official Node.js image as the base
-FROM node:18 AS build
+# Build stage
+FROM node:18-alpine AS builder
 
-# Set the working directory inside the container
+# Set working directory
 WORKDIR /app
 
-# Copy package.json and package-lock.json to install dependencies
+# Copy package files
 COPY package*.json ./
 
 # Install dependencies
-RUN npm install
+RUN npm ci
 
-# Copy the rest of the application code
+# Copy source code
 COPY . .
 
-# Build the TypeScript code to JavaScript
+# Build the application
 RUN npm run build
 
-# Use a minimal Node.js image to run the application in production
-FROM node:18-slim AS production
+# Production stage
+FROM node:18-alpine AS production
 
-# Set the working directory inside the container
+# Set working directory
 WORKDIR /app
 
-# Copy only the built files and node_modules from the build stage
-COPY --from=build /app/dist ./dist
-COPY --from=build /app/node_modules ./node_modules
+# Set Node environment to production
+ENV NODE_ENV=production
 
-# Expose the port your application will run on
+# Copy package files
+COPY package*.json ./
+
+# Install only production dependencies
+RUN npm ci --only=production
+
+# Copy built files from builder stage
+COPY --from=builder /app/dist ./dist
+
+# Add a non-root user
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+USER appuser
+
+# Expose port
 EXPOSE 3000
 
-# Start the application in production mode
-CMD ["node", "./dist/index.js"]
+# Start the application
+CMD ["node", "dist/index.js"]

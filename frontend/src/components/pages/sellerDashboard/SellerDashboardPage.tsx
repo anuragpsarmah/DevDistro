@@ -3,6 +3,7 @@ import BackgroundDots from "@/components/ui/backgroundDots";
 import Sidebar from "./components/sidebar";
 import AccountSettingsTab from "./components/accountSettingsTab";
 import DashboardOverviewTab from "./components/dashboardOverviewTab";
+import { useNavigate } from "react-router-dom";
 
 interface SellerDashboardPageProps {
   logout?: () => Promise<void>;
@@ -13,6 +14,7 @@ export default function SellerDashboardPage({
 }: SellerDashboardPageProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("Dashboard Overview");
+  const navigate = useNavigate();
 
   return (
     <div className="flex h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white relative overflow-hidden">
@@ -24,6 +26,7 @@ export default function SellerDashboardPage({
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         logout={logout}
+        onSwitchToBuyer={() => navigate("/buyer-dashboard")}
       />
 
       <main className="flex-1 p-8 overflow-auto relative z-10">

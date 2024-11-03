@@ -59,9 +59,24 @@ const useYearlySalesInformationQuery = (year: number) => {
   });
 };
 
+const useProfileInformationQuery = () => {
+  return useQuery({
+    queryKey: ["useProfileInformationQuery"],
+    queryFn: async () => {
+      const response = await axios.get(
+        `${backend_uri}/profile/getProfileInformation`,
+        { withCredentials: true }
+      );
+
+      return response.data;
+    },
+  });
+};
+
 export {
   useAuthValidationQuery,
   useLogoutQuery,
   useCommonSalesInformationQuery,
   useYearlySalesInformationQuery,
+  useProfileInformationQuery,
 };

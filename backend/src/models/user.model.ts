@@ -23,13 +23,17 @@ const userSchema = new Schema(
       type: String,
       default: "",
     },
+    location: {
+      type: String,
+      default: "",
+    },
     review_description: {
       type: String,
       default: "",
     },
     review_stars: {
       type: Number,
-      default: -1,
+      default: 0,
     },
     profile_visibility: {
       type: Boolean,

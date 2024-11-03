@@ -21,9 +21,12 @@ const searchCities = asyncHandler(async (req: Request, res: Response) => {
   const cappedLimit = Math.min(limit, 1000);
 
   const results = cityTrie.search(searchTerm, cappedLimit);
+  const filteredResults = results.map((item) => {
+    return `${item.city}, ${item.iso2}`;
+  });
 
   res.json({
-    results,
+    filteredResults,
     count: results.length,
     limit: cappedLimit,
   });
