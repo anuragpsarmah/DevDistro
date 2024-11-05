@@ -37,7 +37,7 @@ export default function ProtectedRouteWrapper({
         setActiveUser(emptyUserObject);
         navigate("/");
       } else if (!isLoading && data) {
-        setActiveUser(data);
+        setActiveUser(data.data);
       }
     };
 

@@ -127,10 +127,7 @@ export default function Footer() {
           <p className="text-gray-400 mt-2">
             Developed by{" "}
             <span className="text-white">
-              <a
-                target="_blank"
-                href="https://www.linkedin.com/in/anuragpsarmah/"
-              >
+              <a target="_blank" href="https://github.com/anuragpsarmah">
                 Anurag
               </a>
             </span>

@@ -4,12 +4,15 @@ import ApiError from "../utils/ApiError.util";
 import { User } from "../models/user.model";
 import response from "../utils/response.util";
 import { SiteReview } from "../models/siteReview.model";
+import mongoose from "mongoose";
 
 const getProfileInformation = asyncHandler(
   async (req: Request, res: Response) => {
     if (req.user) {
+      const userId = new mongoose.Types.ObjectId(req.user._id);
+
       try {
-        const user = await User.findOne({ username: req.user.username });
+        const user = await User.findById(userId);
         if (!user) {
           response(
             res,
@@ -49,8 +52,10 @@ const updateProfileInformation = asyncHandler(
         profile_visibility,
       } = req.body;
 
+      const userId = new mongoose.Types.ObjectId(req.user._id);
+
       try {
-        const user = await User.findOne({ username: req.user.username });
+        const user = await User.findById(userId);
 
         if (!user) {
           response(

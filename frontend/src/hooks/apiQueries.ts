@@ -85,6 +85,21 @@ const useFeaturedReviewQuery = () => {
   });
 };
 
+const usePrivateReposQuery = () => {
+  return useQuery({
+    queryKey: ["privateRepoQuery"],
+    queryFn: async () => {
+      const response = await axios.get(
+        `${backend_uri}/projects/getPrivateRepos`,
+        {
+          withCredentials: true,
+        }
+      );
+      return response.data;
+    },
+  });
+};
+
 export {
   useAuthValidationQuery,
   useLogoutQuery,
@@ -92,4 +107,5 @@ export {
   useYearlySalesInformationQuery,
   useProfileInformationQuery,
   useFeaturedReviewQuery,
+  usePrivateReposQuery,
 };

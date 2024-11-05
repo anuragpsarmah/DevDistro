@@ -43,6 +43,8 @@ export const JOB_ROLES = [
 
 export const MAX_REVIEW_LENGTH = 200;
 export const CITY_SEARCH_DELAY = 500;
+export const MAX_DESCRIPTION_LENGTH = 200;
+export const MAX_IMAGES = 5;
 
 export const INITIAL_PROFILE_INFORMATION_DATA: ProfileInformation = {
   username: "",
@@ -54,3 +56,28 @@ export const INITIAL_PROFILE_INFORMATION_DATA: ProfileInformation = {
   reviewStar: 0,
   profileVisibility: true,
 };
+
+export const PROJECT_TYPES = [
+  "Web Application",
+  "Mobile Application",
+  "Desktop Application",
+  "SaaS Platform",
+  "E-commerce Platform",
+  "CMS/Blog",
+  "Framework",
+  "Library",
+  "API",
+  "CLI Tool",
+  "Data Visualization",
+  "Game",
+  "IoT Application",
+  "Machine Learning/AI",
+  "Blockchain Application",
+  "DevOps Tool",
+  "Cybersecurity Tool",
+  "Scientific Computing",
+  "Educational Application",
+  "Enterprise Software",
+  "Productivity Tool",
+  "Other",
+];

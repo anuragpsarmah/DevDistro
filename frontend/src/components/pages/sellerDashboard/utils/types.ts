@@ -1,3 +1,5 @@
+import { PROJECT_TYPES } from "./constants";
+
 export interface ChartDataObject {
   month: string;
   sales: number;
@@ -28,3 +30,12 @@ export interface ProfileUpdatePayload {
   review_stars: number;
   profile_visibility: boolean;
 }
+
+export interface PrivateRepoData {
+  name: string;
+  description: string;
+  language: string;
+  updated_at: string;
+}
+
+export type ProjectType = (typeof PROJECT_TYPES)[number];

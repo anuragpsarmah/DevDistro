@@ -4,6 +4,7 @@ import Sidebar from "./components/Sidebar";
 import AccountSettingsTab from "./tabs/AccountSettingsTab";
 import DashboardOverviewTab from "./tabs/DashboardOverviewTab";
 import { useNavigate } from "react-router-dom";
+import ListNewProjectTab from "./tabs/ListNewProjectTab";
 
 interface SellerDashboardPageProps {
   logout?: () => Promise<void>;
@@ -32,7 +33,7 @@ export default function SellerDashboardPage({
       <main className="flex-1 p-8 overflow-auto relative z-10">
         {activeTab === "Dashboard Overview" && <DashboardOverviewTab />}
         {activeTab === "Account Settings" && <AccountSettingsTab />}
-        {activeTab === "Manage Projects" && <></>}
+        {activeTab === "List New Project" && <ListNewProjectTab />}
         {activeTab === "Order History" && <></>}
         {activeTab === "Billing & Payments" && <></>}
       </main>

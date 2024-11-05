@@ -77,3 +77,16 @@ export const ReviewSectionSkeleton = () => (
     </div>
   </div>
 );
+
+export const RepoImportSkeleton = () => (
+  <div className="flex items-center justify-between p-4 rounded-lg bg-gray-700 animate-pulse">
+    <div className="flex items-center space-x-3">
+      <div className="w-8 h-8 rounded-lg bg-gray-600" />
+      <div className="space-y-2">
+        <div className="w-24 h-4 bg-gray-600 rounded-md" />
+        <div className="w-32 h-3 bg-gray-600 rounded-md" />
+      </div>
+    </div>
+    <div className="w-24 h-8 bg-gray-600 rounded-md" />
+  </div>
+);

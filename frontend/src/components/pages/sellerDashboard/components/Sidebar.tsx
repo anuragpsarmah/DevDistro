@@ -32,7 +32,7 @@ interface SidebarProps {
 const sidebarItems = [
   { icon: BarChart2, label: "Dashboard Overview" },
   { icon: User, label: "Account Settings" },
-  { icon: PlusSquare, label: "Manage Projects" },
+  { icon: PlusSquare, label: "List New Project" },
   { icon: ShoppingCart, label: "Order History" },
   { icon: CreditCard, label: "Billing & Payments" },
 ];
