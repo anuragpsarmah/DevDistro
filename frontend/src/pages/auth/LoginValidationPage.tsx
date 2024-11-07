@@ -3,7 +3,7 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { user } from "@/utils/atom";
 import { useRecoilState } from "recoil";
-import LoadingPage from "@/components/pages/loading/loading";
+import LoadingPage from "@/pages/loading/loading";
 import { errorToast } from "@/components/ui/customToast";
 
 export default function LoginValidationPage() {
