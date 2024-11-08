@@ -32,10 +32,11 @@ export default function RepoImport({
   const filteredRepos = privateRepoData.filter((repo) =>
     repo.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
   return (
     <div>
       <div className="bg-gray-800 rounded-xl p-6 shadow-lg">
-        <h2 className="text-2xl font-semibold text-gray-100 mb-6">
+        <h2 className="text-2xl font-semibold text-gray-100 mb-6 text-center lg:text-left md:text-left">
           Import Git Repository
         </h2>
 
@@ -56,7 +57,7 @@ export default function RepoImport({
             />
           </div>
 
-          <ScrollArea className="h-[320px] rounded-md border border-gray-700">
+          <ScrollArea className="max-h-[80vh] overflow-y-auto rounded-md border border-gray-700">
             <div className="space-y-2 p-4">
               {isLoading ? (
                 Array.from({ length: 5 }).map((_, index) => (
@@ -68,29 +69,33 @@ export default function RepoImport({
                     key={index}
                     className="flex items-center justify-between p-4 rounded-lg bg-gray-700 hover:bg-gray-600 transition-colors"
                   >
-                    <div className="flex items-center space-x-3">
+                    <div className="flex items-center space-x-3 w-full">
                       <div className="w-8 h-8 rounded-lg bg-gray-800 flex items-center justify-center text-gray-300 font-medium">
                         {repo.name.charAt(0).toUpperCase()}
                       </div>
-                      <div>
+                      <div className="truncate flex-1">
                         <div className="flex items-center space-x-2">
-                          <span className="text-gray-200 font-medium">
-                            {repo.name}
+                          <span className="text-gray-200 font-medium truncate">
+                            {repo.name.length > 30
+                              ? repo.name.slice(0, 27) + "..."
+                              : repo.name}
                           </span>
-                          <Lock className="h-4 w-4 text-gray-400" />
+                          <div className="flex items-center space-x-1">
+                            <Lock className="h-4 w-4 text-gray-400" />
+                            <span className="text-gray-400 text-sm">
+                              {repo.updated_at}
+                            </span>
+                          </div>
                         </div>
-                        <span className="text-sm text-gray-400">
-                          {repo.updated_at}
-                        </span>
                       </div>
+                      <Button
+                        variant="default"
+                        className="bg-gray-800 shrink-0"
+                        onClick={() => handleImportClick(index)}
+                      >
+                        Import
+                      </Button>
                     </div>
-                    <Button
-                      variant="default"
-                      className="bg-gray-800"
-                      onClick={() => handleImportClick(index)}
-                    >
-                      Import
-                    </Button>
                   </div>
                 ))
               ) : (
