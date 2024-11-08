@@ -38,6 +38,7 @@ export default function ProjectListingForm({
   const [liveLink, setLiveLink] = useState("");
   const [images, setImages] = useState<File[]>([]);
   const [video, setVideo] = useState<File | null>(null);
+  const [price, setPrice] = useState("299");
 
   const handleDifferentProjectImport = () => {
     setIsImportState(true);
@@ -94,6 +95,10 @@ export default function ProjectListingForm({
     setVideo(null);
   };
 
+  const handlePriceChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setPrice(e.target.value);
+  };
+
   const handleSubmit = () => {
     console.log({
       title,
@@ -103,6 +108,7 @@ export default function ProjectListingForm({
       liveLink,
       images,
       video,
+      price,
     });
   };
 
@@ -225,7 +231,7 @@ export default function ProjectListingForm({
             placeholder="https://project-demo.com or https://username.github.io/project"
           />
           <p className="text-sm text-gray-400 mt-1">
-            Add a link to your live project or repository
+            Add a link to your live project
           </p>
         </div>
 
@@ -312,6 +318,54 @@ export default function ProjectListingForm({
               </div>
             </label>
           )}
+        </div>
+
+        <div className="border-t border-gray-600 pt-4">
+          <div className="bg-gray-800 rounded-xl p-6 shadow-lg hover:shadow-xl transition-shadow duration-300">
+            <Label htmlFor="price" className="text-gray-300 mb-3 block">
+              Project Price (INR)
+            </Label>
+            <div className="relative flex justify-center">
+              <div className="w-1/3 relative">
+                <span className="absolute top-1/2 left-3 transform -translate-y-1/2 text-3xl font-bold text-blue-400">
+                  ₹
+                </span>
+                <Input
+                  id="price"
+                  type="number"
+                  value={price}
+                  onChange={handlePriceChange}
+                  className="bg-gray-700 border-gray-600 text-gray-300 focus:ring-0 focus:border-white focus:border-[0.5px] transition-colors text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500 text-center appearance-none pl-10 pr-12"
+                  placeholder="e.g., 10000"
+                  required
+                />
+                <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex flex-col space-y-1">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      handlePriceChange({
+                        target: { value: (parseFloat(price) + 1).toString() },
+                      } as ChangeEvent<HTMLInputElement>)
+                    }
+                    className="text-gray-300 hover:text-blue-400 transition-colors text-[0.7rem] leading-tight"
+                  >
+                    ▲
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      handlePriceChange({
+                        target: { value: (parseFloat(price) - 1).toString() },
+                      } as ChangeEvent<HTMLInputElement>)
+                    }
+                    className="text-gray-300 hover:text-blue-400 transition-colors text-[0.7rem] leading-tight"
+                  >
+                    ▼
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         <Button

@@ -26,7 +26,7 @@ export default function RepoImport({
 
   const handleImportClick = (index: number) => {
     setIsImportState(false);
-    setFormProps(privateRepoData[index])
+    setFormProps(privateRepoData[index]);
   };
 
   const filteredRepos = privateRepoData.filter((repo) =>
