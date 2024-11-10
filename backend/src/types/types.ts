@@ -3,3 +3,9 @@ export interface FileMetaData {
   fileType: string;
   fileSize: number;
 }
+
+export interface UploadMetadata {
+  timestamp: number;
+  expectedType: string;
+  expectedSize: number;
+}

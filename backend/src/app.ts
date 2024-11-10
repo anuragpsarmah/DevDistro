@@ -4,10 +4,9 @@ import cookieParser from "cookie-parser";
 import loggerMiddleware from "./middlewares/logger.middleware";
 import response from "./utils/response.util";
 import { healthMemoryCheckLimiter } from "./utils/rateLimitConfig";
-import S3Service from "./utils/S3Service";
+import { s3Service } from "..";
 
 export const app = express();
-export const s3Service = new S3Service();
 
 /* global middlewares */
 app.use(

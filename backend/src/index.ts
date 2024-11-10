@@ -2,9 +2,13 @@ import dotenv from "dotenv";
 import dbConnect from "./initializations/db-connect";
 import { app } from "./app";
 import logger from "./logger/winston.logger";
-import { trieInitialization, cityTrie } from "./initializations/trie-initialization";
+import {
+  trieInitialization,
+  cityTrie,
+} from "./initializations/trie-initialization";
 import { redisInitialization } from "./initializations/redis-initialization";
 import { Redis } from "ioredis";
+import S3Service from "./utils/S3Service";
 
 dotenv.config();
 
@@ -13,6 +17,7 @@ const DBretiers = process.env.RETRIES ? Number(process.env.RETRIES) : 3;
 
 export let redisClient: Redis;
 export { cityTrie };
+export let s3Service: S3Service;
 
 (async () => {
   await trieInitialization();
@@ -34,6 +39,11 @@ export { cityTrie };
       if (!retries) process.exit(1);
     }
   }
+
+  s3Service = new S3Service(
+    process.env.AWS_ACCESS_KEY_ID as string,
+    process.env.AWS_SECRET_ACCESS_KEY as string
+  );
 
   app.listen(PORT, () => logger.info(`⚙️  Server is running on PORT: ${PORT}`));
 })();
