@@ -40,10 +40,7 @@ export let s3Service: S3Service;
     }
   }
 
-  s3Service = new S3Service(
-    process.env.AWS_ACCESS_KEY_ID as string,
-    process.env.AWS_SECRET_ACCESS_KEY as string
-  );
+  s3Service = new S3Service();
 
   app.listen(PORT, () => logger.info(`⚙️  Server is running on PORT: ${PORT}`));
 })();

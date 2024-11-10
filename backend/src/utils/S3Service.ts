@@ -17,12 +17,12 @@ export default class S3Service {
   private UPLOAD_EXPIRY: number = 300;
   private REDIS_KEY_PREFIX = "s3upload:";
 
-  constructor(AWS_ACCESS_KEY_ID: string, AWS_SECRET_ACCESS_KEY: string) {
+  constructor() {
     this.s3Client = new S3Client({
       region: "ap-south-1",
       credentials: {
-        accessKeyId: AWS_ACCESS_KEY_ID,
-        secretAccessKey: AWS_SECRET_ACCESS_KEY,
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID as string,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY as string,
       },
     });
 
