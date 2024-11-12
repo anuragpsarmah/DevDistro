@@ -6,6 +6,8 @@ import response from "../utils/response.util";
 import { User } from "../models/user.model";
 import { decrypt } from "../utils/encryption.util";
 import axios from "axios";
+import { FileMetaData } from "../types/types";
+import { s3Service } from "..";
 
 const getPrivateRepos = asyncHandler(async (req: Request, res: Response) => {
   const { ENCRYPTION_KEY_32, ENCRYPTION_IV } = process.env;
@@ -85,4 +87,55 @@ const getPrivateRepos = asyncHandler(async (req: Request, res: Response) => {
   }
 });
 
-export { getPrivateRepos };
+const getPreSignedUrlForProjectMediaUpload = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { metadata } = req.body;
+
+    const metadataFileCheck = {
+      image: 0,
+      video: 0,
+    };
+
+    metadata.forEach((file: FileMetaData) => {
+      if (file.fileType === "image/png" || file.fileType === "image/jpeg")
+        metadataFileCheck.image++;
+      else metadata.video++;
+    });
+
+    if (metadataFileCheck.image === 0) {
+      response(res, 400, "Atlease one image is required");
+      return;
+    }
+
+    if (metadataFileCheck.image > 5 || metadataFileCheck.video > 1) {
+      response(res, 400, "Sent more files than allowed");
+      return;
+    }
+
+    try {
+      const preSignedUrlPromises = metadata.map(async (file: FileMetaData) => {
+        return s3Service.createPreSignedUploadUrl(file);
+      });
+
+      const preSignedUrls = await Promise.all(preSignedUrlPromises);
+
+      const keys = preSignedUrls.map((url: { [key: string]: string }) => {
+        return url.key;
+      });
+
+      // schedule a cleanup after 300 seconds.
+
+      response(
+        res,
+        200,
+        `${preSignedUrls.length} Pre-signed upload urls generated`,
+        preSignedUrls
+      );
+    } catch (error) {
+      if (error instanceof Error) throw new ApiError(error.message, 400);
+      else throw new ApiError("Something went wrong", 500);
+    }
+  }
+);
+
+export { getPrivateRepos, getPreSignedUrlForProjectMediaUpload };

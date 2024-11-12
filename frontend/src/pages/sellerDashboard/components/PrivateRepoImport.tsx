@@ -11,7 +11,6 @@ interface RepoImportProps {
   userData: User;
   privateRepoData: Array<PrivateRepoData>;
   isLoading: boolean;
-  setIsImportState: (curr: boolean) => void;
   setFormProps: (curr: PrivateRepoData) => void;
 }
 
@@ -19,13 +18,11 @@ export default function RepoImport({
   userData,
   privateRepoData,
   isLoading,
-  setIsImportState,
   setFormProps,
 }: RepoImportProps) {
   const [searchQuery, setSearchQuery] = useState("");
 
   const handleImportClick = (index: number) => {
-    setIsImportState(false);
     setFormProps(privateRepoData[index]);
   };
 

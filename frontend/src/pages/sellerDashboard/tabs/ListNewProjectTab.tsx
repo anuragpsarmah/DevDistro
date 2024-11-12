@@ -64,14 +64,12 @@ export default function ListNewProjectTab() {
             userData={userData}
             privateRepoData={privateRepoData}
             isLoading={isLoading}
-            setIsImportState={(state) => handleStateChange(state)}
             setFormProps={(props) => handleStateChange(false, props)}
           />
         ) : (
           <ProjectListingForm
             formProps={formProps}
-            setFormProps={setFormProps}
-            setIsImportState={(state) => handleStateChange(state)}
+            setFormProps={(props) => handleStateChange(true, props)}
           />
         )}
       </TransitionWrapper>

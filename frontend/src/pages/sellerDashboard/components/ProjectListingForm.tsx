@@ -21,13 +21,11 @@ import { PrivateRepoData, ProjectType } from "../utils/types";
 interface ProjectListingFormProps {
   formProps: PrivateRepoData;
   setFormProps: (curr: PrivateRepoData) => void;
-  setIsImportState: (curr: boolean) => void;
 }
 
 export default function ProjectListingForm({
   formProps,
   setFormProps,
-  setIsImportState,
 }: ProjectListingFormProps) {
   const [title, setTitle] = useState(formProps.name);
   const [description, setDescription] = useState(formProps.description);
@@ -41,7 +39,6 @@ export default function ProjectListingForm({
   const [price, setPrice] = useState("299");
 
   const handleDifferentProjectImport = () => {
-    setIsImportState(true);
     setFormProps({
       name: "",
       description: "",

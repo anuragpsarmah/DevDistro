@@ -32,6 +32,7 @@ const trieInitialization = async () => {
     logger.error("Error loading cities data:", error);
     process.exit(1);
   }
+  return cityTrie;
 };
 
 export { cityTrie, trieInitialization };
