@@ -1,11 +1,5 @@
 import * as express from "express";
-
-type UserType = {
-  _id: string;
-  username: string;
-  name: string;
-  profileImageUrl: string;
-};
+import { UserType } from "./types";
 
 declare global {
   namespace Express {

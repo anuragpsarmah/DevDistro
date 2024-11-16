@@ -18,7 +18,11 @@ export let cityTrie: Trie;
 export let s3Service: S3Service;
 
 (async () => {
-  cityTrie = await trieInitialization();
+  try {
+    cityTrie = await trieInitialization();
+  } catch (error) {
+    process.exit(1);
+  }
 
   try {
     redisClient = await redisInitialization();

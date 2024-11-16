@@ -9,3 +9,10 @@ export interface UploadMetadata {
   expectedType: string;
   expectedSize: number;
 }
+
+export type UserType = {
+  _id: string;
+  username: string;
+  name: string;
+  profileImageUrl: string;
+};
