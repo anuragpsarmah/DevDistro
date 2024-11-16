@@ -37,20 +37,22 @@ const getPrivateRepos = asyncHandler(async (req: Request, res: Response) => {
     const redisKey = privateRepoPrefix(req.user._id);
 
     if (req.query.refreshStatus === "false") {
-      console.log("false");
-      const cached_private_repositories = await redisClient.get(redisKey);
-      if (cached_private_repositories) {
-        response(
-          res,
-          200,
-          "Repos fetched successfully",
-          JSON.parse(cached_private_repositories)
-        );
-        return;
+      try {
+        const cached_private_repositories = await redisClient.get(redisKey);
+        if (cached_private_repositories) {
+          response(
+            res,
+            200,
+            "Repos fetched from cache successfully",
+            JSON.parse(cached_private_repositories)
+          );
+          return;
+        }
+      } catch (error) {
+        logger.error("Redis error:", error);
       }
     }
 
-    console.log("true");
     const userId = new mongoose.Types.ObjectId(req.user._id);
     try {
       const userData = await User.findById(userId);
@@ -115,11 +117,16 @@ const getPrivateRepos = asyncHandler(async (req: Request, res: Response) => {
             })
           );
 
-        await redisClient.setex(
-          redisKey,
-          3 * 24 * 60 * 1000,
-          JSON.stringify(private_repositories)
-        );
+        try {
+          const CACHE_DURATION = 60 * 60;
+          await redisClient.setex(
+            redisKey,
+            CACHE_DURATION,
+            JSON.stringify(private_repositories)
+          );
+        } catch (error) {
+          logger.error("Redis caching error:", error);
+        }
 
         response(res, 200, "Repos fetched successfully", private_repositories);
       }
