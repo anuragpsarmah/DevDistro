@@ -10,7 +10,7 @@ export interface UploadMetadata {
   expectedSize: number;
 }
 
-export type UserType = {
+export interface UserType {
   _id: string;
   username: string;
   name: string;

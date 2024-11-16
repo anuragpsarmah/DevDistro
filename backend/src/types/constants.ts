@@ -37,3 +37,5 @@ export const JOB_ROLE_ENUM = [
   "Student",
   "Other",
 ] as const;
+
+export const FILE_TYPE_ENUM = ["image/png", "image/jpeg", "video/mp4"] as const;

@@ -1,26 +1,5 @@
 import z from "zod";
-import { PROJECT_TYPE_ENUM, JOB_ROLE_ENUM } from "../types/constants";
-
-export const profileInformationSchema = z.object({
-  job_role: z
-    .enum(JOB_ROLE_ENUM, {
-      errorMap: () => ({
-        message: `Invalid job role was provided. Expected one of: ${JOB_ROLE_ENUM.join(", ")}`,
-      }),
-    })
-    .optional(),
-  location: z.string().optional(),
-  review_description: z
-    .string()
-    .max(200, "Review description must be 200 characters or less")
-    .optional(),
-  review_stars: z
-    .number()
-    .min(0, "Review stars must be between 0 and 5")
-    .max(5, "Review stars must be between 0 and 5")
-    .optional(),
-  profile_visibility: z.boolean().optional(),
-});
+import { FILE_TYPE_ENUM, PROJECT_TYPE_ENUM } from "../types/constants";
 
 export const projectTypeSchema = z.object({
   price: z
@@ -55,3 +34,23 @@ export const projectTypeSchema = z.object({
     .min(1, "At least one image URL required"),
   project_video: z.string().url("Invalid URL format").optional(),
 });
+
+export const fileMetadataSchema = z.array(
+  z.object({
+    originalName: z
+      .string({
+        required_error: "Original file name is required",
+      })
+      .max(100, "Name can be at most 50 characters long"),
+    fileType: z.enum(FILE_TYPE_ENUM, {
+      errorMap: () => ({
+        message: `Invalid file type was provided. Expected one of: ${FILE_TYPE_ENUM.join(", ")}`,
+      }),
+    }),
+    fileSize: z
+      .number({
+        required_error: "File size is required",
+      })
+      .max(5000000, "File size cannot exceed 5MB"),
+  })
+);

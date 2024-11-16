@@ -10,6 +10,7 @@ import { FileMetaData } from "../types/types";
 import { redisClient, s3Service } from "..";
 import logger from "../logger/winston.logger";
 import { privateRepoPrefix } from "../utils/redisPrefixGenerator.util";
+import { fileMetadataSchema } from "../validation/projects.validation";
 
 const cleanupOperation = async (keys: string[]) => {
   try {
@@ -90,9 +91,9 @@ const getPrivateRepos = asyncHandler(async (req: Request, res: Response) => {
           .map(
             ({
               updated_at_display,
+              updated_at_ms,
               ...repo
             }: {
-              updated_at_display: string;
               [key: string]: any;
             }) => ({
               ...repo,
@@ -124,6 +125,19 @@ const getPrivateRepos = asyncHandler(async (req: Request, res: Response) => {
 const getPreSignedUrlForProjectMediaUpload = asyncHandler(
   async (req: Request, res: Response) => {
     const { metadata } = req.body;
+
+    const result = fileMetadataSchema.safeParse(metadata);
+
+    if (!result.success) {
+      response(
+        res,
+        400,
+        "Payload failed validation",
+        {},
+        result.error.errors[0].message
+      );
+      return;
+    }
 
     const metadataFileCheck = {
       image: 0,
