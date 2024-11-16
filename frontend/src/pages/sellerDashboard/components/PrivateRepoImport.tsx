@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { User } from "@/types/types";
 import { PrivateRepoData } from "../utils/types";
-import { Search, Lock, Github } from "lucide-react";
+import { Search, Lock, Github, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -12,6 +12,7 @@ interface RepoImportProps {
   privateRepoData: Array<PrivateRepoData>;
   isLoading: boolean;
   setFormProps: (curr: PrivateRepoData) => void;
+  handleRefresh?: () => void;
 }
 
 export default function RepoImport({
@@ -19,6 +20,7 @@ export default function RepoImport({
   privateRepoData,
   isLoading,
   setFormProps,
+  handleRefresh,
 }: RepoImportProps) {
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -38,9 +40,19 @@ export default function RepoImport({
         </h2>
 
         <div className="space-y-4">
-          <div className="flex items-center space-x-2 p-2 bg-gray-700 border border-gray-600 rounded-md text-gray-300">
-            <Github className="h-4 w-4" />
-            <span>{userData.username}</span>
+          <div className="flex items-center justify-between p-2 bg-gray-700 border border-gray-600 rounded-md text-gray-300">
+            <div className="flex items-center space-x-2">
+              <Github className="h-4 w-4" />
+              <span>{userData.username}</span>
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleRefresh}
+              className="h-8 w-8 hover:bg-gray-600"
+            >
+              <RefreshCw className="h-4 w-4" />
+            </Button>
           </div>
 
           <div className="relative">

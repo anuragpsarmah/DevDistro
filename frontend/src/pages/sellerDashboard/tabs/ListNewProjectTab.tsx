@@ -21,8 +21,14 @@ export default function ListNewProjectTab() {
     language: "",
     updated_at: "",
   });
+  const [repoRefreshStatus, setRepoRefreshStatus] = useState<string>("false");
 
-  const { data: repoData, isLoading, isError } = usePrivateReposQuery();
+  const {
+    data: repoData,
+    isLoading,
+    isError,
+    refetch,
+  } = usePrivateReposQuery(repoRefreshStatus);
 
   useEffect(() => {
     if (!isLoading && !isError && repoData) {
@@ -42,6 +48,12 @@ export default function ListNewProjectTab() {
       }
       setIsTransitioning(false);
     }, 200);
+  };
+
+  const handleRefresh = () => {
+    const currentRepoRefreshStatus = repoRefreshStatus;
+    setRepoRefreshStatus("true");
+    if (currentRepoRefreshStatus === "true") refetch();
   };
 
   return (
@@ -65,6 +77,7 @@ export default function ListNewProjectTab() {
             privateRepoData={privateRepoData}
             isLoading={isLoading}
             setFormProps={(props) => handleStateChange(false, props)}
+            handleRefresh={handleRefresh}
           />
         ) : (
           <ProjectListingForm

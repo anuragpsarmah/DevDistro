@@ -9,6 +9,7 @@ import axios from "axios";
 import { FileMetaData } from "../types/types";
 import { redisClient, s3Service } from "..";
 import logger from "../logger/winston.logger";
+import { privateRepoPrefix } from "../cache/redisPrefix";
 
 const cleanupOperation = async (keys: string[]) => {
   try {
@@ -33,6 +34,23 @@ const getPrivateRepos = asyncHandler(async (req: Request, res: Response) => {
   const { ENCRYPTION_KEY_32, ENCRYPTION_IV } = process.env;
 
   if (req.user) {
+    const redisKey = privateRepoPrefix(req.user._id);
+
+    if (req.query.refreshStatus === "false") {
+      console.log("false");
+      const cached_private_repositories = await redisClient.get(redisKey);
+      if (cached_private_repositories) {
+        response(
+          res,
+          200,
+          "Repos fetched successfully",
+          JSON.parse(cached_private_repositories)
+        );
+        return;
+      }
+    }
+
+    console.log("true");
     const userId = new mongoose.Types.ObjectId(req.user._id);
     try {
       const userData = await User.findById(userId);
@@ -96,6 +114,12 @@ const getPrivateRepos = asyncHandler(async (req: Request, res: Response) => {
               updated_at: updated_at_display,
             })
           );
+
+        await redisClient.setex(
+          redisKey,
+          3 * 24 * 60 * 1000,
+          JSON.stringify(private_repositories)
+        );
 
         response(res, 200, "Repos fetched successfully", private_repositories);
       }
