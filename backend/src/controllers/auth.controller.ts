@@ -8,6 +8,8 @@ import jwt from "jsonwebtoken";
 import axios from "axios";
 import mongoose from "mongoose";
 import logger from "../logger/winston.logger";
+import { profileInformationPrefix } from "../utils/redisPrefixGenerator.util";
+import { redisClient } from "..";
 
 const createSessionToken = (
   userid: mongoose.Types.ObjectId,
@@ -86,6 +88,27 @@ const githubLogin = asyncHandler(async (req: Request, res: Response) => {
 
       user.github_access_token = encryptedAccessToken;
       await user.save();
+
+      try {
+        const redisKey = profileInformationPrefix(String(user._id));
+        const CACHE_DURATION = 60 * 60 * 12;
+
+        const existingCache = await redisClient.get(redisKey);
+        if (existingCache) {
+          const existingCacheObj = JSON.parse(existingCache);
+          existingCacheObj.username = username;
+          existingCacheObj.name = name || "";
+          existingCacheObj.profileImageUrl = profileImageUrl;
+
+          await redisClient.setex(
+            redisKey,
+            CACHE_DURATION,
+            JSON.stringify(existingCacheObj)
+          );
+        }
+      } catch (error) {
+        logger.error("Redis caching error:", error);
+      }
 
       response(
         res,

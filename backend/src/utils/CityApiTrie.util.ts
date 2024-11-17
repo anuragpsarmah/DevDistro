@@ -1,7 +1,4 @@
-interface CityInfo {
-  city: string;
-  iso2: string;
-}
+import { CityInfo } from "../types/types";
 
 class TrieNode {
   children: Record<string, TrieNode>;

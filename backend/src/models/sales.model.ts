@@ -1,9 +1,5 @@
 import { model, Schema } from "mongoose";
-
-interface monthlySalesArray {
-  month: Number;
-  sales: Number;
-}
+import { MonthlySales } from "../types/types";
 
 const monthlySalesSchema = new Schema(
   {
@@ -30,7 +26,7 @@ const yearlySalesSchema = new Schema(
     monthly_sales: {
       type: [monthlySalesSchema],
       validate: [
-        (array: Array<monthlySalesArray>) => array.length === 12,
+        (array: Array<MonthlySales>) => array.length === 12,
         "Must have 12 months of data",
       ],
     },

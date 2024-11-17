@@ -15,4 +15,14 @@ export interface UserType {
   username: string;
   name: string;
   profileImageUrl: string;
-};
+}
+
+export interface MonthlySales {
+  month: Number;
+  sales: Number;
+}
+
+export interface CityInfo {
+  city: string;
+  iso2: string;
+}

@@ -52,6 +52,7 @@ const useCommonSalesInformationQuery = ({ logout }: queryParameter) => {
         throw error;
       }
     },
+    refetchOnWindowFocus: false,
   });
 };
 
@@ -78,6 +79,7 @@ const useYearlySalesInformationQuery = (
         throw error;
       }
     },
+    refetchOnWindowFocus: false,
   });
 };
 
@@ -98,6 +100,7 @@ const useProfileInformationQuery = ({ logout }: queryParameter) => {
         throw error;
       }
     },
+    refetchOnWindowFocus: false,
   });
 };
 
@@ -110,6 +113,7 @@ const useFeaturedReviewQuery = () => {
       );
       return response.data;
     },
+    refetchOnWindowFocus: false,
   });
 };
 

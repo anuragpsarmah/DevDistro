@@ -85,7 +85,7 @@ export default class S3Service {
 
     const redisUploadKey = this.getRedisUploadKey(key);
     try {
-      await redisClient.set(redisUploadKey, JSON.stringify(metadata));
+      await redisClient.setex(redisUploadKey, 420, JSON.stringify(metadata));
     } catch (error) {
       throw error;
     }

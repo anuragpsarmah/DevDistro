@@ -6,6 +6,9 @@ import response from "../utils/response.util";
 import { SiteReview } from "../models/siteReview.model";
 import mongoose from "mongoose";
 import { profileInformationSchema } from "../validation/profile.validation";
+import { redisClient } from "..";
+import { profileInformationPrefix } from "../utils/redisPrefixGenerator.util";
+import logger from "../logger/winston.logger";
 
 const getProfileInformation = asyncHandler(
   async (req: Request, res: Response) => {
@@ -15,15 +18,11 @@ const getProfileInformation = asyncHandler(
       try {
         const user = await User.findById(userId);
         if (!user) {
-          response(
-            res,
-            401,
-            "User not found in token payload. Log out the user"
-          );
+          response(res, 401, "User not found. Log out the user");
           return;
         }
 
-        response(res, 200, "User info fetched successfully", {
+        const responseObj = {
           username: req.user.username,
           name: req.user.name,
           profileImageUrl: req.user.profileImageUrl,
@@ -32,7 +31,21 @@ const getProfileInformation = asyncHandler(
           reviewDescription: user.review_description,
           reviewStar: user.review_stars,
           profileVisibility: user.profile_visibility,
-        });
+        };
+
+        try {
+          const redisKey = profileInformationPrefix(req.user._id);
+          const CACHE_DURATION = 60 * 60 * 12;
+          await redisClient.setex(
+            redisKey,
+            CACHE_DURATION,
+            JSON.stringify(responseObj)
+          );
+        } catch (error) {
+          logger.error("Redis caching error:", error);
+        }
+
+        response(res, 200, "User info fetched successfully", responseObj);
       } catch (error) {
         throw new ApiError("Internal Server Error", 500, {}, error);
       }
@@ -78,11 +91,7 @@ const updateProfileInformation = asyncHandler(
         const user = await User.findById(userId);
 
         if (!user) {
-          response(
-            res,
-            401,
-            "User not found in token payload. Log out the user"
-          );
+          response(res, 401, "User not found. Log out the user");
           return;
         }
 
@@ -112,6 +121,29 @@ const updateProfileInformation = asyncHandler(
               review_stars,
             });
           }
+        }
+
+        try {
+          const redisKey = profileInformationPrefix(String(user._id));
+          const CACHE_DURATION = 60 * 60 * 12;
+
+          const existingCache = await redisClient.get(redisKey);
+          if (existingCache) {
+            const existingCacheObj = JSON.parse(existingCache);
+            existingCacheObj.jobRole = job_role;
+            existingCacheObj.reviewDescription = review_description;
+            existingCacheObj.reviewStar = review_stars;
+            existingCacheObj.location = location;
+            existingCacheObj.profileVisibility = profile_visibility;
+
+            await redisClient.setex(
+              redisKey,
+              CACHE_DURATION,
+              JSON.stringify(existingCacheObj)
+            );
+          }
+        } catch (error) {
+          logger.error("Redis caching error:", error);
         }
 
         response(res, 200, "User profile information updated successfully");
