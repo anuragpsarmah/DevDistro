@@ -14,8 +14,8 @@ export default function ProfileSelectionPage() {
 
       <div className="w-full max-w-4xl z-10">
         <div className="text-center mb-12">
-          <h1 className="text-6xl font-extrabold mb-4 relative">
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 animate-gradient-x">
+          <h1 className="text-4xl sm:text-6xl font-extrabold mb-3 sm:mb-4 relative">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 animate-gradient-x hover:cursor-pointer">
               DevExchange
             </span>
           </h1>

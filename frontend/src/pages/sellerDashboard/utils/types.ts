@@ -158,3 +158,28 @@ export interface YearSelectorProps {
   onYearChange: (value: string) => void;
   isLoading?: boolean;
 }
+
+export const ALLOWED_IMAGE_TYPES: { [key: string]: string[] } = {
+  "image/png": ["png"],
+  "image/jpeg": ["jpg", "jpeg"],
+  "video/mp4": ["mp4"],
+} as const;
+
+export const ALLOWED_VIDEO_TYPES: { [key: string]: string[] } = {
+  "video/mp4": ["mp4"],
+} as const;
+
+export const MAX_IMAGE_FILE_SIZE = 2 * 1024 * 1024;
+
+export const MAX_VIDEO_FILE_SIZE = 5 * 1024 * 1024;
+
+export interface projectListingFormData {
+  title: string;
+  description: string;
+  projectType: string;
+  techStack: string[];
+  liveLink: string;
+  price: number;
+  images: File[];
+  video: File | null;
+}

@@ -17,6 +17,8 @@ import {
   PROJECT_TYPES,
 } from "../utils/constants";
 import { ProjectListingFormProps, ProjectType } from "../utils/types";
+import { projectListingDataValidation } from "../utils/projectListingFormValidation";
+import { errorToast } from "@/components/ui/customToast";
 
 export default function ProjectListingForm({
   formProps,
@@ -31,7 +33,7 @@ export default function ProjectListingForm({
   const [liveLink, setLiveLink] = useState("");
   const [images, setImages] = useState<File[]>([]);
   const [video, setVideo] = useState<File | null>(null);
-  const [price, setPrice] = useState("299");
+  const [price, setPrice] = useState(299);
 
   const handleDifferentProjectImport = () => {
     setFormProps({
@@ -88,11 +90,11 @@ export default function ProjectListingForm({
   };
 
   const handlePriceChange = (e: ChangeEvent<HTMLInputElement>) => {
-    setPrice(e.target.value);
+    setPrice(parseInt(e.target.value));
   };
 
   const handleSubmit = () => {
-    console.log({
+    const formData = {
       title,
       description,
       projectType,
@@ -101,7 +103,14 @@ export default function ProjectListingForm({
       images,
       video,
       price,
-    });
+    };
+
+    const validationResult = projectListingDataValidation(formData);
+
+    if (validationResult) {
+      errorToast(validationResult);
+      return;
+    }
   };
 
   return (
@@ -335,7 +344,7 @@ export default function ProjectListingForm({
                   type="button"
                   onClick={() =>
                     handlePriceChange({
-                      target: { value: (parseFloat(price) + 1).toString() },
+                      target: { value: (price + 1).toString() },
                     } as ChangeEvent<HTMLInputElement>)
                   }
                   className="text-gray-300 hover:text-blue-400 transition-colors text-[0.6rem] leading-tight"
@@ -346,7 +355,7 @@ export default function ProjectListingForm({
                   type="button"
                   onClick={() =>
                     handlePriceChange({
-                      target: { value: (parseFloat(price) - 1).toString() },
+                      target: { value: (price - 1).toString() },
                     } as ChangeEvent<HTMLInputElement>)
                   }
                   className="text-gray-300 hover:text-blue-400 transition-colors text-[0.6rem] leading-tight"
