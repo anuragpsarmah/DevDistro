@@ -1,8 +1,10 @@
 import BackgroundDots from "@/components/ui/backgroundDots";
 import { GithubIcon } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 export default function AuthPage() {
   const clientID = import.meta.env.VITE_GITHUB_CLIENT_ID;
+  const navigate = useNavigate();
 
   const handleLogin = async () => {
     window.location.href = `https://github.com/login/oauth/authorize?client_id=${clientID}&scope=read:user,repo`;
@@ -15,7 +17,10 @@ export default function AuthPage() {
       <div className="w-full max-w-md z-10 px-4 sm:px-0">
         <div className="text-center mb-8 sm:mb-12">
           <h1 className="text-4xl sm:text-6xl font-extrabold mb-3 sm:mb-4 relative">
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 animate-gradient-x">
+            <span
+              onClick={() => navigate("/")}
+              className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 animate-gradient-x hover:cursor-pointer"
+            >
               DevExchange
             </span>
           </h1>

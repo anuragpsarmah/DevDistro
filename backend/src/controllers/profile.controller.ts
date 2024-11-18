@@ -23,9 +23,6 @@ const getProfileInformation = asyncHandler(
         }
 
         const responseObj = {
-          username: req.user.username,
-          name: req.user.name,
-          profileImageUrl: req.user.profileImageUrl,
           jobRole: user.job_role,
           location: user.location,
           reviewDescription: user.review_description,
@@ -35,7 +32,7 @@ const getProfileInformation = asyncHandler(
 
         try {
           const redisKey = profileInformationPrefix(req.user._id);
-          const CACHE_DURATION = 60 * 60 * 12;
+          const CACHE_DURATION = 60 * 60 * 24;
           await redisClient.setex(
             redisKey,
             CACHE_DURATION,
@@ -125,7 +122,7 @@ const updateProfileInformation = asyncHandler(
 
         try {
           const redisKey = profileInformationPrefix(String(user._id));
-          const CACHE_DURATION = 60 * 60 * 12;
+          const CACHE_DURATION = 60 * 60 * 24;
 
           const existingCache = await redisClient.get(redisKey);
           if (existingCache) {

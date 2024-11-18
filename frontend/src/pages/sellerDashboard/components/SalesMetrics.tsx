@@ -1,11 +1,6 @@
 import { DashboardCard } from "./DashboardCard";
 import { SalesMetricsSkeleton } from "./Skeletons";
-import { CommonSalesInformation } from "../utils/types";
-
-interface SalesMetricsProps {
-  salesInfo: CommonSalesInformation;
-  isLoading?: boolean;
-}
+import { SalesMetricsProps } from "../utils/types";
 
 export const SalesMetrics: React.FC<SalesMetricsProps> = ({
   salesInfo,

@@ -1,19 +1,10 @@
 import { useState } from "react";
-import { User } from "@/types/types";
-import { PrivateRepoData } from "../utils/types";
+import { RepoImportProps } from "../utils/types";
 import { Search, Lock, Github, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { RepoImportSkeleton } from "./Skeletons";
-
-interface RepoImportProps {
-  userData: User;
-  privateRepoData: Array<PrivateRepoData>;
-  isLoading: boolean;
-  setFormProps: (curr: PrivateRepoData) => void;
-  handleRefresh?: () => void;
-}
 
 export default function RepoImport({
   userData,

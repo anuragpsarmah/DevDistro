@@ -6,13 +6,7 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-
-interface YearSelectorProps {
-  selectedYear: string;
-  years: number[];
-  onYearChange: (value: string) => void;
-  isLoading?: boolean;
-}
+import { YearSelectorProps } from "../utils/types";
 
 export const YearSelector: React.FC<YearSelectorProps> = ({
   selectedYear,

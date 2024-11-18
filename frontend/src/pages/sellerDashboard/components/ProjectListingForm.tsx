@@ -16,12 +16,7 @@ import {
   MAX_IMAGES,
   PROJECT_TYPES,
 } from "../utils/constants";
-import { PrivateRepoData, ProjectType } from "../utils/types";
-
-interface ProjectListingFormProps {
-  formProps: PrivateRepoData;
-  setFormProps: (curr: PrivateRepoData) => void;
-}
+import { ProjectListingFormProps, ProjectType } from "../utils/types";
 
 export default function ProjectListingForm({
   formProps,

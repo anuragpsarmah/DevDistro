@@ -1,16 +1,6 @@
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-
-interface CitySearchInputProps {
-  cityInput: string;
-  onCityInputChange: (value: string) => void;
-  cities: string[];
-  isLoadingCities: boolean;
-  cityError: string | null;
-  onCitySelect: (city: string) => void;
-  showSuggestions: boolean;
-  setShowSuggestions: (show: boolean) => void;
-}
+import { CitySearchInputProps } from "../utils/types";
 
 export const CitySearchInput: React.FC<CitySearchInputProps> = ({
   cityInput,

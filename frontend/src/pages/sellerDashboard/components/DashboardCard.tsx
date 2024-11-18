@@ -1,10 +1,5 @@
 import { DashboardCardSkeleton } from "./Skeletons";
-
-interface DashboardCardProps {
-  title: string;
-  value: string;
-  isLoading?: boolean;
-}
+import { DashboardCardProps } from "../utils/types";
 
 export const DashboardCard: React.FC<DashboardCardProps> = ({
   title,

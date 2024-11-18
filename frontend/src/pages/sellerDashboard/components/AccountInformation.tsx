@@ -19,7 +19,9 @@ import { Switch } from "@/components/ui/switch";
 
 export default function AccountInformation({
   isLoading,
+  activeUserData,
   profileInformationData,
+  setProfileInformationData,
   selectedJobRole,
   setSelectedJobRole,
   cityInput,
@@ -34,7 +36,6 @@ export default function AccountInformation({
   rating,
   handleReviewChange,
   setRating,
-  setProfileInformationData,
 }: AccountInformationProps) {
   return (
     <>
@@ -59,7 +60,7 @@ export default function AccountInformation({
                 </Label>
                 <Input
                   id="github-username"
-                  value={profileInformationData.username}
+                  value={activeUserData.username}
                   readOnly
                   className="bg-gray-700 text-gray-300 border-gray-600 focus:ring-0 focus:border-white focus:border-[0.5px] transition-colors"
                 />
@@ -72,7 +73,7 @@ export default function AccountInformation({
                 <Input
                   id="name"
                   value={
-                    profileInformationData.name ||
+                    activeUserData.name ||
                     "Name not available. Update your GitHub profile."
                   }
                   readOnly

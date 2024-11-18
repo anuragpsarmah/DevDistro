@@ -1,41 +1,9 @@
 import { cn } from "@/lib/utils";
-import {
-  BarChart2,
-  User,
-  PlusSquare,
-  ShoppingCart,
-  CreditCard,
-  ChevronRight,
-  Repeat,
-} from "lucide-react";
+import { ChevronRight, Repeat } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X } from "lucide-react";
-
-interface SidebarContentProps {
-  activeTab: string;
-  setActiveTab: (tabName: string) => void;
-  logout?: () => Promise<void>;
-  isSidebarOpen?: boolean;
-  setIsSidebarOpen?: (openStatus: boolean) => void;
-  onSwitchToBuyer?: () => void;
-}
-
-interface SidebarProps {
-  isSidebarOpen: boolean;
-  setIsSidebarOpen: (val: boolean) => void;
-  activeTab: string;
-  setActiveTab: (tabName: string) => void;
-  logout?: () => Promise<void>;
-  onSwitchToBuyer?: () => void;
-}
-
-const sidebarItems = [
-  { icon: BarChart2, label: "Dashboard Overview" },
-  { icon: User, label: "Account Settings" },
-  { icon: PlusSquare, label: "List New Project" },
-  { icon: ShoppingCart, label: "Order History" },
-  { icon: CreditCard, label: "Billing & Payments" },
-];
+import { SidebarContentProps, SidebarProps } from "../utils/types";
+import { sidebarItems } from "../utils/constants";
 
 export default function Sidebar({
   activeTab,

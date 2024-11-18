@@ -102,7 +102,7 @@ const getPrivateRepos = asyncHandler(async (req: Request, res: Response) => {
           );
 
         try {
-          const CACHE_DURATION = 60 * 60;
+          const CACHE_DURATION = 60 * 60 * 24;
           await redisClient.setex(
             redisKey,
             CACHE_DURATION,

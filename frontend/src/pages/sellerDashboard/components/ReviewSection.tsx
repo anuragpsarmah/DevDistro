@@ -2,13 +2,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Star } from "lucide-react";
 import { MAX_REVIEW_LENGTH } from "../utils/constants";
-
-interface ReviewSectionProps {
-  review: string;
-  rating: number;
-  onReviewChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
-  onRatingChange: (rating: number) => void;
-}
+import { ReviewSectionProps } from "../utils/types";
 
 export const ReviewSection: React.FC<ReviewSectionProps> = ({
   review,

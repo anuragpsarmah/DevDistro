@@ -1,12 +1,6 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { Loader2 } from "lucide-react";
-import { ReactNode } from "react";
-
-interface TransitionWrapperProps {
-  isTransitioning: boolean;
-  children: ReactNode;
-  identifier: string | number;
-}
+import { TransitionWrapperProps } from "../utils/types";
 
 const fadeVariants = {
   initial: { opacity: 0, y: 10 },

@@ -13,6 +13,8 @@ import {
 import type { ProfileInformation } from "../utils/types";
 import AccountInformation from "../components/AccountInformation";
 import AnimatedLoadWrapper from "@/components/wrappers/AnimatedLoadWrapper";
+import { useRecoilState } from "recoil";
+import { user } from "@/utils/atom";
 
 interface AccountSettingsTabProps {
   logout?: () => Promise<void>;
@@ -28,6 +30,7 @@ export default function AccountSettingsTab({
   const [cityInput, setCityInput] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [selectedJobRole, setSelectedJobRole] = useState("");
+  const [activeUser] = useRecoilState(user);
 
   const backend_uri = import.meta.env.VITE_BACKEND_URI;
 
@@ -97,12 +100,17 @@ export default function AccountSettingsTab({
             {isLoading ? (
               <ProfileHeaderSkeleton />
             ) : (
-              <ProfileHeader profileData={profileInformationData} />
+              <ProfileHeader
+                profileData={profileInformationData}
+                activeUserData={activeUser}
+              />
             )}
 
             <AccountInformation
               isLoading={isLoading}
+              activeUserData={activeUser}
               profileInformationData={profileInformationData}
+              setProfileInformationData={setProfileInformationData}
               selectedJobRole={selectedJobRole}
               setSelectedJobRole={setSelectedJobRole}
               cityInput={cityInput}
@@ -117,7 +125,6 @@ export default function AccountSettingsTab({
               rating={rating}
               handleReviewChange={handleReviewChange}
               setRating={setRating}
-              setProfileInformationData={setProfileInformationData}
             />
 
             <div className="mt-8 flex justify-end">

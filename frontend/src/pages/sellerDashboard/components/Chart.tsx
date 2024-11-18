@@ -6,16 +6,7 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart";
 import { ChartSkeleton } from "./Skeletons";
-
-interface chartDataObject {
-  month: string;
-  sales: number;
-}
-
-interface ChartProps {
-  chartData: Array<chartDataObject>;
-  isLoading?: boolean;
-}
+import { ChartProps } from "../utils/types";
 
 const chartConfig = {
   sales: {
