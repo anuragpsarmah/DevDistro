@@ -28,8 +28,8 @@ export default function ProjectListingForm({
   handleValidateUploadAndStoreProject,
   setActiveTab,
 }: ProjectListingFormProps) {
-  const [title, setTitle] = useState(formProps.name);
-  const [description, setDescription] = useState(formProps.description);
+  const [title, setTitle] = useState(formProps.name || "");
+  const [description, setDescription] = useState(formProps.description || "");
   const [projectType, setProjectType] =
     useState<ProjectType>("Web Application");
   const [techStack, setTechStack] = useState<string[]>([formProps.language]);

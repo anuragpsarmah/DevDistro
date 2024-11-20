@@ -16,11 +16,13 @@ export const projectFormDataSchema = z.object({
     .string({
       required_error: "Title is required",
     })
+    .min(1, "Title is required")
     .max(50, "Title must not exceed 50 characters"),
   description: z
     .string({
       required_error: "Description is required",
     })
+    .min(1, "Description is required")
     .max(1000, "Review description must be 1000 characters or less"),
   project_type: z.enum(PROJECT_TYPE_ENUM, {
     errorMap: () => ({
@@ -47,6 +49,7 @@ export const fileMetadataSchema = z.array(
       .string({
         required_error: "Original file name is required",
       })
+      .min(2, "Original file name is required")
       .max(100, "Name can be at most 50 characters long"),
     fileType: z.enum(FILE_TYPE_ENUM, {
       errorMap: () => ({

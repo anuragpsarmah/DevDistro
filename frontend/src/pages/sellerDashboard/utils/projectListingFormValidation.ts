@@ -16,12 +16,14 @@ export const projectListingFormDataValidation = (
       .string({
         required_error: "Title is required",
       })
+      .min(1, "Title is required")
       .max(50, "Title must not exceed 50 characters"),
     description: z
       .string({
         required_error: "Description is required",
       })
-      .max(1000, "Review description must be 1000 characters or less"),
+      .min(1, "Description is required")
+      .max(1000, "Description must be 1000 characters or less"),
     projectType: z.enum(PROJECT_TYPES, {
       errorMap: () => ({
         message: `Invalid project type was provided.`,

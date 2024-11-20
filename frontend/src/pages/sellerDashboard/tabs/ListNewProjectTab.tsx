@@ -97,37 +97,39 @@ export default function ListNewProjectTab({
   };
 
   return (
-    <div className="space-y-6 mt-6 lg:mt-0 md:mt-0">
-      <AnimatedLoadWrapper>
-        <h1 className="text-4xl text-center md:text-left lg:text-left font-bold mb-6 pb-2 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 animate-gradient-x">
-          List New Project
-        </h1>
-      </AnimatedLoadWrapper>
+    <AnimatedLoadWrapper>
+      <>
+        <div className="space-y-6 mt-6 lg:mt-0 md:mt-0">
+          <h1 className="text-4xl text-center md:text-left lg:text-left font-bold mb-6 pb-2 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 animate-gradient-x">
+            List New Project
+          </h1>
 
-      <TransitionWrapper
-        isTransitioning={isTransitioning}
-        identifier={isImportState ? "import" : "form"}
-      >
-        {isImportState ? (
-          <RepoImport
-            userData={userData}
-            privateRepoData={privateRepoData}
-            isLoading={isLoading}
-            setFormProps={(props) => handleStateChange(false, props)}
-            handleRefresh={handleRefresh}
-          />
-        ) : (
-          <ProjectListingForm
-            formProps={formProps}
-            setFormProps={(props) => handleStateChange(true, props)}
-            handleGetPreSignedUrls={handleGetPreSignedUrls}
-            handleValidateUploadAndStoreProject={
-              handleValidateUploadAndStoreProject
-            }
-            setActiveTab={setActiveTab}
-          />
-        )}
-      </TransitionWrapper>
-    </div>
+          <TransitionWrapper
+            isTransitioning={isTransitioning}
+            identifier={isImportState ? "import" : "form"}
+          >
+            {isImportState ? (
+              <RepoImport
+                userData={userData}
+                privateRepoData={privateRepoData}
+                isLoading={isLoading}
+                setFormProps={(props) => handleStateChange(false, props)}
+                handleRefresh={handleRefresh}
+              />
+            ) : (
+              <ProjectListingForm
+                formProps={formProps}
+                setFormProps={(props) => handleStateChange(true, props)}
+                handleGetPreSignedUrls={handleGetPreSignedUrls}
+                handleValidateUploadAndStoreProject={
+                  handleValidateUploadAndStoreProject
+                }
+                setActiveTab={setActiveTab}
+              />
+            )}
+          </TransitionWrapper>
+        </div>
+      </>
+    </AnimatedLoadWrapper>
   );
 }
