@@ -252,6 +252,7 @@ const validateMediaUploadAndStoreProject = asyncHandler(
 
       projectFormData.project_images = preSignedImageGetUrls;
       projectFormData.project_video = preSignedVideoGetUrl;
+      projectFormData.userid = req.user._id;
 
       try {
         await Project.create(projectFormData);

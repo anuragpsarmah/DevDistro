@@ -17,13 +17,16 @@ import {
   PROJECT_TYPES,
 } from "../utils/constants";
 import { ProjectListingFormProps, ProjectType } from "../utils/types";
-import { projectListingDataValidation } from "../utils/projectListingFormValidation";
-import { errorToast } from "@/components/ui/customToast";
+import { projectListingFormDataValidation } from "../utils/projectListingFormValidation";
+import { errorToast, successToast } from "@/components/ui/customToast";
+import axios from "axios";
 
 export default function ProjectListingForm({
   formProps,
   setFormProps,
   handleGetPreSignedUrls,
+  handleValidateUploadAndStoreProject,
+  setActiveTab,
 }: ProjectListingFormProps) {
   const [title, setTitle] = useState(formProps.name);
   const [description, setDescription] = useState(formProps.description);
@@ -111,7 +114,7 @@ export default function ProjectListingForm({
       price,
     };
 
-    const validationResult = projectListingDataValidation(formData);
+    const validationResult = projectListingFormDataValidation(formData);
 
     if (validationResult) {
       errorToast(validationResult);
@@ -136,10 +139,10 @@ export default function ProjectListingForm({
         : []),
     ];
 
-    const response = (await handleGetPreSignedUrls(metadata)) as {
+    const urlResponse = (await handleGetPreSignedUrls(metadata)) as {
       data: { uploadSignedUrl: string; key: string }[];
     };
-    if (!response) {
+    if (!urlResponse) {
       setIsSubmitting(false);
       return;
     }
@@ -149,20 +152,14 @@ export default function ProjectListingForm({
       const totalFiles = allFiles.length;
 
       const keys = await Promise.all(
-        response.data.map(async (urlData, index) => {
+        urlResponse.data.map(async (urlData, index) => {
           const file = allFiles[index];
 
-          const uploadResponse = await fetch(urlData.uploadSignedUrl, {
-            method: "PUT",
-            body: file,
+          await axios.put(urlData.uploadSignedUrl, file, {
             headers: {
               "Content-Type": file.type,
             },
           });
-
-          if (!uploadResponse.ok) {
-            throw new Error(`Failed to upload ${file.name}`);
-          }
 
           setUploadProgress(((index + 1) / totalFiles) * 100);
 
@@ -170,8 +167,30 @@ export default function ProjectListingForm({
         })
       );
 
-      console.log("All done");
-      console.log(keys);
+      const validatedProjectData = {
+        title,
+        description,
+        project_type: projectType,
+        tech_stack: techStack,
+        live_link: liveLink,
+        price,
+        project_images: [] as string[],
+        project_video: "",
+      };
+      if (!video) {
+        validatedProjectData.project_images = [...keys];
+      } else {
+        for (let i = 0; i < images.length; i++) {
+          validatedProjectData.project_images.push(keys[i]);
+        }
+        validatedProjectData.project_video = keys[images.length];
+      }
+
+      const finalResponse = (await handleValidateUploadAndStoreProject(
+        validatedProjectData
+      )) as { message: string };
+      if (finalResponse) successToast(finalResponse?.message);
+      setActiveTab("Manage Projects");
     } catch (error) {
       console.error("Upload failed:", error);
       errorToast("Failed to upload files. Please try again.");

@@ -4,6 +4,7 @@ import {
   PlusSquare,
   ShoppingCart,
   CreditCard,
+  Layers,
 } from "lucide-react";
 import {
   ChartDataObject,
@@ -15,6 +16,7 @@ export const sidebarItems = [
   { icon: BarChart2, label: "Dashboard Overview" },
   { icon: User, label: "Account Settings" },
   { icon: PlusSquare, label: "List New Project" },
+  { icon: Layers, label: "Manage Projects" },
   { icon: ShoppingCart, label: "Order History" },
   { icon: CreditCard, label: "Billing & Payments" },
 ] as const;

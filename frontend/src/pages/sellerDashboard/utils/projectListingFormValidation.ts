@@ -8,7 +8,7 @@ import {
   projectListingFormData,
 } from "./types";
 
-export const projectListingDataValidation = (
+export const projectListingFormDataValidation = (
   data: projectListingFormData
 ): string => {
   const schema = z.object({
@@ -79,42 +79,3 @@ export const projectListingDataValidation = (
 
   return "";
 };
-
-export const projectListingPutSchema = z.object({
-  title: z
-    .string({
-      required_error: "Title is required",
-    })
-    .min(5, "Title is too short")
-    .max(50, "Title must not exceed 50 characters"),
-  description: z
-    .string({
-      required_error: "Description is required",
-    })
-    .min(30, "Description is too short")
-    .max(1000, "Description must not exceed 1000 characters"),
-  project_type: z.enum(PROJECT_TYPES, {
-    errorMap: () => ({
-      message: `Invalid project type was provided.`,
-    }),
-  }),
-  tech_stack: z
-    .array(z.string())
-    .min(1, "Your tech stack should have at least one value"),
-  live_link: z
-    .string()
-    .transform((val) => (val === "" ? undefined : val))
-    .pipe(z.string().url("Invalid live link URL format").optional()),
-  project_images: z
-    .array(z.string().url("Invalid URL format"))
-    .min(1, "At least one image URL required"),
-  project_video: z
-    .string()
-    .transform((val) => (val === "" ? undefined : val))
-    .pipe(z.string().url("Invalid video URL format").optional()),
-  price: z
-    .number({
-      required_error: "Price is required",
-    })
-    .min(0, "Price should be greater than or equal to 0."),
-});

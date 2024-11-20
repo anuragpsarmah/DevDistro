@@ -2,18 +2,29 @@ import { useEffect, useState } from "react";
 import { useRecoilState } from "recoil";
 import { user } from "@/utils/atom";
 import { usePrivateReposQuery } from "@/hooks/apiQueries";
-import { PrivateRepoData, ProjectMediaMetadata } from "../utils/types";
+import {
+  PrivateRepoData,
+  projectListingValidatedFormData,
+  ProjectMediaMetadata,
+} from "../utils/types";
 import RepoImport from "../components/PrivateRepoImport";
 import ProjectListingForm from "../components/ProjectListingForm";
 import { TransitionWrapper } from "../components/TransitionWrapper";
-import { usePreSignedUrlForProjectMediaUploadMutation } from "@/hooks/apiMutations";
+import {
+  usePreSignedUrlForProjectMediaUploadMutation,
+  useValidateMediaUploadAndStoreProjectMutation,
+} from "@/hooks/apiMutations";
 import AnimatedLoadWrapper from "@/components/wrappers/AnimatedLoadWrapper";
 
 interface ListNewProjectTabProps {
   logout?: () => Promise<void>;
+  setActiveTab: (curr: string) => void;
 }
 
-export default function ListNewProjectTab({ logout }: ListNewProjectTabProps) {
+export default function ListNewProjectTab({
+  logout,
+  setActiveTab,
+}: ListNewProjectTabProps) {
   const [userData] = useRecoilState(user);
   const [privateRepoData, setPrivateRepoData] = useState<
     Array<PrivateRepoData>
@@ -35,9 +46,15 @@ export default function ListNewProjectTab({ logout }: ListNewProjectTabProps) {
     refetch,
   } = usePrivateReposQuery(repoRefreshStatus, { logout });
 
-  const { mutateAsync } = usePreSignedUrlForProjectMediaUploadMutation({
-    logout,
-  });
+  const { mutateAsync: preSignedUrlMutate } =
+    usePreSignedUrlForProjectMediaUploadMutation({
+      logout,
+    });
+
+  const { mutateAsync: validationAndStoreMutate } =
+    useValidateMediaUploadAndStoreProjectMutation({
+      logout,
+    });
 
   useEffect(() => {
     if (!isLoading && !isError && repoData) {
@@ -68,7 +85,14 @@ export default function ListNewProjectTab({ logout }: ListNewProjectTabProps) {
   const handleGetPreSignedUrls = async (
     metadata: Array<ProjectMediaMetadata>
   ) => {
-    const response = await mutateAsync(metadata);
+    const response = await preSignedUrlMutate(metadata);
+    return response;
+  };
+
+  const handleValidateUploadAndStoreProject = async (
+    formData: projectListingValidatedFormData
+  ) => {
+    const response = await validationAndStoreMutate(formData);
     return response;
   };
 
@@ -93,6 +117,10 @@ export default function ListNewProjectTab({ logout }: ListNewProjectTabProps) {
             formProps={formProps}
             setFormProps={(props) => handleStateChange(true, props)}
             handleGetPreSignedUrls={handleGetPreSignedUrls}
+            handleValidateUploadAndStoreProject={
+              handleValidateUploadAndStoreProject
+            }
+            setActiveTab={setActiveTab}
           />
         )}
       </TransitionWrapper>

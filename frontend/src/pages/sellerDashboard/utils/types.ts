@@ -115,6 +115,10 @@ export interface ProjectListingFormProps {
   formProps: PrivateRepoData;
   setFormProps: (curr: PrivateRepoData) => void;
   handleGetPreSignedUrls: (metadata: Array<ProjectMediaMetadata>) => unknown;
+  handleValidateUploadAndStoreProject: (
+    data: projectListingValidatedFormData
+  ) => unknown;
+  setActiveTab: (curr: string) => void;
 }
 
 export interface ReviewSectionProps {
@@ -189,4 +193,15 @@ export interface ProjectMediaMetadata {
   originalName: string;
   fileType: string;
   fileSize: number;
+}
+
+export interface projectListingValidatedFormData {
+  title: string;
+  description: string;
+  project_type: string;
+  tech_stack: string[];
+  live_link: string;
+  price: number;
+  project_images: string[];
+  project_video: string;
 }

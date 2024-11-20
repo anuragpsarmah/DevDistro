@@ -18,3 +18,14 @@ export interface ProjectMediaMetadata {
   fileType: string;
   fileSize: number;
 }
+
+export interface projectListingValidatedFormData {
+  title: string;
+  description: string;
+  project_type: string;
+  tech_stack: string[];
+  live_link: string;
+  price: number;
+  project_images: string[];
+  project_video: string;
+}

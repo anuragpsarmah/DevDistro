@@ -1,8 +1,14 @@
 import { model, Schema } from "mongoose";
 import { PROJECT_TYPE_ENUM } from "../types/constants";
+import { User } from "./user.model";
 
 const projectSchema = new Schema(
   {
+    userid: {
+      type: Schema.Types.ObjectId,
+      ref: User,
+      required: [true, "UserId is required"],
+    },
     price: {
       type: Number,
       required: [true, "Project price is required"],
