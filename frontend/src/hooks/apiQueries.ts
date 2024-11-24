@@ -122,6 +122,28 @@ const useFeaturedReviewQuery = () => {
   });
 };
 
+const useTotalListedProjectsQuery = ({ logout }: queryParameter) => {
+  const { handleError } = useHandleError({ logout });
+  return useQuery({
+    queryKey: ["totalListedProjectsQuery"],
+    queryFn: async () => {
+      try {
+        const response = await axios.get(
+          `${backend_uri}/projects/getTotalListedProjects`,
+          {
+            withCredentials: true,
+          }
+        );
+        return response.data;
+      } catch (error) {
+        handleError(error);
+        throw error;
+      }
+    },
+    refetchOnWindowFocus: false,
+  });
+};
+
 const usePrivateReposQuery = (
   refreshStatus: string,
   { logout }: queryParameter
@@ -155,5 +177,6 @@ export {
   useYearlySalesInformationQuery,
   useProfileInformationQuery,
   useFeaturedReviewQuery,
+  useTotalListedProjectsQuery,
   usePrivateReposQuery,
 };

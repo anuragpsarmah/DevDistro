@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react";
 import { useRecoilState } from "recoil";
 import { user } from "@/utils/atom";
-import { usePrivateReposQuery } from "@/hooks/apiQueries";
+import {
+  usePrivateReposQuery,
+  useTotalListedProjectsQuery,
+} from "@/hooks/apiQueries";
 import {
   PrivateRepoData,
   projectListingValidatedFormData,
@@ -40,9 +43,14 @@ export default function ListNewProjectTab({
   const [repoRefreshStatus, setRepoRefreshStatus] = useState<string>("false");
 
   const {
+    data: totalListedProjectsData,
+    isLoading: totalListedProjectsDataLoading,
+  } = useTotalListedProjectsQuery({ logout });
+
+  const {
     data: repoData,
-    isLoading,
-    isError,
+    isLoading: repoDataLoading,
+    isError: repoDataError,
     refetch,
   } = usePrivateReposQuery(repoRefreshStatus, { logout });
 
@@ -57,10 +65,10 @@ export default function ListNewProjectTab({
     });
 
   useEffect(() => {
-    if (!isLoading && !isError && repoData) {
+    if (!repoDataLoading && !repoDataError && repoData) {
       setPrivateRepoData(repoData.data);
     }
-  }, [repoData, isLoading, isError]);
+  }, [repoData, repoDataLoading, repoDataError]);
 
   const handleStateChange = (
     newState: boolean,
@@ -112,7 +120,9 @@ export default function ListNewProjectTab({
               <RepoImport
                 userData={userData}
                 privateRepoData={privateRepoData}
-                isLoading={isLoading}
+                repoDataLoading={repoDataLoading}
+                totalListedProjectsDataLoading={totalListedProjectsDataLoading}
+                totalListedProjectsData={totalListedProjectsData}
                 setFormProps={(props) => handleStateChange(false, props)}
                 handleRefresh={handleRefresh}
               />

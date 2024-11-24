@@ -106,9 +106,13 @@ export interface DashboardCardProps {
 export interface RepoImportProps {
   userData: User;
   privateRepoData: Array<PrivateRepoData>;
-  isLoading: boolean;
+  repoDataLoading: boolean;
   setFormProps: (curr: PrivateRepoData) => void;
   handleRefresh?: () => void;
+  totalListedProjectsDataLoading: boolean;
+  totalListedProjectsData:
+    | { data: { totalListedProjects: number } }
+    | undefined;
 }
 
 export interface ProjectListingFormProps {

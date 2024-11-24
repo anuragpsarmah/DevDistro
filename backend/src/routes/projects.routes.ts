@@ -4,6 +4,7 @@ import {
   getPrivateRepos,
   getPreSignedUrlForProjectMediaUpload,
   validateMediaUploadAndStoreProject,
+  getTotalListedProjects,
 } from "../controllers/projects.controller";
 import { getPrivateReposFromCache } from "../cache/projects.cache";
 
@@ -18,3 +19,6 @@ projectRouter
 projectRouter
   .route("/validateMediaUploadAndStoreProject")
   .put(sessionValidation, validateMediaUploadAndStoreProject);
+projectRouter
+  .route("/getTotalListedProjects")
+  .get(sessionValidation, getTotalListedProjects);

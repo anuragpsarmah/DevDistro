@@ -129,6 +129,18 @@ const getPrivateRepos = asyncHandler(async (req: Request, res: Response) => {
 const getPreSignedUrlForProjectMediaUpload = asyncHandler(
   async (req: Request, res: Response) => {
     if (req.user) {
+      try {
+        const projects = await Project.find({ userid: req.user._id });
+
+        if (projects.length >= 2) {
+          response(res, 400, "Only two projects can be listed at a time");
+          return;
+        }
+      } catch (error) {
+        response(res, 500, "Failed to fetch total listed projects");
+        return;
+      }
+
       const { metadata } = req.body;
 
       const result = fileMetadataSchema.safeParse(metadata);
@@ -201,6 +213,18 @@ const getPreSignedUrlForProjectMediaUpload = asyncHandler(
 const validateMediaUploadAndStoreProject = asyncHandler(
   async (req: Request, res: Response) => {
     if (req.user) {
+      try {
+        const projects = await Project.find({ userid: req.user._id });
+
+        if (projects.length >= 2) {
+          response(res, 400, "Only two projects can be listed at a time");
+          return;
+        }
+      } catch (error) {
+        response(res, 500, "Failed to fetch total listed projects");
+        return;
+      }
+
       const projectFormData = req.body;
 
       const result = projectFormDataSchema.safeParse(projectFormData);
@@ -266,8 +290,30 @@ const validateMediaUploadAndStoreProject = asyncHandler(
   }
 );
 
+const getTotalListedProjects = asyncHandler(
+  async (req: Request, res: Response) => {
+    if (req.user) {
+      let projects = [];
+      try {
+        projects = await Project.find({ userid: req.user._id });
+
+        response(res, 200, "Total listed projects fetched successfully", {
+          totalListedProjects: projects.length,
+        });
+      } catch (error) {
+        response(res, 200, "Failed to fetch total listed projects", {
+          totalListedProjects: -1,
+        });
+      }
+    } else {
+      throw new ApiError("Error during validation", 401);
+    }
+  }
+);
+
 export {
   getPrivateRepos,
   getPreSignedUrlForProjectMediaUpload,
   validateMediaUploadAndStoreProject,
+  getTotalListedProjects,
 };

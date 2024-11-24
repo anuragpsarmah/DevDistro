@@ -8,6 +8,7 @@ const projectSchema = new Schema(
       type: Schema.Types.ObjectId,
       ref: User,
       required: [true, "UserId is required"],
+      index: true,
     },
     price: {
       type: Number,

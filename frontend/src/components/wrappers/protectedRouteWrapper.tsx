@@ -16,6 +16,28 @@ const emptyUserObject = {
   profileImageUrl: "",
 };
 
+const preFetchImage = (imageUrl: string): Promise<void> => {
+  return new Promise((resolve, reject) => {
+    if (!imageUrl || imageUrl in window.sessionStorage) {
+      resolve();
+      return;
+    }
+
+    const img = new Image();
+
+    img.onload = () => {
+      window.sessionStorage.setItem(imageUrl, "cached");
+      resolve();
+    };
+
+    img.onerror = () => {
+      reject(new Error("Failed to load image."));
+    };
+
+    img.src = imageUrl;
+  });
+};
+
 export default function ProtectedRouteWrapper({
   children,
 }: AuthValidatorProps) {
@@ -38,6 +60,14 @@ export default function ProtectedRouteWrapper({
         navigate("/");
       } else if (!isLoading && data) {
         setActiveUser(data.data);
+
+        if (data.data.profileImageUrl) {
+          try {
+            await preFetchImage(data.data.profileImageUrl);
+          } catch (error) {
+            console.warn("Failed to prefetch profile image:", error);
+          }
+        }
       }
     };
 
