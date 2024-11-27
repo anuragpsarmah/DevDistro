@@ -98,3 +98,17 @@ export const PROJECT_TYPES = [
   "Productivity Tool",
   "Other",
 ] as const;
+
+export const ALLOWED_IMAGE_TYPES: { [key: string]: string[] } = {
+  "image/png": ["png"],
+  "image/jpeg": ["jpg", "jpeg"],
+  "video/mp4": ["mp4"],
+} as const;
+
+export const ALLOWED_VIDEO_TYPES: { [key: string]: string[] } = {
+  "video/mp4": ["mp4"],
+} as const;
+
+export const MAX_IMAGE_FILE_SIZE = 2 * 1024 * 1024;
+
+export const MAX_VIDEO_FILE_SIZE = 5 * 1024 * 1024;

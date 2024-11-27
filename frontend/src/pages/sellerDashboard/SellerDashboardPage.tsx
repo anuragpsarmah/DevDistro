@@ -5,6 +5,7 @@ import AccountSettingsTab from "./tabs/AccountSettingsTab";
 import DashboardOverviewTab from "./tabs/DashboardOverviewTab";
 import { useNavigate } from "react-router-dom";
 import ListNewProjectTab from "./tabs/ListNewProjectTab";
+import ManageProjectsTab from "./tabs/ManageProjects";
 
 interface SellerDashboardPageProps {
   logout?: () => Promise<void>;
@@ -40,7 +41,9 @@ export default function SellerDashboardPage({
         {activeTab === "List New Project" && (
           <ListNewProjectTab logout={logout} setActiveTab={setActiveTab} />
         )}
-        {activeTab === "Manage Projects" && <></>}
+        {activeTab === "Manage Projects" && (
+          <ManageProjectsTab logout={logout} />
+        )}
         {activeTab === "Order History" && <></>}
         {activeTab === "Billing & Payments" && <></>}
       </main>

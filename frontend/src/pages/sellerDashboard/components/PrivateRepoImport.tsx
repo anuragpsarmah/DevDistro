@@ -28,8 +28,15 @@ export default function RepoImport({
   return (
     <div>
       <div className="bg-gray-800 rounded-xl p-6 shadow-lg">
-        <h2 className="text-2xl font-semibold text-gray-100 mb-6 text-center lg:text-left md:text-left">
-          Import Git Repository
+        <h2 className="flex flex-row justify-between text-2xl font-semibold text-gray-100 mb-6 text-center lg:text-left md:text-left">
+          <span>Import Git Repository</span>
+          <span>
+            {!totalListedProjectsDataLoading &&
+              totalListedProjectsData &&
+              totalListedProjectsData.data.totalListedProjects !== -1 &&
+              totalListedProjectsData.data.totalListedProjects !== 0 &&
+              `${totalListedProjectsData.data.totalListedProjects} / 2`}
+          </span>
         </h2>
 
         <div className="space-y-4">
@@ -65,12 +72,14 @@ export default function RepoImport({
                 totalListedProjectsData &&
                 (totalListedProjectsData.data.totalListedProjects >= 2 ||
                   totalListedProjectsData.data.totalListedProjects === -1) && (
-                  <div className="absolute inset-0 bg-gray-900/90 z-10 flex items-center justify-center">
-                    <p className="text-gray-200 font-medium text-lg">
-                      {totalListedProjectsData.data.totalListedProjects >= 2
-                        ? "Only two projects can be listed at a time."
-                        : "Something went wrong. Please refresh."}
-                    </p>
+                  <div className="absolute inset-0 bg-gray-900/90 z-10 flex items-center justify-center p-4">
+                    <div className="max-w-sm mx-auto text-center">
+                      <p className="text-gray-200 font-medium text-base sm:text-lg break-words">
+                        {totalListedProjectsData.data.totalListedProjects >= 2
+                          ? "Only two projects can be listed at a time."
+                          : "Something went wrong. Please refresh."}
+                      </p>
+                    </div>
                   </div>
                 )}
               <div className="space-y-2 p-4">

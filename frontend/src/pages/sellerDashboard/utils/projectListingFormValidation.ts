@@ -1,12 +1,12 @@
 import z from "zod";
 import { PROJECT_TYPES } from "./constants";
+import { projectListingFormData } from "./types";
 import {
   ALLOWED_IMAGE_TYPES,
   ALLOWED_VIDEO_TYPES,
   MAX_IMAGE_FILE_SIZE,
   MAX_VIDEO_FILE_SIZE,
-  projectListingFormData,
-} from "./types";
+} from "./constants";
 
 export const projectListingFormDataValidation = (
   data: projectListingFormData

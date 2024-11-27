@@ -130,7 +130,8 @@ const getPreSignedUrlForProjectMediaUpload = asyncHandler(
   async (req: Request, res: Response) => {
     if (req.user) {
       try {
-        const projects = await Project.find({ userid: req.user._id });
+        const userid = new mongoose.Types.ObjectId(req.user._id);
+        const projects = await Project.find({ userid });
 
         if (projects.length >= 2) {
           response(res, 400, "Only two projects can be listed at a time");
@@ -214,7 +215,8 @@ const validateMediaUploadAndStoreProject = asyncHandler(
   async (req: Request, res: Response) => {
     if (req.user) {
       try {
-        const projects = await Project.find({ userid: req.user._id });
+        const userid = new mongoose.Types.ObjectId(req.user._id);
+        const projects = await Project.find({ userid });
 
         if (projects.length >= 2) {
           response(res, 400, "Only two projects can be listed at a time");
@@ -264,7 +266,7 @@ const validateMediaUploadAndStoreProject = asyncHandler(
           const url = await s3Service.validateAndCreatePreSignedDownloadUrl(
             toBeValidatedKeys[i]
           );
-          if (i != toBeValidatedKeys.length - 1)
+          if (i < projectFormData.project_images.length)
             preSignedImageGetUrls.push(url);
           else preSignedVideoGetUrl = url;
         } catch (error) {
@@ -295,7 +297,8 @@ const getTotalListedProjects = asyncHandler(
     if (req.user) {
       let projects = [];
       try {
-        projects = await Project.find({ userid: req.user._id });
+        const userid = new mongoose.Types.ObjectId(req.user._id);
+        projects = await Project.find({ userid });
 
         response(res, 200, "Total listed projects fetched successfully", {
           totalListedProjects: projects.length,
@@ -311,9 +314,53 @@ const getTotalListedProjects = asyncHandler(
   }
 );
 
+const getInitialProjectData = asyncHandler(
+  async (req: Request, res: Response) => {
+    if (req.user) {
+      const userid = new mongoose.Types.ObjectId(req.user._id);
+
+      try {
+        const projectData = await Project.find({ userid })
+          .select({
+            _id: 0,
+            userid: 0,
+            price: 0,
+            project_type: 0,
+            live_link: 0,
+            project_video: 0,
+            createdAt: 0,
+            updatedAt: 0,
+            __v: 0,
+            project_images: { $slice: 1 },
+          })
+          .then((result) => {
+            return result.map((project) => {
+              return {
+                ...project.toObject(),
+                project_images: project.project_images[0],
+              };
+            });
+          });
+
+        response(
+          res,
+          200,
+          "Initial project data fetched successfully",
+          projectData
+        );
+      } catch (error) {
+        response(res, 500, "Failed to fetch project data. Try again later.");
+      }
+    } else {
+      throw new ApiError("Error during validation", 401);
+    }
+  }
+);
+
 export {
   getPrivateRepos,
   getPreSignedUrlForProjectMediaUpload,
   validateMediaUploadAndStoreProject,
   getTotalListedProjects,
+  getInitialProjectData,
 };

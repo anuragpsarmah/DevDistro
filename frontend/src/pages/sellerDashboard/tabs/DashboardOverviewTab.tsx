@@ -10,7 +10,7 @@ import { SalesMetrics } from "../components/SalesMetrics";
 import { useChartDimensions } from "../hooks/useChartDimensions";
 import { useYearOptions } from "../hooks/useYearOptions";
 import { INITIAL_CHART_DATA, INITIAL_SALES_INFO } from "../utils/constants";
-import type { ChartDataObject, CommonSalesInformation } from "../utils/types";
+import type { ChartDataObject } from "../utils/types";
 import AnimatedLoadWrapper from "@/components/wrappers/AnimatedLoadWrapper";
 
 interface DashboardOverviewTabProps {
@@ -22,8 +22,6 @@ export default function DashboardOverviewTab({
 }: DashboardOverviewTabProps) {
   const [chartData, setChartData] =
     useState<ChartDataObject[]>(INITIAL_CHART_DATA);
-  const [salesInfo, setSalesInfo] =
-    useState<CommonSalesInformation>(INITIAL_SALES_INFO);
   const [selectedYear, setSelectedYear] = useState<string>(
     new Date().getFullYear().toString()
   );
@@ -45,14 +43,6 @@ export default function DashboardOverviewTab({
   } = useYearlySalesInformationQuery(parseInt(selectedYear), { logout });
 
   useEffect(() => {
-    if (!commonInfoLoading && !commonInfoError && commonInfoData?.data) {
-      setSalesInfo(commonInfoData.data);
-    } else if (!commonInfoLoading && commonInfoError) {
-      console.log("Something went wrong");
-    }
-  }, [commonInfoData, commonInfoLoading, commonInfoError, toast]);
-
-  useEffect(() => {
     if (!yearlyLoading && !yearlyError && yearlyData?.data) {
       setChartData((prevData) =>
         prevData.map((item, index) => ({
@@ -63,8 +53,6 @@ export default function DashboardOverviewTab({
               : item.sales,
         }))
       );
-    } else if (!yearlyLoading && yearlyError) {
-      console.log("Something went wrong");
     }
   }, [yearlyData, yearlyLoading, yearlyError, toast]);
 
@@ -75,7 +63,14 @@ export default function DashboardOverviewTab({
           Dashboard Overview
         </h1>
 
-        <SalesMetrics salesInfo={salesInfo} isLoading={commonInfoLoading} />
+        <SalesMetrics
+          salesInfo={
+            !commonInfoLoading && !commonInfoError && commonInfoData
+              ? commonInfoData.data
+              : INITIAL_SALES_INFO
+          }
+          isLoading={commonInfoLoading}
+        />
 
         <div className="bg-gray-800 rounded-xl p-6 shadow-lg">
           <div className="flex justify-between items-center mb-10">

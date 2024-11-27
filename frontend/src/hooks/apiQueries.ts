@@ -170,6 +170,28 @@ const usePrivateReposQuery = (
   });
 };
 
+const useInitialProjectDataQuery = ({ logout }: queryParameter) => {
+  const { handleError } = useHandleError({ logout });
+  return useQuery({
+    queryKey: ["initialProjectDataQuery"],
+    queryFn: async () => {
+      try {
+        const response = await axios.get(
+          `${backend_uri}/projects/getInitialProjectData`,
+          {
+            withCredentials: true,
+          }
+        );
+        return response.data;
+      } catch (error) {
+        handleError(error);
+        throw error;
+      }
+    },
+    refetchOnWindowFocus: false,
+  });
+};
+
 export {
   useAuthValidationQuery,
   useLogoutQuery,
@@ -179,4 +201,5 @@ export {
   useFeaturedReviewQuery,
   useTotalListedProjectsQuery,
   usePrivateReposQuery,
+  useInitialProjectDataQuery,
 };

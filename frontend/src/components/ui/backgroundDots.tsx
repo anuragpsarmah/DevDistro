@@ -56,7 +56,7 @@ function hexToRgb(hex: string): number[] {
 }
 
 const BackgroundDots: React.FC<ParticlesProps> = ({
-  className = "",
+  className = "mt-8",
   quantity = 100,
   staticity = 50,
   ease = 50,

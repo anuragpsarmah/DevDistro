@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRecoilState } from "recoil";
 import { user } from "@/utils/atom";
 import {
@@ -29,9 +29,6 @@ export default function ListNewProjectTab({
   setActiveTab,
 }: ListNewProjectTabProps) {
   const [userData] = useRecoilState(user);
-  const [privateRepoData, setPrivateRepoData] = useState<
-    Array<PrivateRepoData>
-  >([]);
   const [isImportState, setIsImportState] = useState<boolean>(true);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [formProps, setFormProps] = useState<PrivateRepoData>({
@@ -63,12 +60,6 @@ export default function ListNewProjectTab({
     useValidateMediaUploadAndStoreProjectMutation({
       logout,
     });
-
-  useEffect(() => {
-    if (!repoDataLoading && !repoDataError && repoData) {
-      setPrivateRepoData(repoData.data);
-    }
-  }, [repoData, repoDataLoading, repoDataError]);
 
   const handleStateChange = (
     newState: boolean,
@@ -119,7 +110,11 @@ export default function ListNewProjectTab({
             {isImportState ? (
               <RepoImport
                 userData={userData}
-                privateRepoData={privateRepoData}
+                privateRepoData={
+                  !repoDataLoading && !repoDataError && repoData
+                    ? repoData.data
+                    : []
+                }
                 repoDataLoading={repoDataLoading}
                 totalListedProjectsDataLoading={totalListedProjectsDataLoading}
                 totalListedProjectsData={totalListedProjectsData}

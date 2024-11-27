@@ -168,20 +168,6 @@ export interface YearSelectorProps {
   isLoading?: boolean;
 }
 
-export const ALLOWED_IMAGE_TYPES: { [key: string]: string[] } = {
-  "image/png": ["png"],
-  "image/jpeg": ["jpg", "jpeg"],
-  "video/mp4": ["mp4"],
-} as const;
-
-export const ALLOWED_VIDEO_TYPES: { [key: string]: string[] } = {
-  "video/mp4": ["mp4"],
-} as const;
-
-export const MAX_IMAGE_FILE_SIZE = 2 * 1024 * 1024;
-
-export const MAX_VIDEO_FILE_SIZE = 5 * 1024 * 1024;
-
 export interface projectListingFormData {
   title: string;
   description: string;
@@ -219,4 +205,16 @@ export interface ProjectMediaUploaderProps {
   setImages: React.Dispatch<React.SetStateAction<File[]>>;
   video: File | null;
   setVideo: React.Dispatch<React.SetStateAction<File | null>>;
+}
+
+export interface InitialProjectData {
+  isActive: boolean;
+  title: string;
+  description: string;
+  tech_stack: string[];
+  project_images: string;
+}
+
+export interface ListedProjectsProps {
+  initialProjectData: Array<InitialProjectData>;
 }
