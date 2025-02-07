@@ -1,15 +1,64 @@
 import { Label } from "@/components/ui/label";
 import { Plus, Upload, X } from "lucide-react";
 import { MAX_IMAGES } from "../utils/constants";
-import { ChangeEvent } from "react";
+import { ChangeEvent, useMemo, memo, useEffect, useRef } from "react";
 import { ProjectMediaUploaderProps } from "../utils/types";
 
-export default function ProjectMediaUploader({
+const ProjectMediaUploader = memo(function ProjectMediaUploader({
   images,
   setImages,
   video,
   setVideo,
 }: ProjectMediaUploaderProps) {
+  const imageUrlsRef = useRef<{ [key: string]: string }>({});
+  const videoUrlRef = useRef<string | null>(null);
+
+  const imageUrls = useMemo(() => {
+    const newUrls: string[] = [];
+
+    images.forEach((image, index) => {
+      if (!imageUrlsRef.current[image.name + index]) {
+        imageUrlsRef.current[image.name + index] = URL.createObjectURL(image);
+      }
+      newUrls.push(imageUrlsRef.current[image.name + index]);
+    });
+
+    Object.entries(imageUrlsRef.current).forEach(([key, url]) => {
+      if (!images.some((img, idx) => key === img.name + idx)) {
+        URL.revokeObjectURL(url);
+        delete imageUrlsRef.current[key];
+      }
+    });
+
+    return newUrls;
+  }, [images]);
+
+  const videoUrl = useMemo(() => {
+    if (video) {
+      const newUrl = URL.createObjectURL(video);
+      if (videoUrlRef.current) {
+        URL.revokeObjectURL(videoUrlRef.current);
+      }
+      videoUrlRef.current = newUrl;
+      return videoUrlRef.current;
+    }
+    if (videoUrlRef.current) {
+      URL.revokeObjectURL(videoUrlRef.current);
+      videoUrlRef.current = null;
+    }
+    return null;
+  }, [video]);
+
+  useEffect(() => {
+    const imageUrls = { ...imageUrlsRef.current };
+    const videoUrl = videoUrlRef.current;
+
+    return () => {
+      Object.values(imageUrls).forEach((url) => URL.revokeObjectURL(url));
+      if (videoUrl) URL.revokeObjectURL(videoUrl);
+    };
+  }, []);
+
   const handleImageUpload = (e: ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (images.length + files.length <= MAX_IMAGES) {
@@ -44,10 +93,10 @@ export default function ProjectMediaUploader({
           Add screenshots or mockups showcasing key features
         </p>
         <div className="flex flex-wrap gap-4 mt-2">
-          {images.map((image, index) => (
-            <div key={index} className="relative">
+          {imageUrls.map((url, index) => (
+            <div key={images[index].name + index} className="relative">
               <img
-                src={URL.createObjectURL(image)}
+                src={url}
                 alt={`Project image ${index + 1}`}
                 className="w-20 h-20 object-cover rounded-md"
               />
@@ -83,13 +132,9 @@ export default function ProjectMediaUploader({
         <p className="text-sm text-gray-400 mb-2">
           Add a short demo video showcasing your project in action
         </p>
-        {video ? (
+        {videoUrl ? (
           <div className="relative mt-2">
-            <video
-              src={URL.createObjectURL(video)}
-              className="w-full rounded-md"
-              controls
-            />
+            <video src={videoUrl} className="w-full rounded-md" controls />
             <button
               type="button"
               onClick={removeVideo}
@@ -118,4 +163,6 @@ export default function ProjectMediaUploader({
       </div>
     </>
   );
-}
+});
+
+export default ProjectMediaUploader;
