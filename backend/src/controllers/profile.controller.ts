@@ -5,7 +5,7 @@ import { User } from "../models/user.model";
 import response from "../utils/response.util";
 import { SiteReview } from "../models/siteReview.model";
 import mongoose from "mongoose";
-import { profileInformationSchema } from "../validation/profile.validation";
+import { profileInformationSchema } from "../validations/profile.validation";
 
 const getProfileInformation = asyncHandler(
   async (req: Request, res: Response) => {

@@ -4,8 +4,8 @@ import { app } from "./app";
 import logger from "./logger/logger";
 import { redisInitialization } from "./initializations/redis-initialization";
 import { Redis } from "ioredis";
-import S3Service from "./utils/S3Service.util";
-import S3CleanupService from "./utils/S3CleanupService.util";
+import S3Service from "./S3/S3Service";
+import S3CleanupService from "./workers/S3Cleanup.worker";
 
 dotenv.config();
 

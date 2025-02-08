@@ -13,7 +13,7 @@ import { privateRepoPrefix } from "../utils/redisPrefixGenerator.util";
 import {
   fileMetadataSchema,
   projectFormDataSchema,
-} from "../validation/projects.validation";
+} from "../validations/projects.validation";
 import { Project } from "../models/project.model";
 
 const getPrivateRepos = asyncHandler(async (req: Request, res: Response) => {
