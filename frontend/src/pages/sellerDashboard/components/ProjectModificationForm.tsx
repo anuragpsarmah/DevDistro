@@ -1,13 +1,12 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { Import } from "lucide-react";
+import { Undo2 } from "lucide-react";
 import { ProjectModificationFormProps, ProjectType } from "../utils/types";
 import UploadOverlay from "./UploadOverlay";
 import ProjectMediaUploader from "./ProjectMediaUploader";
 import ProjectGeneralInfo from "./ProjectGeneralInfo";
 import ProjectPriceSelection from "./ProjectPriceSelection";
 import { useProjectSubmission } from "../hooks/useProjectSubmission";
-import { useSpecificProjectDataQuery } from "@/hooks/apiQueries";
 
 export default function ProjectModificationForm({
   formProps,
@@ -27,14 +26,6 @@ export default function ProjectModificationForm({
   const [images, setImages] = useState<File[]>([]);
   const [video, setVideo] = useState<File | null>(null);
   const [price, setPrice] = useState(299);
-
-  const {
-    data: projectData,
-    isLoading: projectDataLoading,
-    isError: projectDataError,
-  } = useSpecificProjectDataQuery({ logout }, formProps.title);
-
-  useEffect(() => {}, [projectData, projectDataLoading, projectDataError]);
 
   const { handleSubmit, isSubmitting, uploadProgress } = useProjectSubmission({
     handleGetPreSignedUrls,
@@ -77,8 +68,8 @@ export default function ProjectModificationForm({
               className="flex items-center gap-2 bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600 hover:text-white"
               onClick={handleDifferentProjectImport}
             >
-              <Import className="w-4 h-4" />
-              Import Different Project
+              <Undo2 className="w-4 h-4" />
+              Undo Changes
             </Button>
           </div>
 

@@ -128,7 +128,7 @@ export interface ProjectListingFormProps {
 }
 
 export interface ProjectModificationFormProps {
-  formProps: formPropsType | undefined;
+  formProps: formPropsType;
   setFormProps: (curr: PrivateRepoData) => void;
   handleGetPreSignedUrls: (
     metadata: Array<ProjectMediaMetadata>

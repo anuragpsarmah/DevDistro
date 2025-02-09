@@ -128,4 +128,5 @@ class CustomLogger {
 }
 
 const logger = new CustomLogger();
+
 export default logger;
