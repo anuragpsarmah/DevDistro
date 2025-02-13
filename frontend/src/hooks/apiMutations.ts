@@ -40,11 +40,26 @@ const usePreSignedUrlForProjectMediaUploadMutation = ({
   const { handleError } = useHandleError({ logout });
 
   return useMutation({
-    mutationFn: async (data: Array<ProjectMediaMetadata>) => {
+    mutationFn: async ({
+      metadata,
+      existingImageCount,
+      existingVideoCount,
+      modificationType,
+    }: {
+      metadata: Array<ProjectMediaMetadata>;
+      existingImageCount: number;
+      existingVideoCount: number;
+      modificationType: string;
+    }) => {
       try {
         const response = await axios.post(
           `${backend_uri}/projects/getPreSignedUrlForProjectMediaUpload`,
-          { metadata: data },
+          {
+            metadata,
+            existingImageCount,
+            existingVideoCount,
+            modificationType,
+          },
           { withCredentials: true }
         );
         return response.data;
@@ -61,11 +76,17 @@ const useValidateMediaUploadAndStoreProjectMutation = ({
   const { handleError } = useHandleError({ logout });
 
   return useMutation({
-    mutationFn: async (data: projectListingValidatedFormData) => {
+    mutationFn: async ({
+      projectData,
+      modificationType,
+    }: {
+      projectData: projectListingValidatedFormData;
+      modificationType: string;
+    }) => {
       try {
         const response = await axios.put(
           `${backend_uri}/projects/validateMediaUploadAndStoreProject`,
-          data,
+          { projectData, modificationType },
           { withCredentials: true }
         );
         return response.data;

@@ -82,16 +82,28 @@ export default function ListNewProjectTab({
   };
 
   const handleGetPreSignedUrls = async (
-    metadata: Array<ProjectMediaMetadata>
+    metadata: Array<ProjectMediaMetadata>,
+    existingImageCount: number,
+    existingVideoCount: number,
+    modificationType: string
   ) => {
-    const response = await preSignedUrlMutate(metadata);
+    const response = await preSignedUrlMutate({
+      metadata,
+      existingImageCount,
+      existingVideoCount,
+      modificationType,
+    });
     return response;
   };
 
   const handleValidateUploadAndStoreProject = async (
-    formData: projectListingValidatedFormData
+    projectData: projectListingValidatedFormData,
+    modificationType: string
   ) => {
-    const response = await validationAndStoreMutate(formData);
+    const response = await validationAndStoreMutate({
+      projectData,
+      modificationType,
+    });
     return response;
   };
 

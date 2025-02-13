@@ -29,6 +29,7 @@ export default function ProjectListingForm({
   const { handleSubmit, isSubmitting, uploadProgress } = useProjectSubmission({
     handleGetPreSignedUrls,
     handleValidateUploadAndStoreProject,
+    modificationType: "new",
     setActiveTab,
   });
 

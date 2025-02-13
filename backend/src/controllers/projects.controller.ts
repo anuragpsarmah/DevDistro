@@ -5,7 +5,7 @@ import ApiError from "../utils/ApiError.util";
 import response from "../utils/response.util";
 import { User } from "../models/user.model";
 import { decrypt } from "../utils/encryption.util";
-import axios from "axios";
+import axios, { all } from "axios";
 import { FileMetaData } from "../types/types";
 import { redisClient, s3Service } from "..";
 import logger from "../logger/logger";
@@ -15,6 +15,7 @@ import {
   projectFormDataSchema,
 } from "../validations/projects.validation";
 import { Project } from "../models/project.model";
+import { MAX_ALLOWED_IMAGES } from "../types/constants";
 
 const getPrivateRepos = asyncHandler(async (req: Request, res: Response) => {
   const { ENCRYPTION_KEY_32, ENCRYPTION_IV } = process.env;
@@ -110,23 +111,33 @@ const getPrivateRepos = asyncHandler(async (req: Request, res: Response) => {
 const getPreSignedUrlForProjectMediaUpload = asyncHandler(
   async (req: Request, res: Response) => {
     if (req.user) {
-      try {
-        const userid = new mongoose.Types.ObjectId(req.user._id);
-        const projects = await Project.find({ userid });
+      const userid = new mongoose.Types.ObjectId(req.user._id);
+      const {
+        metadata,
+        existingImageCount,
+        existingVideoCount,
+        modificationType,
+      } = req.body;
 
-        if (projects.length >= 2) {
-          response(res, 400, "Only two projects can be listed at a time");
+      if (modificationType === "new") {
+        try {
+          const projectCount = await Project.countDocuments({ userid });
+          if (projectCount >= 2) {
+            response(res, 400, "Only two projects can be listed at a time");
+            return;
+          }
+        } catch (error) {
+          response(res, 500, "Failed to fetch total listed projects");
           return;
         }
-      } catch (error) {
-        response(res, 500, "Failed to fetch total listed projects");
+      }
+
+      if (isNaN(existingImageCount) || isNaN(existingVideoCount)) {
+        response(res, 400, "Invalid count values provided");
         return;
       }
 
-      const { metadata } = req.body;
-
       const result = fileMetadataSchema.safeParse(metadata);
-
       if (!result.success) {
         response(
           res,
@@ -138,37 +149,35 @@ const getPreSignedUrlForProjectMediaUpload = asyncHandler(
         return;
       }
 
+      const allowedImagesCount = MAX_ALLOWED_IMAGES - existingImageCount;
       const metadataFileCheck = {
         image: 0,
         video: 0,
       };
-
       metadata.forEach((file: FileMetaData) => {
         if (file.fileType === "image/png" || file.fileType === "image/jpeg")
           metadataFileCheck.image++;
         else metadataFileCheck.video++;
       });
 
-      if (metadataFileCheck.image === 0) {
+      if (!existingImageCount && metadataFileCheck.image === 0) {
         response(res, 400, "At least one image is required");
         return;
       }
-
-      if (metadataFileCheck.image > 5 || metadataFileCheck.video > 1) {
+      if (
+        metadataFileCheck.image > allowedImagesCount ||
+        (metadataFileCheck.video && existingVideoCount)
+      ) {
         response(res, 400, "Sent more files than allowed");
         return;
       }
 
       try {
-        const preSignedUrlPromises = metadata.map((file: FileMetaData) => {
-          return s3Service.createPreSignedUploadUrl(file);
-        });
-
-        const preSignedUrls = await Promise.all(preSignedUrlPromises);
-
-        const keys = preSignedUrls.map((url: { [key: string]: string }) => {
-          return url.key;
-        });
+        const preSignedUrls = await Promise.all(
+          metadata.map((file: FileMetaData) => {
+            return s3Service.createPreSignedUploadUrl(file);
+          })
+        );
 
         response(
           res,
@@ -189,23 +198,23 @@ const getPreSignedUrlForProjectMediaUpload = asyncHandler(
 const validateMediaUploadAndStoreProject = asyncHandler(
   async (req: Request, res: Response) => {
     if (req.user) {
-      try {
-        const userid = new mongoose.Types.ObjectId(req.user._id);
-        const projects = await Project.find({ userid });
+      const { modificationType, projectData } = req.body;
+      const userid = new mongoose.Types.ObjectId(req.user._id);
 
-        if (projects.length >= 2) {
-          response(res, 400, "Only two projects can be listed at a time");
+      if (modificationType === "new") {
+        try {
+          const projectCount = await Project.countDocuments({ userid });
+          if (projectCount >= 2) {
+            response(res, 400, "Only two projects can be listed at a time");
+            return;
+          }
+        } catch (error) {
+          response(res, 500, "Failed to fetch total listed projects");
           return;
         }
-      } catch (error) {
-        response(res, 500, "Failed to fetch total listed projects");
-        return;
       }
 
-      const projectFormData = req.body;
-
-      const result = projectFormDataSchema.safeParse(projectFormData);
-
+      const result = projectFormDataSchema.safeParse(projectData);
       if (!result.success) {
         response(
           res,
@@ -217,47 +226,112 @@ const validateMediaUploadAndStoreProject = asyncHandler(
         return;
       }
 
+      const { existingImages, project_images, project_video, existingVideo } =
+        projectData;
+      const allowedImagesCount = 5 - existingImages.length;
+
+      if (!existingImages.length && project_images.length === 0) {
+        response(res, 400, "At least one image is required");
+        return;
+      }
+
+      if (
+        project_images.length > allowedImagesCount ||
+        (project_video && existingVideo)
+      ) {
+        response(res, 400, "Sent more files than allowed");
+        return;
+      }
+
+      let project;
       try {
-        const project = await Project.findOne({ title: projectFormData.title });
-        if (project) {
+        project = await Project.findOne({ title: projectData.title, userid });
+
+        if (project && modificationType === "new") {
           response(res, 400, "Project already exists");
+          return;
+        }
+        if (!project && modificationType === "existing") {
+          response(res, 400, "Project does not exist");
           return;
         }
       } catch (error) {
         throw new ApiError("Something went wrong", 500);
       }
 
-      const toBeValidatedKeys = [
-        ...projectFormData.project_images,
-        ...(projectFormData.project_video
-          ? [projectFormData.project_video]
-          : []),
+      const mediaKeys = [
+        ...project_images,
+        ...(project_video ? [project_video] : []),
       ];
 
-      const preSignedImageGetUrls = [];
-      let preSignedVideoGetUrl;
-      for (let i = 0; i < toBeValidatedKeys.length; i++) {
-        try {
-          const url = await s3Service.validateAndCreatePreSignedDownloadUrl(
-            toBeValidatedKeys[i]
-          );
-          if (i < projectFormData.project_images.length)
-            preSignedImageGetUrls.push(url);
-          else preSignedVideoGetUrl = url;
-        } catch (error) {
-          if (error instanceof Error) response(res, 400, error.message);
-          else throw new ApiError("Couldn't verify uploads. Try again.", 500);
-          return;
+      let preSignedUrls;
+      try {
+        preSignedUrls = await Promise.all(
+          mediaKeys.map((key) =>
+            s3Service.validateAndCreatePreSignedDownloadUrl(key)
+          )
+        );
+      } catch (error) {
+        if (error instanceof Error) {
+          response(res, 400, error.message);
+        } else {
+          throw new ApiError("Couldn't verify uploads. Try again.", 500);
         }
+        return;
       }
 
-      projectFormData.project_images = preSignedImageGetUrls;
-      projectFormData.project_video = preSignedVideoGetUrl;
-      projectFormData.userid = new mongoose.Types.ObjectId(req.user._id);
+      const preSignedImageUrls = preSignedUrls.slice(0, project_images.length);
+      const preSignedVideoUrl = preSignedUrls[project_images.length] || "";
+
+      const {
+        existingImages: _,
+        existingVideo: __,
+        ...filteredProjectData
+      } = {
+        ...projectData,
+        project_images: [...preSignedImageUrls, ...existingImages],
+        project_video: existingVideo || preSignedVideoUrl,
+        userid,
+      };
 
       try {
-        await Project.create(projectFormData);
-        response(res, 200, "Project listed successfully");
+        if (modificationType === "new") {
+          await Project.create(filteredProjectData);
+        } else {
+          const currentMedia = [
+            ...(project?.project_images ?? []),
+            ...(project?.project_video ? [project?.project_video] : []),
+          ];
+          const updatedMedia = [
+            ...(filteredProjectData.project_images ?? []),
+            ...(filteredProjectData.project_video
+              ? [filteredProjectData.project_video]
+              : []),
+          ];
+          const mediaToRemove = currentMedia.filter(
+            (url) => !updatedMedia.includes(url)
+          );
+
+          for (const media of mediaToRemove) {
+            try {
+              const S3Uploadkey = media.replace(
+                `${process.env.S3_CLOUDFRONT_DISTRIBUTION as string}/`,
+                ""
+              );
+
+              await redisClient.zadd(
+                "media-cleanup-schedule",
+                Date.now(),
+                S3Uploadkey
+              );
+            } catch (error) {
+              logger.error("Failed to delete object:", error);
+            }
+          }
+
+          await project?.set(filteredProjectData).save();
+        }
+        response(res, 200, "Project listed/modified successfully");
       } catch (error) {
         throw new ApiError("Something went wrong", 500);
       }
@@ -270,13 +344,12 @@ const validateMediaUploadAndStoreProject = asyncHandler(
 const getTotalListedProjects = asyncHandler(
   async (req: Request, res: Response) => {
     if (req.user) {
-      let projects = [];
       try {
         const userid = new mongoose.Types.ObjectId(req.user._id);
-        projects = await Project.find({ userid });
+        const projectCount = await Project.countDocuments({ userid });
 
         response(res, 200, "Total listed projects fetched successfully", {
-          totalListedProjects: projects.length,
+          totalListedProjects: projectCount,
         });
       } catch (error) {
         response(res, 200, "Failed to fetch total listed projects", {
@@ -407,6 +480,11 @@ const deleteProjectListing = asyncHandler(
           title: req.query.title,
         });
 
+        if (deleteResponse.deletedCount == 0) {
+          response(res, 404, "No such project was listed. Invalid Request.");
+          return;
+        }
+
         const toBeDeletedKeys = [
           ...(projectData?.project_images ? projectData.project_images : []),
           ...(projectData?.project_video ? [projectData.project_video] : []),
@@ -429,10 +507,7 @@ const deleteProjectListing = asyncHandler(
           }
         }
 
-        if (deleteResponse.deletedCount == 0)
-          response(res, 404, "No such project was listed. Invalid Request.");
-        else response(res, 200, "Project was deleted successfully");
-        return;
+        response(res, 200, "Project was deleted successfully");
       } catch (error) {
         response(res, 500, "Failed to delete listed project. Try again later.");
       }

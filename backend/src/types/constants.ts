@@ -39,3 +39,5 @@ export const JOB_ROLE_ENUM = [
 ] as const;
 
 export const FILE_TYPE_ENUM = ["image/png", "image/jpeg", "video/mp4"] as const;
+
+export const MAX_ALLOWED_IMAGES = 5;

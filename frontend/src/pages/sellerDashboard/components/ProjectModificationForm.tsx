@@ -11,10 +11,10 @@ import { useProjectSubmission } from "../hooks/useProjectSubmission";
 export default function ProjectModificationForm({
   formProps,
   setFormProps,
+  handleStateChange,
   handleGetPreSignedUrls,
   handleValidateUploadAndStoreProject,
   setActiveTab,
-  logout,
 }: ProjectModificationFormProps) {
   const title = useRef<HTMLInputElement | null>(null);
   const [description, setDescription] = useState(formProps.description || "");
@@ -22,25 +22,40 @@ export default function ProjectModificationForm({
     useState<ProjectType>("Web Application");
   const [techStack, setTechStack] = useState<string[]>(formProps.tech_stack);
   const [techInput, setTechInput] = useState("");
-  const [liveLink, setLiveLink] = useState("");
+  const [liveLink, setLiveLink] = useState(formProps.live_link || "");
   const [images, setImages] = useState<File[]>([]);
   const [video, setVideo] = useState<File | null>(null);
-  const [price, setPrice] = useState(299);
+  const [price, setPrice] = useState(formProps.price || 299);
+  const [existingImages, setExistingImages] = useState<string[]>(
+    formProps.project_images
+  );
+  const [existingVideo, setExistingVideo] = useState<string | null>(
+    formProps.project_video || null
+  );
+
+  const handleReturnToAllListings = () => {
+    setFormProps({
+      isActive: false,
+      title: "",
+      description: "",
+      tech_stack: [],
+      live_link: "",
+      price: 0,
+      project_images: [],
+      project_type: "",
+      project_video: "",
+    });
+
+    handleStateChange("projects");
+  };
 
   const { handleSubmit, isSubmitting, uploadProgress } = useProjectSubmission({
     handleGetPreSignedUrls,
     handleValidateUploadAndStoreProject,
+    modificationType: "existing",
     setActiveTab,
+    handleReturnToAllListings,
   });
-
-  const handleDifferentProjectImport = () => {
-    setFormProps({
-      name: "",
-      description: "",
-      language: "",
-      updated_at: "",
-    });
-  };
 
   const onSubmit = () => {
     handleSubmit({
@@ -52,6 +67,8 @@ export default function ProjectModificationForm({
       images,
       video,
       price,
+      existingImages,
+      existingVideo,
     });
   };
 
@@ -66,7 +83,7 @@ export default function ProjectModificationForm({
               type="button"
               variant="outline"
               className="flex items-center gap-2 bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600 hover:text-white"
-              onClick={handleDifferentProjectImport}
+              onClick={handleReturnToAllListings}
             >
               <Undo2 className="w-4 h-4" />
               Undo Changes
@@ -93,6 +110,10 @@ export default function ProjectModificationForm({
             setImages={setImages}
             video={video}
             setVideo={setVideo}
+            existingImages={existingImages}
+            setExistingImages={setExistingImages}
+            existingVideo={existingVideo}
+            setExistingVideo={setExistingVideo}
           />
 
           <ProjectPriceSelection price={price} setPrice={setPrice} />

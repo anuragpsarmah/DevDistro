@@ -9,11 +9,15 @@ const ProjectMediaUploader = memo(function ProjectMediaUploader({
   setImages,
   video,
   setVideo,
+  existingImages,
+  setExistingImages,
+  existingVideo,
+  setExistingVideo,
 }: ProjectMediaUploaderProps) {
   const imageUrlsRef = useRef<{ [key: string]: string }>({});
   const videoUrlRef = useRef<string | null>(null);
 
-  const imageUrls = useMemo(() => {
+  const newImageUrls = useMemo(() => {
     const newUrls: string[] = [];
 
     images.forEach((image, index) => {
@@ -33,7 +37,7 @@ const ProjectMediaUploader = memo(function ProjectMediaUploader({
     return newUrls;
   }, [images]);
 
-  const videoUrl = useMemo(() => {
+  const newVideoUrl = useMemo(() => {
     if (video) {
       const newUrl = URL.createObjectURL(video);
       if (videoUrlRef.current) {
@@ -61,7 +65,10 @@ const ProjectMediaUploader = memo(function ProjectMediaUploader({
 
   const handleImageUpload = (e: ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
-    if (images.length + files.length <= MAX_IMAGES) {
+    const existingCount = existingImages?.length || 0;
+    const totalImages = existingCount + images.length + files.length;
+
+    if (totalImages <= MAX_IMAGES) {
       setImages((prevImages: File[]) => [...prevImages, ...(files as File[])]);
     }
   };
@@ -69,16 +76,33 @@ const ProjectMediaUploader = memo(function ProjectMediaUploader({
   const handleVideoUpload = (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       setVideo(e.target.files[0]);
+      if (existingVideo && setExistingVideo) {
+        setExistingVideo(null);
+      }
     }
   };
 
-  const removeImage = (index: number) => {
+  const removeNewImage = (index: number) => {
     setImages((prevImages) => prevImages.filter((_, i) => i !== index));
   };
 
-  const removeVideo = () => {
+  const removeExistingImage = (index: number) => {
+    if (setExistingImages && existingImages) {
+      setExistingImages((prev) => prev.filter((_, i) => i !== index));
+    }
+  };
+
+  const removeNewVideo = () => {
     setVideo(null);
   };
+
+  const removeExistingVideo = () => {
+    if (setExistingVideo) {
+      setExistingVideo(null);
+    }
+  };
+
+  const totalImagesCount = (existingImages?.length || 0) + images.length;
 
   return (
     <>
@@ -93,24 +117,44 @@ const ProjectMediaUploader = memo(function ProjectMediaUploader({
           Add screenshots or mockups showcasing key features
         </p>
         <div className="flex flex-wrap gap-4 mt-2">
-          {imageUrls.map((url, index) => (
-            <div key={images[index].name + index} className="relative">
+          {/* Only render existing images if they exist */}
+          {existingImages?.map((url, index) => (
+            <div key={`existing-${url}`} className="relative">
               <img
                 src={url}
-                alt={`Project image ${index + 1}`}
+                alt={`Existing project image ${index + 1}`}
                 className="w-20 h-20 object-cover rounded-md"
               />
               <button
                 type="button"
-                onClick={() => removeImage(index)}
+                onClick={() => removeExistingImage(index)}
                 className="absolute -bottom-2 -right-2 bg-red-500 rounded-full p-1"
-                aria-label={`Remove image ${index + 1}`}
+                aria-label={`Remove existing image ${index + 1}`}
               >
                 <X className="w-4 h-4 text-white" />
               </button>
             </div>
           ))}
-          {images.length < MAX_IMAGES && (
+
+          {newImageUrls.map((url, index) => (
+            <div key={images[index].name + index} className="relative">
+              <img
+                src={url}
+                alt={`New project image ${index + 1}`}
+                className="w-20 h-20 object-cover rounded-md"
+              />
+              <button
+                type="button"
+                onClick={() => removeNewImage(index)}
+                className="absolute -bottom-2 -right-2 bg-red-500 rounded-full p-1"
+                aria-label={`Remove new image ${index + 1}`}
+              >
+                <X className="w-4 h-4 text-white" />
+              </button>
+            </div>
+          ))}
+
+          {totalImagesCount < MAX_IMAGES && (
             <label className="w-20 h-20 flex items-center justify-center bg-gray-700 border-2 border-dashed border-gray-600 rounded-md cursor-pointer hover:bg-gray-600 transition-colors">
               <input
                 type="file"
@@ -132,14 +176,26 @@ const ProjectMediaUploader = memo(function ProjectMediaUploader({
         <p className="text-sm text-gray-400 mb-2">
           Add a short demo video showcasing your project in action
         </p>
-        {videoUrl ? (
+        {existingVideo ? (
           <div className="relative mt-2">
-            <video src={videoUrl} className="w-full rounded-md" controls />
+            <video src={existingVideo} className="w-full rounded-md" controls />
             <button
               type="button"
-              onClick={removeVideo}
+              onClick={removeExistingVideo}
               className="absolute top-2 right-2 bg-red-500 rounded-full p-1"
-              aria-label="Remove video"
+              aria-label="Remove existing video"
+            >
+              <X className="w-4 h-4 text-white" />
+            </button>
+          </div>
+        ) : newVideoUrl ? (
+          <div className="relative mt-2">
+            <video src={newVideoUrl} className="w-full rounded-md" controls />
+            <button
+              type="button"
+              onClick={removeNewVideo}
+              className="absolute top-2 right-2 bg-red-500 rounded-full p-1"
+              aria-label="Remove new video"
             >
               <X className="w-4 h-4 text-white" />
             </button>

@@ -119,24 +119,33 @@ export interface ProjectListingFormProps {
   formProps: PrivateRepoData;
   setFormProps: (curr: PrivateRepoData) => void;
   handleGetPreSignedUrls: (
-    metadata: Array<ProjectMediaMetadata>
+    metadata: Array<ProjectMediaMetadata>,
+    existingImageCount: number,
+    existingVideoCount: number,
+    modificationType: string
   ) => Promise<unknown>;
   handleValidateUploadAndStoreProject: (
-    data: projectListingValidatedFormData
+    data: projectListingValidatedFormData,
+    modificationType: string
   ) => Promise<unknown>;
   setActiveTab: (curr: string) => void;
 }
 
 export interface ProjectModificationFormProps {
   formProps: formPropsType;
-  setFormProps: (curr: PrivateRepoData) => void;
+  setFormProps: (curr: formPropsType) => void;
+  handleStateChange: (identifier: string, title?: string) => void;
   handleGetPreSignedUrls: (
-    metadata: Array<ProjectMediaMetadata>
+    metadata: Array<ProjectMediaMetadata>,
+    existingImageCount: number,
+    existingVideoCount: number,
+    modificationType: string
   ) => Promise<unknown>;
   handleValidateUploadAndStoreProject: (
-    data: projectListingValidatedFormData
+    data: projectListingValidatedFormData,
+    modificationType: string
   ) => Promise<unknown>;
-  setActiveTab: (curr: string) => void;
+  setActiveTab?: (curr: string) => void;
   logout?: () => Promise<void>;
 }
 
@@ -192,6 +201,8 @@ export interface projectListingFormData {
   price: number;
   images: File[];
   video: File | null;
+  existingImages?: string[];
+  existingVideo?: string | null;
 }
 
 export interface ProjectMediaMetadata {
@@ -220,6 +231,10 @@ export interface ProjectMediaUploaderProps {
   setImages: React.Dispatch<React.SetStateAction<File[]>>;
   video: File | null;
   setVideo: React.Dispatch<React.SetStateAction<File | null>>;
+  existingImages?: string[];
+  setExistingImages?: React.Dispatch<React.SetStateAction<string[]>>;
+  existingVideo?: string | null;
+  setExistingVideo?: React.Dispatch<React.SetStateAction<string | null>>;
 }
 
 export interface InitialProjectData {

@@ -10,7 +10,7 @@ import {
 
 export const projectListingFormDataValidation = (
   data: projectListingFormData
-): string => {
+): string | undefined => {
   const schema = z.object({
     title: z
       .string({
@@ -41,43 +41,63 @@ export const projectListingFormDataValidation = (
         required_error: "Price is required",
       })
       .min(0, "Price should be greater than or equal to 0."),
+    existingImages: z.array(z.string()).optional(),
+    existingVideo: z.string().nullable().optional(),
   });
 
   const result = schema.safeParse(data);
-
   if (!result.success) {
     return result.error.errors[0].message;
   }
 
-  if (data.images.length < 1) return "At least one image is required";
-  if (data.images.length > 5) return "At most five images are allowed";
-  for (const file of data.images) {
-    const nameArray = file.name.split(".");
-    if (!ALLOWED_IMAGE_TYPES[file.type])
-      return "Image file type is not supported";
-    if (file.size > MAX_IMAGE_FILE_SIZE)
-      return "Image file size should not exceed 2MB";
-    if (
-      !ALLOWED_IMAGE_TYPES[file.type].includes(
-        nameArray[nameArray.length - 1].toLowerCase()
-      )
-    )
-      return "Invalid file extension";
+  const totalImageCount =
+    (data.existingImages?.length || 0) + data.images.length;
+
+  if (totalImageCount < 1) {
+    return "At least one image is required";
+  }
+
+  if (totalImageCount > 5) {
+    return "At most five images are allowed";
+  }
+
+  if (data.images.length > 0) {
+    for (const file of data.images) {
+      const nameArray = file.name.split(".");
+      const extension = nameArray[nameArray.length - 1].toLowerCase();
+
+      if (!ALLOWED_IMAGE_TYPES[file.type]) {
+        return "Image file type is not supported";
+      }
+
+      if (file.size > MAX_IMAGE_FILE_SIZE) {
+        return "Image file size should not exceed 2MB";
+      }
+
+      if (!ALLOWED_IMAGE_TYPES[file.type].includes(extension)) {
+        return "Invalid file extension";
+      }
+    }
   }
 
   if (data.video) {
-    const nameArray = data.video.name.split(".");
-    if (!ALLOWED_VIDEO_TYPES[data.video.type])
-      return "Video file type is not supported";
-    if (data.video.size > MAX_VIDEO_FILE_SIZE)
-      return "Video file size should not exceed 2MB";
-    if (
-      !ALLOWED_VIDEO_TYPES[data.video.type].includes(
-        nameArray[nameArray.length - 1].toLowerCase()
-      )
-    )
-      return "Invalid file extension";
-  }
+    if (data.existingVideo) {
+      return "Cannot upload new video while existing video is present";
+    }
 
-  return "";
+    const nameArray = data.video.name.split(".");
+    const extension = nameArray[nameArray.length - 1].toLowerCase();
+
+    if (!ALLOWED_VIDEO_TYPES[data.video.type]) {
+      return "Video file type is not supported";
+    }
+
+    if (data.video.size > MAX_VIDEO_FILE_SIZE) {
+      return "Video file size should not exceed 2MB";
+    }
+
+    if (!ALLOWED_VIDEO_TYPES[data.video.type].includes(extension)) {
+      return "Invalid file extension";
+    }
+  }
 };

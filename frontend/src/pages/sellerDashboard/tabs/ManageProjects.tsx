@@ -8,10 +8,16 @@ import {
 import ListedProjects from "../components/ListedProjects";
 import {
   useDeleteProjectListingMutation,
+  usePreSignedUrlForProjectMediaUploadMutation,
   useToggleProjectListingMutation,
+  useValidateMediaUploadAndStoreProjectMutation,
 } from "@/hooks/apiMutations";
 import ProjectModificationForm from "../components/ProjectModificationForm";
 import { formPropsType } from "../utils/types";
+import {
+  projectListingValidatedFormData,
+  ProjectMediaMetadata,
+} from "@/utils/types";
 
 interface ManageProjectsTabProps {
   logout?: () => Promise<void>;
@@ -49,6 +55,16 @@ export default function ManageProjectsTab({ logout }: ManageProjectsTabProps) {
     logout,
   });
 
+  const { mutateAsync: preSignedUrlMutate } =
+    usePreSignedUrlForProjectMediaUploadMutation({
+      logout,
+    });
+
+  const { mutateAsync: validationAndStoreMutate } =
+    useValidateMediaUploadAndStoreProjectMutation({
+      logout,
+    });
+
   const handleToggleProjectListing = async (title: string) => {
     const response = await toggleListingMutate(title);
     return response;
@@ -59,22 +75,49 @@ export default function ManageProjectsTab({ logout }: ManageProjectsTabProps) {
     return response;
   };
 
-  const handleStateChange = async (identifier: string, title: string) => {
+  const handleStateChange = async (identifier: string, title: string = "") => {
     setIsTransitioning(true);
-    if (identifier == "projects") setComponenetIdentifier(true);
-    else setComponenetIdentifier(false);
-
-    try {
-      const data = await getData(title || "");
-      setFormProps((prev) => {
-        return { ...prev, ...data?.data };
-      });
-      setIsTransitioning(false);
-    } catch {
-      setIsTransitioning(false);
-      if (identifier == "projects") setComponenetIdentifier(false);
-      else setComponenetIdentifier(true);
+    if (identifier == "projects") {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      setComponenetIdentifier(true);
+    } else setComponenetIdentifier(false);
+    if (identifier == "form") {
+      try {
+        const data = await getData(title || "");
+        setFormProps((prev) => {
+          return { ...prev, ...data?.data };
+        });
+      } catch {
+        setComponenetIdentifier(true);
+      }
     }
+    setIsTransitioning(false);
+  };
+
+  const handleGetPreSignedUrls = async (
+    metadata: Array<ProjectMediaMetadata>,
+    existingImageCount: number,
+    existingVideoCount: number,
+    modificationType: string
+  ) => {
+    const response = await preSignedUrlMutate({
+      metadata,
+      existingImageCount,
+      existingVideoCount,
+      modificationType,
+    });
+    return response;
+  };
+
+  const handleValidateUploadAndStoreProject = async (
+    projectData: projectListingValidatedFormData,
+    modificationType: string
+  ) => {
+    const response = await validationAndStoreMutate({
+      projectData,
+      modificationType,
+    });
+    return response;
   };
 
   return (
@@ -100,7 +143,15 @@ export default function ManageProjectsTab({ logout }: ManageProjectsTabProps) {
                 setFormProps={setFormProps}
               />
             ) : (
-              <ProjectModificationForm formProps={formProps} />
+              <ProjectModificationForm
+                formProps={formProps}
+                setFormProps={setFormProps}
+                handleStateChange={handleStateChange}
+                handleGetPreSignedUrls={handleGetPreSignedUrls}
+                handleValidateUploadAndStoreProject={
+                  handleValidateUploadAndStoreProject
+                }
+              />
             )}
           </TransitionWrapper>
         </div>

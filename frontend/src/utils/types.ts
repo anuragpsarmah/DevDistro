@@ -31,9 +31,17 @@ export interface projectListingValidatedFormData {
 }
 
 export interface UseProjectSubmissionProps {
-  handleGetPreSignedUrls: (metadata: Array<ProjectMediaMetadata>) => unknown;
+  handleGetPreSignedUrls: (
+    metadata: Array<ProjectMediaMetadata>,
+    existingImageCount: number,
+    existingVideoCount: number,
+    modificationType: string
+  ) => Promise<unknown>;
   handleValidateUploadAndStoreProject: (
-    data: projectListingValidatedFormData
+    data: projectListingValidatedFormData,
+    modificationType: string
   ) => unknown;
-  setActiveTab: (curr: string) => void;
+  modificationType: string;
+  setActiveTab?: (curr: string) => void;
+  handleReturnToAllListings?: () => void;
 }

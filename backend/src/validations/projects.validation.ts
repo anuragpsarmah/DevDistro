@@ -36,11 +36,13 @@ export const projectFormDataSchema = z.object({
     .string()
     .transform((val) => (val === "" ? undefined : val))
     .pipe(z.string().url("Invalid live link URL format").optional()),
-  project_images: z.array(z.string()).min(1, "At least one image URL required"),
+  project_images: z.array(z.string()),
   project_video: z
     .string()
     .transform((val) => (val === "" ? undefined : val))
     .pipe(z.string().optional()),
+  existingImages: z.array(z.string()).optional(),
+  existingVideo: z.string().optional(),
 });
 
 export const fileMetadataSchema = z.array(

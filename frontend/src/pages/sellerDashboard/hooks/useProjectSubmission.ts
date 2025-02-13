@@ -8,7 +8,9 @@ import { projectListingFormData } from "../utils/types";
 export const useProjectSubmission = ({
   handleGetPreSignedUrls,
   handleValidateUploadAndStoreProject,
+  modificationType,
   setActiveTab,
+  handleReturnToAllListings,
 }: UseProjectSubmissionProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -42,7 +44,12 @@ export const useProjectSubmission = ({
         : []),
     ];
 
-    const urlResponse = (await handleGetPreSignedUrls(metadata)) as {
+    const urlResponse = (await handleGetPreSignedUrls(
+      metadata,
+      formData?.existingImages?.length || 0,
+      formData?.existingVideo ? 1 : 0,
+      modificationType
+    )) as {
       data: { uploadSignedUrl: string; key: string }[];
     };
     if (!urlResponse) {
@@ -89,6 +96,8 @@ export const useProjectSubmission = ({
       price: formData.price,
       project_images: [] as string[],
       project_video: "",
+      existingImages: formData?.existingImages || [],
+      existingVideo: formData?.existingVideo || "",
     };
 
     if (!formData.video) {
@@ -102,12 +111,14 @@ export const useProjectSubmission = ({
     }
 
     const finalResponse = (await handleValidateUploadAndStoreProject(
-      validatedProjectData
+      validatedProjectData,
+      modificationType
     )) as { message: string };
 
     if (finalResponse) {
       successToast(finalResponse?.message);
-      setActiveTab("Manage Projects");
+      if (setActiveTab) setActiveTab("Manage Projects");
+      if (handleReturnToAllListings) handleReturnToAllListings();
     }
     setIsSubmitting(false);
     setUploadProgress(0);
