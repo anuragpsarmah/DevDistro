@@ -38,6 +38,7 @@ interface ParticlesProps {
   vx?: number;
   vy?: number;
 }
+
 function hexToRgb(hex: string): number[] {
   hex = hex.replace("#", "");
 
@@ -82,13 +83,21 @@ const BackgroundDots: React.FC<ParticlesProps> = ({
     }
     initCanvas();
     animate();
-    window.addEventListener("resize", initCanvas);
+
+    const handleResize = () => {
+      initCanvas();
+    };
+
+    window.addEventListener("resize", handleResize);
+
+    window.addEventListener("orientationchange", handleResize);
 
     return () => {
       if (rafID.current != null) {
         window.cancelAnimationFrame(rafID.current);
       }
-      window.removeEventListener("resize", initCanvas);
+      window.removeEventListener("resize", handleResize);
+      window.removeEventListener("orientationchange", handleResize);
     };
   }, [color]);
 
@@ -135,8 +144,10 @@ const BackgroundDots: React.FC<ParticlesProps> = ({
   const resizeCanvas = () => {
     if (canvasContainerRef.current && canvasRef.current && context.current) {
       circles.current.length = 0;
-      canvasSize.current.w = canvasContainerRef.current.offsetWidth;
-      canvasSize.current.h = canvasContainerRef.current.offsetHeight;
+
+      canvasSize.current.w = window.innerWidth;
+      canvasSize.current.h = window.innerHeight;
+
       canvasRef.current.width = canvasSize.current.w * dpr;
       canvasRef.current.height = canvasSize.current.h * dpr;
       canvasRef.current.style.width = `${canvasSize.current.w}px`;
@@ -201,8 +212,12 @@ const BackgroundDots: React.FC<ParticlesProps> = ({
 
   const drawParticles = () => {
     clearContext();
-    const particleCount = quantity;
-    for (let i = 0; i < particleCount; i++) {
+
+    const adjustedQuantity = Math.max(
+      quantity,
+      Math.floor((canvasSize.current.w * canvasSize.current.h) / 10000)
+    );
+    for (let i = 0; i < adjustedQuantity; i++) {
       const circle = circleParams();
       drawCircle(circle);
     }
@@ -223,12 +238,11 @@ const BackgroundDots: React.FC<ParticlesProps> = ({
   const animate = () => {
     clearContext();
     circles.current.forEach((circle: Circle, i: number) => {
-      // Handle the alpha value
       const edge = [
-        circle.x + circle.translateX - circle.size, // distance from left edge
-        canvasSize.current.w - circle.x - circle.translateX - circle.size, // distance from right edge
-        circle.y + circle.translateY - circle.size, // distance from top edge
-        canvasSize.current.h - circle.y - circle.translateY - circle.size, // distance from bottom edge
+        circle.x + circle.translateX - circle.size,
+        canvasSize.current.w - circle.x - circle.translateX - circle.size,
+        circle.y + circle.translateY - circle.size,
+        canvasSize.current.h - circle.y - circle.translateY - circle.size,
       ];
       const closestEdge = edge.reduce((a, b) => Math.min(a, b));
       const remapClosestEdge = parseFloat(
@@ -253,32 +267,29 @@ const BackgroundDots: React.FC<ParticlesProps> = ({
 
       drawCircle(circle, true);
 
-      // circle gets out of the canvas
       if (
         circle.x < -circle.size ||
         circle.x > canvasSize.current.w + circle.size ||
         circle.y < -circle.size ||
         circle.y > canvasSize.current.h + circle.size
       ) {
-        // remove the circle from the array
         circles.current.splice(i, 1);
-        // create a new circle
+
         const newCircle = circleParams();
         drawCircle(newCircle);
-        // update the circle position
       }
     });
     rafID.current = window.requestAnimationFrame(animate);
   };
 
   return (
-    <div className="absolute inset-0 z-0">
+    <div className="fixed inset-0 z-0 w-full h-full">
       <div
-        className={cn("pointer-events-none", className)}
+        className={cn("pointer-events-none w-full h-full", className)}
         ref={canvasContainerRef}
         aria-hidden="true"
       >
-        <canvas ref={canvasRef} className="size-full" />
+        <canvas ref={canvasRef} className="w-full h-full" />
       </div>
     </div>
   );

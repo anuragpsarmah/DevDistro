@@ -116,7 +116,9 @@ export const useProjectSubmission = ({
     )) as { message: string };
 
     if (finalResponse) {
-      successToast(finalResponse?.message);
+      successToast(
+        finalResponse?.message || "Project listed/modified successfully"
+      );
       if (setActiveTab) setActiveTab("Manage Projects");
       if (handleReturnToAllListings) handleReturnToAllListings();
     }

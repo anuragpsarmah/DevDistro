@@ -12,7 +12,7 @@ export default function Header({
   setIsMenuOpen,
 }: HeaderProps) {
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-gray-900 bg-opacity-90 backdrop-blur-md">
+    <header className="fixed top-0 left-0 right-0 z-50 bg-gray-900 bg-opacity-0 backdrop-blur-md">
       <nav className="container mx-auto px-6 py-4 flex justify-between items-center">
         <div className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 hover:cursor-pointer">
           DevExchange
