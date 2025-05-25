@@ -431,13 +431,13 @@ const getSpecificProjectData = asyncHandler(
       try {
         const projectData = await Project.findOne({
           userid,
-          title: req.query.title,
+          github_repo_id: req.query.github_repo_id,
         }).select(
           "-_id -__v -createdAt -updatedAt -userid -title -description -isActive -tech_stack"
         );
 
         if (!projectData) {
-          response(res, 404, "Invalid project title. No such records found.");
+          response(res, 404, "Invalid Repo ID. No such records found.");
           return;
         }
 
@@ -460,11 +460,11 @@ const toggleProjectListing = asyncHandler(
       try {
         const projectData = await Project.findOne({
           userid,
-          title: req.body.title,
+          github_repo_id: req.body.github_repo_id,
         });
 
         if (!projectData) {
-          response(res, 404, "Invalid project title. No such records found.");
+          response(res, 404, "Invalid Repo ID. No such records found.");
           return;
         }
 
@@ -492,12 +492,12 @@ const deleteProjectListing = asyncHandler(
       try {
         const projectData = await Project.findOne({
           userid,
-          title: req.query.title,
+          github_repo_id: req.query.github_repo_id,
         }).select("project_images project_video -_id");
 
         const deleteResponse = await Project.deleteOne({
           userid,
-          title: req.query.title,
+          github_repo_id: req.query.github_repo_id,
         });
 
         if (deleteResponse.deletedCount == 0) {

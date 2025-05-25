@@ -198,10 +198,10 @@ const useInitialProjectDataQuery = ({ logout }: queryParameter) => {
 
 const useSpecificProjectDataQuery = ({ logout }: queryParameter) => {
   const { handleError } = useHandleError({ logout });
-  const getData = async (title: string) => {
+  const getData = async (github_repo_id: string) => {
     try {
       const response = await axios.get(
-        `${backend_uri}/projects/getSpecificProjectData?title=${title}`,
+        `${backend_uri}/projects/getSpecificProjectData?github_repo_id=${github_repo_id}`,
         {
           withCredentials: true,
         }

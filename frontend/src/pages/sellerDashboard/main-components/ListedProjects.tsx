@@ -21,7 +21,7 @@ const ListedProjects = ({
   isError,
   handleToggleProjectListing,
   handleDeleteProjectListing,
-  handleStateChange,
+  handleUIStateChange,
   setFormProps,
 }: ListedProjectsProps) => {
   const [projectStatuses, setProjectStatuses] = useState<Array<boolean>>([]);
@@ -38,7 +38,7 @@ const ListedProjects = ({
     const updatedStatuses = [...projectStatuses];
     updatedStatuses[index] = !updatedStatuses[index];
     const response = await handleToggleProjectListing(
-      initialProjectData[index].title
+      initialProjectData[index].github_repo_id
     );
     if (response) setProjectStatuses(updatedStatuses);
   };
@@ -51,7 +51,7 @@ const ListedProjects = ({
   const handleDeleteConfirm = async () => {
     if (projectToDelete !== null) {
       const response = await handleDeleteProjectListing(
-        initialProjectData[projectToDelete].title
+        initialProjectData[projectToDelete].github_repo_id
       );
       if (response) initialProjectData.splice(projectToDelete, 1);
     }
@@ -66,11 +66,11 @@ const ListedProjects = ({
 
   const handleEditProject = (idx: number) => {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { project_images: _, ...other_props } = initialProjectData[idx];
+    const { project_images, ...other_props } = initialProjectData[idx];
     setFormProps((prev) => {
       return { ...prev, ...other_props };
     });
-    handleStateChange("form", other_props.title);
+    handleUIStateChange("form", other_props.github_repo_id);
   };
 
   if (isLoading) {

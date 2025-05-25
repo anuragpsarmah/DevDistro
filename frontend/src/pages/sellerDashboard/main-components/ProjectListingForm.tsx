@@ -10,7 +10,7 @@ import ProjectPriceSelection from "../sub-components/ProjectPriceSelection";
 
 export default function ProjectListingForm({
   formProps,
-  setFormProps,
+  setFormPropsAndSwitchUI,
   handleGetPreSignedUrls,
   handleValidateUploadAndStoreProject,
   setActiveTab,
@@ -35,7 +35,7 @@ export default function ProjectListingForm({
   });
 
   const handleDifferentProjectImport = () => {
-    setFormProps({
+    setFormPropsAndSwitchUI({
       name: "",
       description: "",
       language: "",

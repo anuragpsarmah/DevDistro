@@ -101,11 +101,11 @@ const useToggleProjectListingMutation = ({ logout }: mutationParameter) => {
   const { handleError } = useHandleError({ logout });
 
   return useMutation({
-    mutationFn: async (title: string) => {
+    mutationFn: async (github_repo_id: string) => {
       try {
         const response = await axios.patch(
           `${backend_uri}/projects/toggleProjectListing`,
-          { title },
+          { github_repo_id },
           { withCredentials: true }
         );
         successToast(
@@ -125,10 +125,10 @@ const useDeleteProjectListingMutation = ({ logout }: mutationParameter) => {
   const { handleError } = useHandleError({ logout });
 
   return useMutation({
-    mutationFn: async (title: string) => {
+    mutationFn: async (github_repo_id: string) => {
       try {
         await axios.delete(
-          `${backend_uri}/projects/deleteProjectListing?title=${title}`,
+          `${backend_uri}/projects/deleteProjectListing?github_repo_id=${github_repo_id}`,
           { withCredentials: true }
         );
         successToast("Project was unlisted permanantly");

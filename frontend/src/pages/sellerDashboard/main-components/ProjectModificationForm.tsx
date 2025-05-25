@@ -12,7 +12,7 @@ import ProjectPriceSelection from "../sub-components/ProjectPriceSelection";
 export default function ProjectModificationForm({
   formProps,
   setFormProps,
-  handleStateChange,
+  handleUIStateChange,
   handleGetPreSignedUrls,
   handleValidateUploadAndStoreProject,
   setActiveTab,
@@ -40,6 +40,7 @@ export default function ProjectModificationForm({
     queryClient.invalidateQueries({ queryKey: ["initialProjectDataQuery"] });
 
     setFormProps({
+      github_repo_id: "",
       isActive: false,
       title: "",
       description: "",
@@ -51,7 +52,7 @@ export default function ProjectModificationForm({
       project_video: "",
     });
 
-    handleStateChange("projects");
+    handleUIStateChange("projects");
   };
 
   const { handleSubmit, isSubmitting, uploadProgress } = useProjectSubmission({
@@ -60,6 +61,7 @@ export default function ProjectModificationForm({
     modificationType: "existing",
     setActiveTab,
     handleReturnToAllListings,
+    github_repo_id: formProps.github_repo_id || "",
   });
 
   const onSubmit = () => {

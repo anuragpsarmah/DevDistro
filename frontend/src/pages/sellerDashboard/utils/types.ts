@@ -119,7 +119,7 @@ export interface RepoImportProps {
 
 export interface ProjectListingFormProps {
   formProps: PrivateRepoData;
-  setFormProps: (curr: PrivateRepoData) => void;
+  setFormPropsAndSwitchUI: (curr: PrivateRepoData) => void;
   handleGetPreSignedUrls: (
     metadata: Array<ProjectMediaMetadata>,
     existingImageCount: number,
@@ -136,7 +136,7 @@ export interface ProjectListingFormProps {
 export interface ProjectModificationFormProps {
   formProps: formPropsType;
   setFormProps: (curr: formPropsType) => void;
-  handleStateChange: (identifier: string, title?: string) => void;
+  handleUIStateChange: (identifier: string, title?: string) => void;
   handleGetPreSignedUrls: (
     metadata: Array<ProjectMediaMetadata>,
     existingImageCount: number,
@@ -214,6 +214,7 @@ export interface ProjectMediaMetadata {
 }
 
 export interface projectListingValidatedFormData {
+  github_repo_id: string;
   title: string;
   description: string;
   project_type: string;
@@ -240,6 +241,7 @@ export interface ProjectMediaUploaderProps {
 }
 
 export interface InitialProjectData {
+  github_repo_id: string;
   isActive: boolean;
   title: string;
   description: string;
@@ -251,13 +253,14 @@ export interface ListedProjectsProps {
   initialProjectData: Array<InitialProjectData>;
   handleToggleProjectListing: (title: string) => Promise<unknown>;
   handleDeleteProjectListing: (title: string) => Promise<unknown>;
-  handleStateChange: (identifier: string, title: string) => void;
+  handleUIStateChange: (identifier: string, title: string) => void;
   isLoading: boolean;
   isError: boolean;
   setFormProps: React.Dispatch<React.SetStateAction<formPropsType>>;
 }
 
 export interface formPropsType {
+  github_repo_id: string;
   isActive: boolean;
   title: string;
   description: string;

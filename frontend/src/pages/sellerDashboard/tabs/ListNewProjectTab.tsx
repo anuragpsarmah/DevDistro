@@ -62,7 +62,7 @@ export default function ListNewProjectTab({
       logout,
     });
 
-  const handleStateChange = (
+  const handleUIStateChange = (
     isImportState: boolean,
     newFormProps?: PrivateRepoData
   ) => {
@@ -132,14 +132,16 @@ export default function ListNewProjectTab({
                 totalListedProjectsDataLoading={totalListedProjectsDataLoading}
                 totalListedProjectsData={totalListedProjectsData}
                 setFormPropsAndSwitchUI={(props) =>
-                  handleStateChange(false, props)
+                  handleUIStateChange(false, props)
                 }
                 handleRefresh={handleRefresh}
               />
             ) : (
               <ProjectListingForm
                 formProps={formProps}
-                setFormProps={(props) => handleStateChange(true, props)}
+                setFormPropsAndSwitchUI={(props) =>
+                  handleUIStateChange(true, props)
+                }
                 handleGetPreSignedUrls={handleGetPreSignedUrls}
                 handleValidateUploadAndStoreProject={
                   handleValidateUploadAndStoreProject

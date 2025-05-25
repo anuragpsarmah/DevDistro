@@ -28,6 +28,7 @@ export default function ManageProjectsTab({ logout }: ManageProjectsTabProps) {
     useState<boolean>(true);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [formProps, setFormProps] = useState<formPropsType>({
+    github_repo_id: "",
     isActive: false,
     title: "",
     description: "",
@@ -75,7 +76,10 @@ export default function ManageProjectsTab({ logout }: ManageProjectsTabProps) {
     return response;
   };
 
-  const handleStateChange = async (identifier: string, title: string = "") => {
+  const handleUIStateChange = async (
+    identifier: string,
+    repo_id: string = ""
+  ) => {
     setIsTransitioning(true);
     if (identifier == "projects") {
       await new Promise((resolve) => setTimeout(resolve, 100));
@@ -83,7 +87,7 @@ export default function ManageProjectsTab({ logout }: ManageProjectsTabProps) {
     } else setComponenetIdentifier(false);
     if (identifier == "form") {
       try {
-        const data = await getData(title || "");
+        const data = await getData(repo_id || "");
         setFormProps((prev) => {
           return { ...prev, ...data?.data };
         });
@@ -138,14 +142,14 @@ export default function ManageProjectsTab({ logout }: ManageProjectsTabProps) {
               isError={initialDataError}
               handleToggleProjectListing={handleToggleProjectListing}
               handleDeleteProjectListing={handleDeleteProjectListing}
-              handleStateChange={handleStateChange}
+              handleUIStateChange={handleUIStateChange}
               setFormProps={setFormProps}
             />
           ) : (
             <ProjectModificationForm
               formProps={formProps}
               setFormProps={setFormProps}
-              handleStateChange={handleStateChange}
+              handleUIStateChange={handleUIStateChange}
               handleGetPreSignedUrls={handleGetPreSignedUrls}
               handleValidateUploadAndStoreProject={
                 handleValidateUploadAndStoreProject
