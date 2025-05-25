@@ -38,6 +38,7 @@ export interface PrivateRepoData {
   description: string;
   language: string;
   updated_at: string;
+  github_repo_id: string;
 }
 
 export type ProjectType = (typeof PROJECT_TYPES)[number];
@@ -108,7 +109,7 @@ export interface RepoImportProps {
   userData: User;
   privateRepoData: Array<PrivateRepoData>;
   repoDataLoading: boolean;
-  setFormProps: (curr: PrivateRepoData) => void;
+  setFormPropsAndSwitchUI: (curr: PrivateRepoData) => void;
   handleRefresh?: () => Promise<unknown>;
   totalListedProjectsDataLoading: boolean;
   totalListedProjectsData:
@@ -282,6 +283,7 @@ export interface UseProjectSubmissionProps {
   modificationType: string;
   setActiveTab?: (curr: string) => void;
   handleReturnToAllListings?: () => void;
+  github_repo_id: string;
 }
 
 export interface ConnectToWalletProps {

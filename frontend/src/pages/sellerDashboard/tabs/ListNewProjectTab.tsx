@@ -36,6 +36,7 @@ export default function ListNewProjectTab({
     description: "",
     language: "",
     updated_at: "",
+    github_repo_id: "",
   });
   const [repoRefreshStatus, setRepoRefreshStatus] = useState<string>("false");
 
@@ -62,12 +63,12 @@ export default function ListNewProjectTab({
     });
 
   const handleStateChange = (
-    newState: boolean,
+    isImportState: boolean,
     newFormProps?: PrivateRepoData
   ) => {
     setIsTransitioning(true);
     setTimeout(() => {
-      setIsImportState(newState);
+      setIsImportState(isImportState);
       if (newFormProps) {
         setFormProps(newFormProps);
       }
@@ -130,7 +131,9 @@ export default function ListNewProjectTab({
                 repoDataLoading={repoDataLoading}
                 totalListedProjectsDataLoading={totalListedProjectsDataLoading}
                 totalListedProjectsData={totalListedProjectsData}
-                setFormProps={(props) => handleStateChange(false, props)}
+                setFormPropsAndSwitchUI={(props) =>
+                  handleStateChange(false, props)
+                }
                 handleRefresh={handleRefresh}
               />
             ) : (

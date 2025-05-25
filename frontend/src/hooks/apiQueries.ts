@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import { useHandleError } from "./useHandleErrors";
-import { errorToast } from "@/components/ui/customToast";
+import { errorToast, successToast } from "@/components/ui/customToast";
 
 const backend_uri = import.meta.env.VITE_BACKEND_URI;
 
@@ -160,6 +160,10 @@ const usePrivateReposQuery = (
             withCredentials: true,
           }
         );
+        if (response.data.data[response.data.data.length - 1].isRateLimited)
+          successToast(
+            response.data.message || "Too many requests. Cached data fetched."
+          );
         return response.data;
       } catch (error) {
         handleError(error);

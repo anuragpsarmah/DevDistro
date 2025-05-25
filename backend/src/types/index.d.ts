@@ -5,6 +5,8 @@ declare global {
   namespace Express {
     export interface Request {
       user?: UserType;
+      rateLimited?: boolean;
+      rateLimitMessage?: string;
     }
   }
 }

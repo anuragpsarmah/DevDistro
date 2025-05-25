@@ -12,25 +12,26 @@ export default function PrivateRepoImport({
   repoDataLoading,
   totalListedProjectsDataLoading,
   totalListedProjectsData,
-  setFormProps,
+  setFormPropsAndSwitchUI,
   handleRefresh,
 }: RepoImportProps) {
   const [searchQuery, setSearchQuery] = useState("");
 
   const handleImportClick = (index: number) => {
-    setFormProps(privateRepoData[index]);
+    setFormPropsAndSwitchUI(privateRepoData[index]);
   };
 
-  const filteredRepos = privateRepoData.filter((repo) =>
-    repo.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredRepos = privateRepoData.filter((repo) => {
+    if (!repo.name) return false;
+    return repo.name.toLowerCase().includes(searchQuery.toLowerCase());
+  });
 
   return (
     <div>
       <div className="bg-gray-800 rounded-xl p-6 shadow-lg">
-        <h2 className="flex flex-row justify-between text-2xl font-semibold text-gray-100 mb-6 text-center lg:text-left md:text-left">
-          <span>Import Git Repository</span>
-          <span>
+        <h2 className="flex flex-row justify-between items-center text-2xl font-semibold text-gray-100 mb-6 text-center lg:text-left md:text-left">
+          <span className="text-left md:text-left">Import Git Repository</span>
+          <span className="w-full text-right flex flex-col justify-center md:w-auto md:text-left md:block">
             {!totalListedProjectsDataLoading &&
               totalListedProjectsData &&
               totalListedProjectsData.data.totalListedProjects !== -1 &&
@@ -83,7 +84,7 @@ export default function PrivateRepoImport({
                   </div>
                 )}
               <div className="space-y-2 p-4">
-                {repoDataLoading && totalListedProjectsDataLoading ? (
+                {repoDataLoading || totalListedProjectsDataLoading ? (
                   Array.from({ length: 5 }).map((_, index) => (
                     <RepoImportSkeleton key={index} />
                   ))

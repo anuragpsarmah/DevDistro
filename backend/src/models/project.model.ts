@@ -45,6 +45,10 @@ const projectSchema = new Schema(
     project_video: {
       type: String,
     },
+    github_repo_id: {
+      type: String,
+      required: [true, "GitHub repository ID is required"],
+    },
   },
   { timestamps: true }
 );

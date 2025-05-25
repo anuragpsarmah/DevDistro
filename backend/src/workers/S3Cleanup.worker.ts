@@ -35,7 +35,7 @@ export default class S3CleanupService {
   static async startWorker() {
     while (true) {
       await this.processExpiredJobs();
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      await new Promise((resolve) => setTimeout(resolve, 12 * 60 * 60 * 1000));
     }
   }
 }

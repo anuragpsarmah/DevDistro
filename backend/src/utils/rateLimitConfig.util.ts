@@ -1,5 +1,6 @@
 import { rateLimit } from "express-rate-limit";
-import { Request } from "express";
+import { NextFunction, Request } from "express";
+import { RequestHandler } from "express";
 
 export const healthMemoryCheckLimiter = rateLimit({
   windowMs: 1000,
@@ -11,14 +12,38 @@ export const toggleProjectListingLimiter = rateLimit({
   limit: 10,
 });
 
-export const getPrivateReposRefreshLimiter = rateLimit({
-  windowMs: 60 * 1000,
-  limit: 2,
-  keyGenerator: (req: Request) => req.user?._id ?? req.ip ?? "unknown",
-  skip: (req: Request) => {
-    return req.query.refreshStatus !== "true";
-  },
-  message: {
-    error: "Too many refresh requests, please try again later.",
-  },
-});
+export const getPrivateReposRefreshLimiter: RequestHandler = (() => {
+  const requestCounts = new Map<string, { count: number; resetTime: number }>();
+  const WINDOW_MS = 60 * 1000;
+  const LIMIT = 1;
+
+  return (req, res, next) => {
+    if (req.query.refreshStatus !== "true") {
+      return next();
+    }
+
+    const key = req.user?._id ?? req.ip ?? "unknown";
+    const now = Date.now();
+
+    for (const [k, v] of requestCounts.entries()) {
+      if (now > v.resetTime) {
+        requestCounts.delete(k);
+      }
+    }
+
+    let entry = requestCounts.get(key);
+    if (!entry || now > entry.resetTime) {
+      entry = { count: 0, resetTime: now + WINDOW_MS };
+      requestCounts.set(key, entry);
+    }
+
+    if (entry.count >= LIMIT) {
+      req.rateLimited = true;
+      req.rateLimitMessage = "Too many refresh requests. Cached data fetched.";
+    } else {
+      entry.count++;
+    }
+
+    next();
+  };
+})();

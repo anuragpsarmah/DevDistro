@@ -31,6 +31,7 @@ export default function ProjectListingForm({
     handleValidateUploadAndStoreProject,
     modificationType: "new",
     setActiveTab,
+    github_repo_id: formProps.github_repo_id,
   });
 
   const handleDifferentProjectImport = () => {
@@ -39,6 +40,7 @@ export default function ProjectListingForm({
       description: "",
       language: "",
       updated_at: "",
+      github_repo_id: "",
     });
   };
 

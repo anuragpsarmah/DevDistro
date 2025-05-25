@@ -11,6 +11,7 @@ export const useProjectSubmission = ({
   modificationType,
   setActiveTab,
   handleReturnToAllListings,
+  github_repo_id,
 }: UseProjectSubmissionProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -88,6 +89,7 @@ export const useProjectSubmission = ({
     }
 
     const validatedProjectData = {
+      github_repo_id: github_repo_id || "",
       title: formData.title,
       description: formData.description,
       project_type: formData.projectType,

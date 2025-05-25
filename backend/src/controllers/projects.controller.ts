@@ -19,7 +19,15 @@ import { MAX_ALLOWED_IMAGES } from "../types/constants";
 
 const getPrivateRepos = asyncHandler(async (req: Request, res: Response) => {
   const { ENCRYPTION_KEY_32, ENCRYPTION_IV } = process.env;
-
+  if (req.rateLimited) {
+    response(
+      res,
+      429,
+      "Too many refresh requests and no cached data available",
+      null
+    );
+    return;
+  }
   if (req.user) {
     const redisKey = privateRepoPrefix(req.user._id);
     const userId = new mongoose.Types.ObjectId(req.user._id);
@@ -66,6 +74,7 @@ const getPrivateRepos = asyncHandler(async (req: Request, res: Response) => {
             }
 
             return {
+              github_repo_id: repo?.id || null,
               name: repo?.name || "",
               description: repo?.description || "",
               language: repo?.language || "",
@@ -97,6 +106,8 @@ const getPrivateRepos = asyncHandler(async (req: Request, res: Response) => {
         } catch (error) {
           logger.error("Redis caching error:", error);
         }
+
+        console.log(private_repositories);
 
         response(res, 200, "Repos fetched successfully", private_repositories);
       }
@@ -144,7 +155,7 @@ const getPreSignedUrlForProjectMediaUpload = asyncHandler(
         response(
           res,
           400,
-          "Payload failed validation",
+          "Payload validation failed",
           {},
           result.error.errors[0].message
         );
@@ -249,7 +260,10 @@ const validateMediaUploadAndStoreProject = asyncHandler(
 
       let project;
       try {
-        project = await Project.findOne({ title: projectData.title, userid });
+        project = await Project.findOne({
+          github_repo_id: projectData.github_repo_id,
+          userid,
+        });
 
         if (project && modificationType === "new") {
           response(res, 400, "Project already exists");

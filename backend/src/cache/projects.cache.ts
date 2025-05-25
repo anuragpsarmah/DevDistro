@@ -11,24 +11,56 @@ const getPrivateReposFromCache = asyncHandler(
     if (req.user) {
       const redisKey = privateRepoPrefix(req.user._id);
 
-      if (req.query.refreshStatus === "false") {
-        try {
-          const cached_private_repositories = await redisClient.get(redisKey);
-          if (cached_private_repositories) {
+      try {
+        const cached_private_repositories = await redisClient.get(redisKey);
+
+        if (cached_private_repositories) {
+          const cachedData = JSON.parse(cached_private_repositories);
+
+          if (req.rateLimited) {
+            response(
+              res,
+              200,
+              req.rateLimitMessage || "Too many requests. Cached data fetched.",
+              [...cachedData, { isRateLimited: true }]
+            );
+            return;
+          }
+
+          if (req.query.refreshStatus === "false") {
             response(
               res,
               200,
               "Repos fetched from cache successfully",
-              JSON.parse(cached_private_repositories)
+              cachedData
             );
             return;
           }
-        } catch (error) {
-          logger.error("Redis error:", error);
-        }
-      }
 
-      next();
+          next();
+        } else {
+          if (req.rateLimited) {
+            response(
+              res,
+              429,
+              "Too many refresh requests and no cached data available",
+              null
+            );
+            return;
+          }
+
+          next();
+        }
+      } catch (error) {
+        logger.error("Redis error:", error);
+
+        if (req.rateLimited) {
+          response(res, 429, "Too many requests and cache unavailable", null);
+          return;
+        }
+
+        next();
+      }
     } else {
       throw new ApiError("Error during validation", 401);
     }
