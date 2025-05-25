@@ -2,7 +2,6 @@ import { useFeaturedReviewQuery } from "@/hooks/apiQueries";
 import { motion } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
 import { featuredReviewType } from "../utils/types";
-import { useEffect } from "react";
 
 export default function ReviewSection() {
   const {
@@ -10,12 +9,6 @@ export default function ReviewSection() {
     isLoading,
     isError,
   } = useFeaturedReviewQuery();
-
-  useEffect(() => {
-    if (!isLoading && !isError) {
-      console.log(featuredReviews.data);
-    }
-  }, [isLoading, isError, featuredReviews]);
 
   return (
     <section id="reviews" className="py-24 relative overflow-hidden">

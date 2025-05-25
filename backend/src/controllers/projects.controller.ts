@@ -107,8 +107,6 @@ const getPrivateRepos = asyncHandler(async (req: Request, res: Response) => {
           logger.error("Redis caching error:", error);
         }
 
-        console.log(private_repositories);
-
         response(res, 200, "Repos fetched successfully", private_repositories);
       }
     } catch (error) {

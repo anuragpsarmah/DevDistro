@@ -1,5 +1,4 @@
 import { rateLimit } from "express-rate-limit";
-import { NextFunction, Request } from "express";
 import { RequestHandler } from "express";
 
 export const healthMemoryCheckLimiter = rateLimit({
