@@ -11,7 +11,7 @@ export default function Sidebar({
   isSidebarOpen,
   setIsSidebarOpen,
   logout,
-  onSwitchToBuyer,
+  onSwitchToSeller,
 }: SidebarProps) {
   return (
     <>
@@ -20,7 +20,7 @@ export default function Sidebar({
           activeTab={activeTab}
           setActiveTab={setActiveTab}
           logout={logout}
-          onSwitchToBuyer={onSwitchToBuyer}
+          onSwitchToSeller={onSwitchToSeller}
         />
       </aside>
       <div className="lg:hidden">
@@ -63,7 +63,7 @@ export default function Sidebar({
                   logout={logout}
                   isSidebarOpen={isSidebarOpen}
                   setIsSidebarOpen={setIsSidebarOpen}
-                  onSwitchToBuyer={onSwitchToBuyer}
+                  onSwitchToSeller={onSwitchToSeller}
                 />
               </motion.aside>
             </>
@@ -80,7 +80,7 @@ function SidebarContent({
   logout,
   isSidebarOpen,
   setIsSidebarOpen,
-  onSwitchToBuyer,
+  onSwitchToSeller,
 }: SidebarContentProps) {
   return (
     <div className="flex flex-col h-full">
@@ -108,10 +108,10 @@ function SidebarContent({
       <div className="p-4 space-y-3 border-t border-gray-700">
         <button
           className="w-full py-2 px-4 text-gray-300 hover:text-white font-medium rounded-md transition-all duration-300 ease-in-out bg-gray-700 flex items-center justify-center gap-2 hover:bg-gray-600"
-          onClick={onSwitchToBuyer}
+          onClick={onSwitchToSeller}
         >
           <Repeat className="h-5 w-5" />
-          Switch to Buyer Space
+          Switch to Seller Space
         </button>
         <button
           className="w-full py-2 px-4 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-medium rounded-md transition-all duration-300 transform hover:shadow-lg"

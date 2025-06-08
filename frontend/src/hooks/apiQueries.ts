@@ -38,6 +38,21 @@ const useLogoutQuery = () => {
   });
 };
 
+const useUserCurrencyQuery = () => {
+  return useQuery({
+    queryKey: ["userCurrency"],
+    queryFn: async () => {
+      const response = await axios.get("https://ipapi.co/json/");
+      return {
+        country: response.data.country_name,
+        currency: response.data.currency,
+      };
+    },
+    staleTime: 1000 * 60 * 60 * 24,
+    refetchOnWindowFocus: false,
+  });
+};
+
 const useCommonSalesInformationQuery = ({ logout }: queryParameter) => {
   const { handleError } = useHandleError({ logout });
 
@@ -242,6 +257,7 @@ const useGetWalletAddress = ({ logout }: queryParameter) => {
 export {
   useAuthValidationQuery,
   useLogoutQuery,
+  useUserCurrencyQuery,
   useCommonSalesInformationQuery,
   useYearlySalesInformationQuery,
   useProfileInformationQuery,

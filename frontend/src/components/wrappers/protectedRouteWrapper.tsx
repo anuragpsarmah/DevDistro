@@ -1,8 +1,12 @@
 import { ReactNode, useEffect, cloneElement, isValidElement } from "react";
-import { user } from "@/utils/atom";
+import { user, userCurrency } from "@/utils/atom";
 import { useRecoilState } from "recoil";
 import { useNavigate } from "react-router-dom";
-import { useAuthValidationQuery, useLogoutQuery } from "@/hooks/apiQueries";
+import {
+  useAuthValidationQuery,
+  useLogoutQuery,
+  useUserCurrencyQuery,
+} from "@/hooks/apiQueries";
 import BackgroundDots from "../ui/backgroundDots";
 
 interface AuthValidatorProps {
@@ -52,8 +56,18 @@ export default function ProtectedRouteWrapper({
   children,
 }: AuthValidatorProps) {
   const [, setActiveUser] = useRecoilState(user);
+  const [, setUserCurrency] = useRecoilState(userCurrency);
   const navigate = useNavigate();
-  const { data, isLoading, isError } = useAuthValidationQuery();
+  const {
+    data: userData,
+    isLoading: isUserDataLoading,
+    isError: isUserDataError,
+  } = useAuthValidationQuery();
+  const {
+    data: regionData,
+    isLoading: isRegionDataLoading,
+    isError: isRegionDataError,
+  } = useUserCurrencyQuery();
   const { refetch: logout } = useLogoutQuery();
 
   const handleLogout = async () => {
@@ -64,25 +78,41 @@ export default function ProtectedRouteWrapper({
 
   useEffect(() => {
     const handleAuthValidation = async () => {
-      if (isError) {
+      if (isUserDataError) {
         await logout();
         setActiveUser(emptyUserObject);
         navigate("/");
-      } else if (!isLoading && data) {
-        setActiveUser(data.data);
-        if (data.data.profileImageUrl) {
+      } else if (!isUserDataLoading && userData) {
+        setActiveUser(userData.data);
+        if (userData.data.profileImageUrl) {
           try {
-            await preFetchImage(data.data.profileImageUrl);
+            await preFetchImage(userData.data.profileImageUrl);
           } catch (error) {
             console.warn("Failed to prefetch profile image:", error);
           }
         }
       }
     };
-    handleAuthValidation();
-  }, [isError, isLoading, data, logout, navigate, setActiveUser]);
 
-  if (isLoading) {
+    if (!isRegionDataError && !isRegionDataLoading && regionData?.currency) {
+      setUserCurrency(regionData.currency);
+    }
+
+    handleAuthValidation();
+  }, [
+    isUserDataError,
+    isUserDataLoading,
+    userData,
+    isRegionDataError,
+    isRegionDataLoading,
+    regionData,
+    logout,
+    navigate,
+    setActiveUser,
+    setUserCurrency,
+  ]);
+
+  if (isUserDataLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-gray-900 to-gray-800 text-white relative overflow-hidden">
         <BackgroundDots />

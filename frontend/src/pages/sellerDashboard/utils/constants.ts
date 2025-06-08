@@ -1,10 +1,4 @@
-import {
-  BarChart2,
-  User,
-  PlusSquare,
-  ShoppingCart,
-  Layers,
-} from "lucide-react";
+import { BarChart2, User, PlusSquare, History, Layers } from "lucide-react";
 import { SolanaLogo } from "@/components/ui/solanaLogo";
 import {
   ChartDataObject,
@@ -17,7 +11,7 @@ export const sidebarItems = [
   { icon: User, label: "Account Settings" },
   { icon: PlusSquare, label: "List New Project" },
   { icon: Layers, label: "Manage Projects" },
-  { icon: ShoppingCart, label: "Order History" },
+  { icon: History, label: "Order History" },
   { icon: SolanaLogo, label: "Wallet Connection" },
 ] as const;
 

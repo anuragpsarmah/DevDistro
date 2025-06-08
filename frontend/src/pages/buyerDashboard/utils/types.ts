@@ -1,22 +1,22 @@
 export interface SidebarContentProps {
   activeTab: string;
-  setActiveTab: (tabName: SellerDashboardTabTypes) => void;
+  setActiveTab: (tabName: BuyerDashboardTabTypes) => void;
   logout?: () => Promise<void>;
   isSidebarOpen?: boolean;
   setIsSidebarOpen?: (openStatus: boolean) => void;
-  onSwitchToBuyer?: () => void;
+  onSwitchToSeller?: () => void;
 }
 
 export interface SidebarProps {
   isSidebarOpen: boolean;
   setIsSidebarOpen: (val: boolean) => void;
   activeTab: string;
-  setActiveTab: (tabName: SellerDashboardTabTypes) => void;
+  setActiveTab: (tabName: BuyerDashboardTabTypes) => void;
   logout?: () => Promise<void>;
-  onSwitchToBuyer?: () => void;
+  onSwitchToSeller?: () => void;
 }
 
-export type SellerDashboardTabTypes =
+export type BuyerDashboardTabTypes =
   | "Marketplace"
   | "Cart"
   | "Account Settings"

@@ -5,7 +5,7 @@ import Sidebar from "./main-components/Sidebar";
 import AccountSettingsTab from "./tabs/AccountSettingsTab";
 import DashboardOverviewTab from "./tabs/DashboardOverviewTab";
 import ListNewProjectTab from "./tabs/ListNewProjectTab";
-import ManageProjectsTab from "./tabs/ManageProjects";
+import ManageProjectsTab from "./tabs/ManageProjectsTab";
 import BillingAndPaymentsTab from "./tabs/BillingAndPayments";
 import { SellerDashboardTabTypes } from "./utils/types";
 

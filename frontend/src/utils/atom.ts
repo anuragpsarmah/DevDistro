@@ -11,4 +11,9 @@ const user: RecoilState<User> = atom({
   },
 });
 
-export { user };
+const userCurrency = atom<string | null>({
+  key: "userCurrency",
+  default: null,
+});
+
+export { user, userCurrency };

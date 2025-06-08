@@ -25,7 +25,7 @@ export default function ProjectListingForm({
   const [liveLink, setLiveLink] = useState("");
   const [images, setImages] = useState<File[]>([]);
   const [video, setVideo] = useState<File | null>(null);
-  const [price, setPrice] = useState(299);
+  const [price, setPrice] = useState<number>(0.1);
 
   const { handleSubmit, isSubmitting, uploadProgress } = useProjectSubmission({
     handleGetPreSignedUrls,
