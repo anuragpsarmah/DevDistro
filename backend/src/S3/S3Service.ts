@@ -9,6 +9,7 @@ import crypto from "crypto";
 import { FileMetaData, UploadMetadata } from "../types/types";
 import { redisClient } from "..";
 import logger from "../logger/logger";
+import { tryCatch } from "../utils/tryCatch.util";
 
 export default class S3Service {
   private ALLOWED_TYPES: { [key: string]: string[] };
@@ -158,7 +159,7 @@ export default class S3Service {
   }
 
   async deleteObject(key: string) {
-    try {
+    const [, error] = await tryCatch(async () => {
       const deleteCommand = new DeleteObjectCommand({
         Bucket: process.env.S3_BUCKET as string,
         Key: key,
@@ -168,7 +169,9 @@ export default class S3Service {
 
       const redisUploadKey = this.getRedisUploadKey(key);
       await redisClient.del(redisUploadKey);
-    } catch (error) {
+    });
+
+    if (error) {
       throw new Error("Failed to delete invalid object");
     }
   }

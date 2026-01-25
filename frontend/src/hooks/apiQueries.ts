@@ -151,18 +151,17 @@ const useTotalListedProjectsQuery = ({ logout }: queryParameter) => {
   return useQuery({
     queryKey: ["totalListedProjectsQuery"],
     queryFn: async () => {
-      try {
-        const response = await axios.get(
-          `${backend_uri}/projects/getTotalListedProjects`,
-          {
-            withCredentials: true,
-          }
-        );
-        return response.data;
-      } catch (error) {
+      const [response, error] = await tryCatch(
+        axios.get(`${backend_uri}/projects/getTotalListedProjects`, {
+          withCredentials: true,
+        })
+      );
+
+      if (error) {
         handleError(error);
         throw error;
       }
+      return response.data;
     },
     refetchOnWindowFocus: false,
   });
@@ -176,23 +175,25 @@ const usePrivateReposQuery = (
   return useQuery({
     queryKey: ["privateRepoQuery", refreshStatus],
     queryFn: async ({ queryKey }) => {
-      try {
-        const [, refreshStatus] = queryKey;
-        const response = await axios.get(
+      const [, refreshStatus] = queryKey;
+      const [response, error] = await tryCatch(
+        axios.get(
           `${backend_uri}/projects/getPrivateRepos?refreshStatus=${refreshStatus}`,
           {
             withCredentials: true,
           }
-        );
-        if (response.data.data[response.data.data.length - 1].isRateLimited)
-          successToast(
-            response.data.message || "Too many requests. Cached data fetched."
-          );
-        return response.data;
-      } catch (error) {
+        )
+      );
+
+      if (error) {
         handleError(error);
         throw error;
       }
+      if (response.data.data[response.data.data.length - 1].isRateLimited)
+        successToast(
+          response.data.message || "Too many requests. Cached data fetched."
+        );
+      return response.data;
     },
     refetchOnWindowFocus: false,
   });
@@ -203,18 +204,17 @@ const useInitialProjectDataQuery = ({ logout }: queryParameter) => {
   return useQuery({
     queryKey: ["initialProjectDataQuery"],
     queryFn: async () => {
-      try {
-        const response = await axios.get(
-          `${backend_uri}/projects/getInitialProjectData`,
-          {
-            withCredentials: true,
-          }
-        );
-        return response.data;
-      } catch (error) {
+      const [response, error] = await tryCatch(
+        axios.get(`${backend_uri}/projects/getInitialProjectData`, {
+          withCredentials: true,
+        })
+      );
+
+      if (error) {
         handleError(error);
         throw error;
       }
+      return response.data;
     },
     refetchOnWindowFocus: false,
   });
@@ -223,18 +223,20 @@ const useInitialProjectDataQuery = ({ logout }: queryParameter) => {
 const useSpecificProjectDataQuery = ({ logout }: queryParameter) => {
   const { handleError } = useHandleError({ logout });
   const getData = async (github_repo_id: string) => {
-    try {
-      const response = await axios.get(
+    const [response, error] = await tryCatch(
+      axios.get(
         `${backend_uri}/projects/getSpecificProjectData?github_repo_id=${github_repo_id}`,
         {
           withCredentials: true,
         }
-      );
-      return response.data;
-    } catch (error) {
+      )
+    );
+
+    if (error) {
       handleError(error);
       throw error;
     }
+    return response.data;
   };
 
   return getData;

@@ -425,20 +425,6 @@ const validateMediaUploadAndStoreProject = asyncHandler(
 
     const { existingImages, project_images, project_video, existingVideo } =
       projectData;
-    const allowedImagesCount = 5 - existingImages.length;
-
-    if (!existingImages.length && project_images.length === 0) {
-      response(res, 400, "At least one image is required");
-      return;
-    }
-
-    if (
-      project_images.length > allowedImagesCount ||
-      (project_video && existingVideo)
-    ) {
-      response(res, 400, "Sent more files than allowed");
-      return;
-    }
 
     const [project, projectError] = await tryCatch(
       Project.findOne({
@@ -458,6 +444,42 @@ const validateMediaUploadAndStoreProject = asyncHandler(
     }
     if (!project && modificationType === "existing") {
       response(res, 400, "Project does not exist");
+      return;
+    }
+
+    let validatedExistingImages: string[] = [];
+    let validatedExistingVideo: string = "";
+
+    if (modificationType === "existing" && project) {
+      validatedExistingImages = existingImages.filter((url: string) =>
+        project.project_images?.includes(url)
+      );
+
+      if (existingVideo && project.project_video === existingVideo) {
+        validatedExistingVideo = existingVideo;
+      }
+
+      if (validatedExistingImages.length !== existingImages.length) {
+        logger.warn(
+          `Security: User ${userid} sent ${existingImages.length - validatedExistingImages.length} unowned image URL(s)`
+        );
+      }
+      if (existingVideo && !validatedExistingVideo) {
+        logger.warn(`Security: User ${userid} sent unowned video URL`);
+      }
+    }
+    const allowedImagesCount = 5 - validatedExistingImages.length;
+
+    if (!validatedExistingImages.length && project_images.length === 0) {
+      response(res, 400, "At least one image is required");
+      return;
+    }
+
+    if (
+      project_images.length > allowedImagesCount ||
+      (project_video && validatedExistingVideo)
+    ) {
+      response(res, 400, "Sent more files than allowed");
       return;
     }
 
@@ -489,8 +511,8 @@ const validateMediaUploadAndStoreProject = asyncHandler(
       ...filteredProjectData
     } = {
       ...projectData,
-      project_images: [...preSignedImageUrls, ...existingImages],
-      project_video: existingVideo || preSignedVideoUrl,
+      project_images: [...preSignedImageUrls, ...validatedExistingImages],
+      project_video: validatedExistingVideo || preSignedVideoUrl,
       userid,
     };
 

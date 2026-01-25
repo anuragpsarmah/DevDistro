@@ -27,26 +27,29 @@ const useProfileUpdateMutation = ({ logout }: mutationParameter) => {
         throw new Error("Operation already in progress");
       }
 
-      try {
-        operationInProgress = true;
+      operationInProgress = true;
 
-        const response = await axios.put(
+      const [response, error] = await tryCatch(
+        axios.put(
           `${backend_uri}/profile/updateProfileInformation`,
           data,
           { withCredentials: true }
-        );
-        successToast("Profile updated successfully");
-        return response.data;
-      } catch (error) {
+        )
+      );
+
+      setTimeout(() => {
+        operationInProgress = false;
+        queryClient.invalidateQueries({
+          queryKey: ["useProfileInformationQuery"],
+        });
+      }, 300);
+
+      if (error) {
         handleError(error);
-      } finally {
-        setTimeout(() => {
-          operationInProgress = false;
-          queryClient.invalidateQueries({
-            queryKey: ["useProfileInformationQuery"],
-          });
-        }, 300);
+        throw error;
       }
+      successToast("Profile updated successfully");
+      return response.data;
     },
   });
 };
@@ -74,10 +77,10 @@ const usePreSignedUrlForProjectMediaUploadMutation = ({
         throw new Error("Operation already in progress");
       }
 
-      try {
-        operationInProgress = true;
+      operationInProgress = true;
 
-        const response = await axios.post(
+      const [response, error] = await tryCatch(
+        axios.post(
           `${backend_uri}/projects/getPreSignedUrlForProjectMediaUpload`,
           {
             metadata,
@@ -86,13 +89,16 @@ const usePreSignedUrlForProjectMediaUploadMutation = ({
             modificationType,
           },
           { withCredentials: true }
-        );
-        return response.data;
-      } catch (error) {
+        )
+      );
+
+      operationInProgress = false;
+
+      if (error) {
         handleError(error);
-      } finally {
-        operationInProgress = false;
+        throw error;
       }
+      return response.data;
     },
   });
 };
@@ -116,20 +122,23 @@ const useValidateMediaUploadAndStoreProjectMutation = ({
         throw new Error("Operation already in progress");
       }
 
-      try {
-        operationInProgress = true;
+      operationInProgress = true;
 
-        const response = await axios.put(
+      const [response, error] = await tryCatch(
+        axios.put(
           `${backend_uri}/projects/validateMediaUploadAndStoreProject`,
           { projectData, modificationType },
           { withCredentials: true }
-        );
-        return response.data;
-      } catch (error) {
+        )
+      );
+
+      operationInProgress = false;
+
+      if (error) {
         handleError(error);
-      } finally {
-        operationInProgress = false;
+        throw error;
       }
+      return response.data;
     },
   });
 };
@@ -145,25 +154,28 @@ const useToggleProjectListingMutation = ({ logout }: mutationParameter) => {
         throw new Error("Operation already in progress");
       }
 
-      try {
-        operationInProgress = true;
+      operationInProgress = true;
 
-        const response = await axios.patch(
+      const [response, error] = await tryCatch(
+        axios.patch(
           `${backend_uri}/projects/toggleProjectListing`,
           { github_repo_id },
           { withCredentials: true }
-        );
-        successToast(
-          response.data?.data?.status
-            ? "Project was re-listed"
-            : "Project was unlisted"
-        );
-        return response.data;
-      } catch (error) {
+        )
+      );
+
+      operationInProgress = false;
+
+      if (error) {
         handleError(error);
-      } finally {
-        operationInProgress = false;
+        throw error;
       }
+      successToast(
+        response.data?.data?.status
+          ? "Project was re-listed"
+          : "Project was unlisted"
+      );
+      return response.data;
     },
   });
 };
@@ -179,21 +191,23 @@ const useDeleteProjectListingMutation = ({ logout }: mutationParameter) => {
         throw new Error("Operation already in progress");
       }
 
-      try {
-        operationInProgress = true;
+      operationInProgress = true;
 
-        await axios.delete(
+      const [, error] = await tryCatch(
+        axios.delete(
           `${backend_uri}/projects/deleteProjectListing?github_repo_id=${github_repo_id}`,
           { withCredentials: true }
-        );
-        successToast("Project was unlisted permanantly");
-        return true;
-      } catch (error) {
+        )
+      );
+
+      operationInProgress = false;
+
+      if (error) {
         handleError(error);
         return false;
-      } finally {
-        operationInProgress = false;
       }
+      successToast("Project was unlisted permanantly");
+      return true;
     },
   });
 };
