@@ -1,4 +1,5 @@
 import { MenuIcon, XIcon } from "lucide-react";
+import { motion } from "framer-motion";
 
 interface HeaderProps {
   handleAuthNavigate: () => void;
@@ -12,37 +13,45 @@ export default function Header({
   setIsMenuOpen,
 }: HeaderProps) {
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-gray-900 bg-opacity-0 backdrop-blur-md">
-      <nav className="container mx-auto px-6 py-4 flex justify-between items-center">
-        <div className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 hover:cursor-pointer">
-          DevExchange
-        </div>
-        <div className="hidden md:flex space-x-8">
-          {["Features", "Showcase", "Reviews", "FAQs"].map((item) => (
+    <motion.header
+      initial={{ y: -20, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ duration: 0.5, ease: "easeOut" }}
+      className="fixed top-0 left-0 right-0 z-50 px-4 py-3"
+    >
+      <nav className="max-w-5xl mx-auto flex justify-between items-center px-5 py-2.5 rounded-full bg-white/[0.03] backdrop-blur-md border border-white/[0.08]">
+        <a href="#" className="text-lg font-semibold tracking-tight hover:opacity-80 transition-opacity">
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500">DevExchange</span>
+        </a>
+
+        <div className="hidden md:flex items-center gap-8">
+          {["Features", "Projects", "Reviews", "FAQs"].map((item) => (
             <a
               key={item}
               href={`#${item.toLowerCase()}`}
-              className="text-gray-300 hover:text-white transition-colors"
+              className="text-sm text-gray-400 hover:text-white transition-colors duration-200"
             >
               {item}
             </a>
           ))}
         </div>
+
         <div className="hidden md:block">
           <button
-            className="bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 hover:cursor-pointer text-white font-bold py-2 px-6 rounded-full transition-colors"
+            className="text-sm font-medium text-white bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 hover:opacity-90 px-5 py-2 rounded-full transition-opacity duration-200"
             onClick={handleAuthNavigate}
           >
             Get Started
           </button>
         </div>
+
         <button
-          className="md:hidden text-white"
+          className="md:hidden text-gray-400 hover:text-white p-1.5 transition-colors"
           onClick={() => setIsMenuOpen(!isMenuOpen)}
         >
-          {isMenuOpen ? <XIcon /> : <MenuIcon />}
+          {isMenuOpen ? <XIcon size={20} /> : <MenuIcon size={20} />}
         </button>
       </nav>
-    </header>
+    </motion.header>
   );
 }

@@ -11,43 +11,51 @@ export default function FAQSection() {
   };
 
   return (
-    <section id="faqs" className="py-24 relative overflow-hidden">
-      <div className="container mx-auto px-4 max-w-4xl relative z-10">
+    <section id="faqs" className="py-24 lg:py-32 relative">
+      <div className="container mx-auto px-4 max-w-3xl relative z-10">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.5 }}
-          className="text-center mb-16"
+          transition={{ duration: 0.6 }}
+          className="text-center mb-12"
         >
-          <h2 className="text-4xl font-bold mb-4">
-            Frequently Asked Questions
+          <p className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500 text-sm font-medium mb-3 uppercase tracking-wider">FAQ</p>
+          <h2 className="text-3xl lg:text-4xl font-bold mb-4 text-white">
+            Common questions
           </h2>
-          <p className="text-gray-300 text-lg">
+          <p className="text-gray-400 text-base">
             Everything you need to know about DevExchange
           </p>
         </motion.div>
 
-        <div className="space-y-4">
+        <div className="space-y-3">
           {faqs.map((faq, index) => (
             <motion.div
               key={index}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: index * 0.1 }}
-              className="bg-gray-800 bg-opacity-50 rounded-xl overflow-hidden"
+              transition={{ duration: 0.4, delay: index * 0.05 }}
+              className={`bg-gray-900/50 border rounded-xl overflow-hidden transition-all duration-200 ${
+                openIndex === index ? "border-blue-500/30" : "border-white/[0.06]"
+              }`}
             >
               <button
-                className="w-full text-left px-6 py-4 flex items-center justify-between hover:bg-gray-700 transition-colors duration-200"
+                className="w-full text-left px-5 py-4 flex items-center justify-between hover:bg-white/[0.02] transition-colors duration-200"
                 onClick={() => toggleFAQ(index)}
               >
-                <span className="text-lg font-semibold">{faq.question}</span>
+                <span className="text-sm font-medium text-white pr-4">
+                  {faq.question}
+                </span>
                 <motion.div
                   animate={{ rotate: openIndex === index ? 180 : 0 }}
                   transition={{ duration: 0.2 }}
+                  className={`flex-shrink-0 transition-colors ${
+                    openIndex === index ? "text-blue-400" : "text-gray-500"
+                  }`}
                 >
-                  <ChevronDown className="w-5 h-5 text-gray-400" />
+                  <ChevronDown className="w-4 h-4" />
                 </motion.div>
               </button>
 
@@ -57,9 +65,9 @@ export default function FAQSection() {
                     initial={{ height: 0, opacity: 0 }}
                     animate={{ height: "auto", opacity: 1 }}
                     exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.2 }}
+                    transition={{ duration: 0.2, ease: "easeInOut" }}
                   >
-                    <div className="px-6 py-4 text-gray-300 border-t border-gray-700">
+                    <div className="px-5 pb-4 text-gray-400 text-sm leading-relaxed">
                       {faq.answer}
                     </div>
                   </motion.div>

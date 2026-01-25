@@ -38,13 +38,19 @@ export default function LandingPage() {
   }, []);
 
   return (
-    <div
-      className="min-h-screen text-white relative overflow-hidden"
-      style={{
-        background:
-          "radial-gradient(100% 25% at bottom, #35518d 4%, #111827 100%, #111827 100%)",
-      }}
-    >
+    <div className="min-h-screen text-white relative overflow-hidden bg-[#030712]">
+      <div
+        className="fixed inset-0 pointer-events-none"
+        style={{
+          background: `
+            radial-gradient(ellipse 100% 80% at 50% 0%, rgba(88, 28, 135, 0.15) 0%, transparent 60%),
+            radial-gradient(circle at 20% 50%, rgba(59, 130, 246, 0.05) 0%, transparent 40%),
+            radial-gradient(circle at 80% 70%, rgba(139, 92, 246, 0.05) 0%, transparent 40%),
+            #030712
+          `,
+        }}
+      />
+      
       <BackgroundDots />
 
       <Header

@@ -3,6 +3,9 @@ export default {
   darkMode: ["class"],
   content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
   theme: {
+    fontFamily: {
+      sans: ['Inter', 'system-ui', 'sans-serif'],
+    },
     animation: {
       shimmer: "shimmer 2s linear infinite",
     },
@@ -19,11 +22,26 @@ export default {
     extend: {
       animation: {
         move: "move 5s linear infinite",
+        "fade-in-up": "fadeInUp 0.6s ease forwards",
+        "float": "float 6s ease-in-out infinite",
+        "pulse-glow": "pulseGlow 2s ease-in-out infinite",
       },
       keyframes: {
         move: {
           "0%": { transform: "translateX(-200px)" },
           "100%": { transform: "translateX(200px)" },
+        },
+        fadeInUp: {
+          "0%": { opacity: "0", transform: "translateY(30px)" },
+          "100%": { opacity: "1", transform: "translateY(0)" },
+        },
+        float: {
+          "0%, 100%": { transform: "translateY(0) rotate(0deg)" },
+          "50%": { transform: "translateY(-20px) rotate(2deg)" },
+        },
+        pulseGlow: {
+          "0%, 100%": { boxShadow: "0 0 20px rgba(139, 92, 246, 0.3)" },
+          "50%": { boxShadow: "0 0 40px rgba(139, 92, 246, 0.6)" },
         },
       },
       borderRadius: {
