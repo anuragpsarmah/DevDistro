@@ -1,132 +1,104 @@
-import fs from "fs";
-import path from "path";
+import pino from "pino";
+import { asyncLocalStorage } from "../utils/asyncContext";
 
-type LogLevel = "error" | "warn" | "info" | "http" | "worker" | "debug";
-
-type LogColors = {
-  [K in LogLevel]: string;
+const levels = {
+  http: 30,
+  worker: 30,
 };
 
-class CustomLogger {
-  private colors: LogColors = {
-    error: "\x1b[31m",
-    warn: "\x1b[33m",
-    info: "\x1b[34m",
-    http: "\x1b[35m",
-    worker: "\x1b[32m",
-    debug: "\x1b[37m",
-  };
-
-  private reset = "\x1b[0m";
-  private logsDir = "logs";
-
-  constructor() {
-    if (!fs.existsSync(this.logsDir)) {
-      fs.mkdirSync(this.logsDir);
-    }
-  }
-
-  private getTimestamp(): string {
-    const now = new Date();
-    return (
-      now.toLocaleString("en-GB", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-        hour12: false,
-      }) +
-      ":" +
-      now.getMilliseconds().toString().padStart(3, "0")
-    );
-  }
-
-  private formatMessage(level: LogLevel, args: unknown[]): string {
-    const timestamp = this.getTimestamp();
-    const message = args
-      .map((arg) => {
-        if (arg instanceof Error) {
-          return arg.stack || arg.message;
-        }
-        if (typeof arg === "object") {
-          return JSON.stringify(arg, null, 2);
-        }
-        return String(arg);
-      })
-      .join(" ");
-    return `[${timestamp}] ${this.colors[level]}${level}: ${message.trim()}${this.reset}`;
-  }
-
-  private formatFileMessage(level: LogLevel, args: unknown[]): string {
-    const timestamp = this.getTimestamp();
-    const message = args
-      .map((arg) => {
-        if (arg instanceof Error) {
-          return arg.stack || arg.message;
-        }
-        if (typeof arg === "object") {
-          return JSON.stringify(arg, null, 2);
-        }
-        return String(arg);
-      })
-      .join(" ");
-    return `[${timestamp}] ${level}: ${message.trim()}\n`;
-  }
-
-  private writeToFile(filePath: string, message: string): void {
-    fs.appendFile(filePath, message, (err) => {
-      if (err) {
-        console.error("Error writing to log file:", err);
+const pinoInstance = pino({
+  customLevels: levels,
+  level: process.env.LOG_LEVEL || "info",
+  transport:
+    process.env.NODE_ENV === "development"
+      ? {
+        target: "pino-pretty",
+        options: {
+          colorize: true,
+          translateTime: "SYS:standard",
+          ignore: "pid,hostname",
+        },
       }
-    });
-  }
+      : undefined,
+  timestamp: pino.stdTimeFunctions.isoTime,
+});
 
-  private log(level: LogLevel, ...args: unknown[]): void {
-    const consoleMessage = this.formatMessage(level, args);
-    console.log(consoleMessage);
+class PinoAdapter {
+  private pino = pinoInstance;
 
-    const fileMessage = this.formatFileMessage(level, args);
-
-    if (level === "error" || level === "warn") {
-      this.writeToFile(path.join(this.logsDir, "error.txt"), fileMessage);
+  private handle(level: keyof typeof levels | pino.Level, args: any[]) {
+    // Enrich context if error
+    if (level === "error") {
+      const store = asyncLocalStorage.getStore();
+      if (store) {
+        const errorArg = args.find((arg) => arg instanceof Error);
+        if (errorArg) {
+          store.error = {
+            message: errorArg.message,
+            stack: errorArg.stack,
+            name: errorArg.name,
+          };
+        } else {
+          // If no error object, capture the message
+          store.error_message = args.map(String).join(' ');
+        }
+      }
     }
 
-    if (level === "http") {
-      this.writeToFile(path.join(this.logsDir, "http.txt"), fileMessage);
+    if (args.length === 0) return;
+
+    // Case 1: (Msg, Error/Object) -> pino.level(obj, msg)
+    if (
+      args.length === 2 &&
+      typeof args[0] === "string" &&
+      typeof args[1] === "object"
+    ) {
+      // @ts-ignore
+      this.pino[level](args[1], args[0]);
+      return;
     }
 
-    if (level === "worker") {
-      this.writeToFile(path.join(this.logsDir, "worker.txt"), fileMessage);
+    // Case 2: (Object) -> pino.level(obj)
+    if (args.length === 1 && typeof args[0] === "object") {
+      // @ts-ignore
+      this.pino[level](args[0]);
+      return;
     }
+
+    // Case 3: Legacy/Text behavior
+    const message = args
+      .map((arg) => (typeof arg === "object" ? JSON.stringify(arg) : String(arg)))
+      .join(" ");
+
+    // @ts-ignore
+    this.pino[level](message);
   }
 
-  public error(...args: unknown[]): void {
-    this.log("error", ...args);
+  public info(...args: any[]) {
+    this.handle("info", args);
   }
 
-  public warn(...args: unknown[]): void {
-    this.log("warn", ...args);
+  public error(...args: any[]) {
+    this.handle("error", args);
   }
 
-  public info(...args: unknown[]): void {
-    this.log("info", ...args);
+  public warn(...args: any[]) {
+    this.handle("warn", args);
   }
 
-  public http(...args: unknown[]): void {
-    this.log("http", ...args);
+  public debug(...args: any[]) {
+    this.handle("debug", args);
   }
 
-  public worker(...args: unknown[]): void {
-    this.log("worker", ...args);
+  public http(...args: any[]) {
+    this.handle("http", args);
   }
 
-  public debug(...args: unknown[]): void {
-    this.log("debug", ...args);
+  public worker(...args: any[]) {
+    this.handle("worker", args);
   }
 }
 
-const logger = new CustomLogger();
+const logger = new PinoAdapter();
 
 export default logger;

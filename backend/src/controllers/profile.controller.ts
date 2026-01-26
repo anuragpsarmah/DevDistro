@@ -11,25 +11,40 @@ import {
 } from "../validations/profile.validation";
 import logger from "../logger/logger";
 import { tryCatch } from "../utils/tryCatch.util";
+import { enrichContext } from "../utils/asyncContext";
 
 const getProfileInformation = asyncHandler(
   async (req: Request, res: Response) => {
-    if (!req.user) throw new ApiError("Error during validation", 401);
+    enrichContext({ action: "get_profile" });
+
+    if (!req.user) {
+      enrichContext({ outcome: "unauthorized" });
+      throw new ApiError("Error during validation", 401);
+    }
 
     const userId = new mongoose.Types.ObjectId(req.user._id);
+    enrichContext({ entity: { type: "user", id: userId.toString() } });
 
+    const dbStartTime = performance.now();
     const [user, findError] = await tryCatch(User.findById(userId));
+    enrichContext({ db_latency_ms: Math.round(performance.now() - dbStartTime) });
 
     if (findError) {
-      logger.error("Error fetching user profile information:", findError);
+      enrichContext({
+        outcome: "error",
+        error: { name: "DatabaseError", message: findError instanceof Error ? findError.message : "Database query failed" },
+      });
+      logger.error("Failed to fetch user profile", findError);
       throw new ApiError("Internal Server Error", 500, {}, findError);
     }
 
     if (!user) {
+      enrichContext({ outcome: "not_found" });
       response(res, 401, "User not found. Unauthorized access.");
       return;
     }
 
+    enrichContext({ outcome: "success" });
     const responseObj = {
       job_role: user.job_role,
       location: user.location,
@@ -44,11 +59,16 @@ const getProfileInformation = asyncHandler(
 
 const updateProfileInformation = asyncHandler(
   async (req: Request, res: Response) => {
+    enrichContext({ action: "update_profile" });
+
     if (!req.user) {
+      enrichContext({ outcome: "unauthorized" });
       throw new ApiError("Error during validation", 401);
     }
 
     const userId = new mongoose.Types.ObjectId(req.user._id);
+    enrichContext({ entity: { type: "user", id: userId.toString() } });
+
     const {
       job_role,
       review_description,
@@ -66,6 +86,7 @@ const updateProfileInformation = asyncHandler(
     });
 
     if (!result.success) {
+      enrichContext({ outcome: "validation_failed" });
       response(
         res,
         400,
@@ -76,14 +97,21 @@ const updateProfileInformation = asyncHandler(
       return;
     }
 
+    const dbStartTime = performance.now();
     const [user, userFindError] = await tryCatch(User.findById(userId));
+    enrichContext({ db_latency_ms: Math.round(performance.now() - dbStartTime) });
 
     if (userFindError) {
-      logger.error("Error updating user profile information", userFindError);
+      enrichContext({
+        outcome: "error",
+        error: { name: "DatabaseError", message: userFindError instanceof Error ? userFindError.message : "Database query failed" },
+      });
+      logger.error("Failed to find user for profile update", userFindError);
       throw new ApiError("Internal Server Error", 500);
     }
 
     if (!user) {
+      enrichContext({ outcome: "not_found" });
       response(res, 401, "User not found. Unauthorized access.");
       return;
     }
@@ -98,14 +126,22 @@ const updateProfileInformation = asyncHandler(
 
     const [, saveUserError] = await tryCatch(user.save());
     if (saveUserError) {
-      logger.error("Error updating user profile information", saveUserError);
+      enrichContext({
+        outcome: "error",
+        error: { name: "DatabaseError", message: saveUserError instanceof Error ? saveUserError.message : "Failed to save user" },
+      });
+      logger.error("Failed to save user profile", saveUserError);
       throw new ApiError("Internal Server Error", 500);
     }
 
     if (!review_description || !review_stars) {
+      enrichContext({ outcome: "success", has_review: false });
       response(res, 200, "User profile information updated successfully.");
       return;
     }
+
+    // Sync profile updates to SiteReview if it exists
+    enrichContext({ has_review: true });
 
     const [siteUserReview, findReviewError] = await tryCatch(
       SiteReview.findOne({
@@ -114,11 +150,16 @@ const updateProfileInformation = asyncHandler(
     );
 
     if (findReviewError) {
-      logger.error("Error updating user profile information", findReviewError);
+      enrichContext({
+        outcome: "error",
+        error: { name: "DatabaseError", message: findReviewError instanceof Error ? findReviewError.message : "Failed to find review" },
+      });
+      logger.error("Failed to find user site review", findReviewError);
       throw new ApiError("Internal Server Error", 500);
     }
 
     if (siteUserReview) {
+      enrichContext({ review_action: "update" });
       Object.assign(siteUserReview, {
         username: req.user.username,
         profile_image_url: req.user.profile_image_url,
@@ -129,13 +170,15 @@ const updateProfileInformation = asyncHandler(
 
       const [, saveReviewError] = await tryCatch(siteUserReview.save());
       if (saveReviewError) {
-        logger.error(
-          "Error updating user profile information",
-          saveReviewError
-        );
+        enrichContext({
+          outcome: "error",
+          error: { name: "DatabaseError", message: saveReviewError instanceof Error ? saveReviewError.message : "Failed to save review" },
+        });
+        logger.error("Failed to update site review", saveReviewError);
         throw new ApiError("Internal Server Error", 500);
       }
     } else {
+      enrichContext({ review_action: "create" });
       const [, newReviewError] = await tryCatch(
         SiteReview.create({
           username: req.user.username,
@@ -147,33 +190,54 @@ const updateProfileInformation = asyncHandler(
       );
 
       if (newReviewError) {
-        logger.error("Error updating user profile information", newReviewError);
+        enrichContext({
+          outcome: "error",
+          error: { name: "DatabaseError", message: newReviewError instanceof Error ? newReviewError.message : "Failed to create review" },
+        });
+        logger.error("Failed to create new site review", newReviewError);
         throw new ApiError("Internal Server Error", 500);
       }
     }
 
+    enrichContext({ outcome: "success" });
     response(res, 200, "User profile information updated successfully.");
   }
 );
 
 const getWalletAddress = asyncHandler(async (req: Request, res: Response) => {
+  enrichContext({ action: "get_wallet" });
+
   if (!req.user) {
+    enrichContext({ outcome: "unauthorized" });
     throw new ApiError("Error during validation", 401);
   }
 
   const userId = new mongoose.Types.ObjectId(req.user._id);
+  enrichContext({ entity: { type: "user", id: userId.toString() } });
 
+  const dbStartTime = performance.now();
   const [user, findUserError] = await tryCatch(User.findById(userId));
+  enrichContext({ db_latency_ms: Math.round(performance.now() - dbStartTime) });
 
   if (findUserError) {
-    logger.error("Error fetching wallet address", findUserError);
+    enrichContext({
+      outcome: "error",
+      error: { name: "DatabaseError", message: findUserError instanceof Error ? findUserError.message : "Database query failed" },
+    });
+    logger.error("Failed to fetch user wallet address", findUserError);
     throw new ApiError("Internal Server Error", 500);
   }
 
   if (!user) {
+    enrichContext({ outcome: "not_found" });
     response(res, 401, "User not found. Unauthorized access.");
     return;
   }
+
+  enrichContext({
+    outcome: "success",
+    has_wallet: !!user.wallet_address,
+  });
 
   const responseObj = {
     wallet_address: user.wallet_address,
@@ -184,15 +248,21 @@ const getWalletAddress = asyncHandler(async (req: Request, res: Response) => {
 
 const updateWalletAddress = asyncHandler(
   async (req: Request, res: Response) => {
+    enrichContext({ action: "update_wallet" });
+
     if (!req.user) {
+      enrichContext({ outcome: "unauthorized" });
       throw new ApiError("Error during validation", 401);
     }
 
     const userId = new mongoose.Types.ObjectId(req.user._id);
+    enrichContext({ entity: { type: "user", id: userId.toString() } });
+
     const { wallet_address } = req.body;
 
     const result = walletAddressSchema.safeParse(req.body);
     if (!result.success) {
+      enrichContext({ outcome: "validation_failed" });
       response(
         res,
         400,
@@ -203,19 +273,31 @@ const updateWalletAddress = asyncHandler(
       return;
     }
 
+    const dbStartTime = performance.now();
     const [updatedUser, updateError] = await tryCatch(
       User.findByIdAndUpdate(userId, { wallet_address }, { new: true })
     );
+    enrichContext({ db_latency_ms: Math.round(performance.now() - dbStartTime) });
 
     if (updateError) {
-      logger.error("Error updating wallet address", updateError);
+      enrichContext({
+        outcome: "error",
+        error: { name: "DatabaseError", message: updateError instanceof Error ? updateError.message : "Database update failed" },
+      });
+      logger.error("Failed to update wallet address", updateError);
       throw new ApiError("Internal Server Error", 500);
     }
 
     if (!updatedUser) {
+      enrichContext({ outcome: "not_found" });
       response(res, 401, "User not found. Unauthorized access.");
       return;
     }
+
+    enrichContext({
+      outcome: "success",
+      wallet_action: wallet_address ? "set" : "removed",
+    });
 
     response(
       res,
@@ -233,3 +315,4 @@ export {
   getWalletAddress,
   updateWalletAddress,
 };
+

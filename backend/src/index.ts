@@ -41,5 +41,5 @@ export let s3Service: S3Service;
     process.exit(1);
   });
 
-  app.listen(PORT, () => logger.info(`⚙️  Server is running on PORT: ${PORT}`));
+  app.listen(PORT, () => logger.info(`Server is running on PORT: ${PORT}`));
 })();

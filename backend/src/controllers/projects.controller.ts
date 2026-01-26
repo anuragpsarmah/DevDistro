@@ -24,7 +24,9 @@ import {
 import { Project } from "../models/project.model";
 import { MAX_ALLOWED_IMAGES } from "../types/constants";
 import { tryCatch } from "../utils/tryCatch.util";
+import { enrichContext } from "../utils/asyncContext";
 
+// Builds dynamic query and sort based on filters
 const searchAndFilterProjects = async (
   searchTerm: string = "",
   projectTypes: string[] = [],
@@ -44,6 +46,7 @@ const searchAndFilterProjects = async (
     query.$text = { $search: searchTerm.trim() };
   }
 
+  // Text search needs score-based sorting first
   if (hasSearchTerm) {
     sort.score = { $meta: "textScore" };
 
@@ -110,8 +113,11 @@ const searchAndFilterProjects = async (
 };
 
 const getPrivateRepos = asyncHandler(async (req: Request, res: Response) => {
+  enrichContext({ action: "get_private_repos" });
   const { ENCRYPTION_KEY_32, ENCRYPTION_IV } = process.env;
+
   if (req.rateLimited) {
+    enrichContext({ outcome: "error", reason: "rate_limited" });
     response(
       res,
       429,
@@ -121,19 +127,27 @@ const getPrivateRepos = asyncHandler(async (req: Request, res: Response) => {
     return;
   }
 
-  if (!req.user) throw new ApiError("Error during validation", 401);
+  if (!req.user) {
+    enrichContext({ outcome: "unauthorized" });
+    throw new ApiError("Error during validation", 401);
+  }
 
   const redisKey = privateRepoPrefix(req.user._id);
   const userId = new mongoose.Types.ObjectId(req.user._id);
+  enrichContext({ entity: { type: "github_repos", id: userId.toString() } });
 
+  const dbStartTime = performance.now();
   const [userData, userError] = await tryCatch(User.findById(userId));
+  enrichContext({ db_latency_ms: Math.round(performance.now() - dbStartTime) });
 
   if (userError) {
-    logger.error("Error fetching private repos:", userError);
+    enrichContext({ outcome: "error", error: { name: "DatabaseError", message: userError instanceof Error ? userError.message : "Failed to fetch user" } });
+    logger.error("Failed to fetch user for repos", userError);
     throw new ApiError("Something went wrong", 500);
   }
 
   if (!userData) {
+    enrichContext({ outcome: "not_found" });
     response(res, 401, "Unauthorized Access");
     return;
   }
@@ -147,10 +161,12 @@ const getPrivateRepos = asyncHandler(async (req: Request, res: Response) => {
   );
 
   if (decryptionError) {
-    logger.error("Error fetching private repos:", decryptionError);
+    enrichContext({ outcome: "error", error: { name: "DecryptionError", message: decryptionError instanceof Error ? decryptionError.message : "Decryption failed" } });
+    logger.error("Failed to decrypt GitHub token", decryptionError);
     throw new ApiError("Something went wrong", 500);
   }
 
+  const apiStartTime = performance.now();
   let [private_repositories, fetchError] = await tryCatch(
     axios.get(`https://api.github.com/user/repos`, {
       headers: {
@@ -161,9 +177,11 @@ const getPrivateRepos = asyncHandler(async (req: Request, res: Response) => {
       },
     })
   );
+  enrichContext({ external_api_latency_ms: Math.round(performance.now() - apiStartTime) });
 
   if (fetchError) {
-    logger.error("Error fetching private repos:", fetchError);
+    enrichContext({ outcome: "error", error: { name: "GitHubAPIError", message: fetchError instanceof Error ? fetchError.message : "Failed to fetch repos" } });
+    logger.error("Failed to fetch GitHub repos", fetchError);
     throw new ApiError("Something went wrong", 500);
   }
 
@@ -172,17 +190,20 @@ const getPrivateRepos = asyncHandler(async (req: Request, res: Response) => {
     !private_repositories.data ||
     private_repositories.data.length === 0
   ) {
+    enrichContext({ outcome: "success", repos_count: 0 });
     response(res, 200, "No private repositories found", []);
     return;
   }
 
   const currentDate = new Date();
 
+  // Transform GitHub API response to our format with relative time
   private_repositories = private_repositories.data
     .map((repo: any) => {
       const updatedDate = new Date(repo?.updated_at);
       const differenceInMs = currentDate.getTime() - updatedDate.getTime();
 
+      // Convert ms to human-readable (d/h/m)
       let updatedAtDisplay;
       if (differenceInMs >= 86400000) {
         updatedAtDisplay = `${Math.floor(differenceInMs / 86400000)}d`;
@@ -215,6 +236,7 @@ const getPrivateRepos = asyncHandler(async (req: Request, res: Response) => {
       })
     );
 
+  // Cache for 24h to reduce GitHub API calls
   const CACHE_DURATION = 60 * 60 * 24;
   const [, cacheError] = await tryCatch(
     redisClient.setex(
@@ -224,22 +246,34 @@ const getPrivateRepos = asyncHandler(async (req: Request, res: Response) => {
     )
   );
 
-  if (cacheError) logger.error("Redis caching error:", cacheError);
+  if (cacheError) {
+    enrichContext({ cache_error: true });
+    logger.error("Redis caching error", cacheError);
+  }
 
+  enrichContext({ outcome: "success", repos_count: Array.isArray(private_repositories) ? private_repositories.length : 0 });
   response(res, 200, "Repos fetched successfully", private_repositories);
 });
 
 const getPreSignedUrlForProjectMediaUpload = asyncHandler(
   async (req: Request, res: Response) => {
-    if (!req.user) throw new ApiError("Error during validation", 401);
+    enrichContext({ action: "get_presigned_upload_url" });
+
+    if (!req.user) {
+      enrichContext({ outcome: "unauthorized" });
+      throw new ApiError("Error during validation", 401);
+    }
 
     const userid = new mongoose.Types.ObjectId(req.user._id);
+    enrichContext({ entity: { type: "media_upload", id: userid.toString() } });
+
     const {
       metadata,
       existingImageCount,
       existingVideoCount,
       modificationType,
     } = req.body;
+    enrichContext({ modification_type: modificationType });
 
     if (modificationType === "new") {
       const [projectCount, countError] = await tryCatch(
@@ -247,24 +281,29 @@ const getPreSignedUrlForProjectMediaUpload = asyncHandler(
       );
 
       if (countError) {
-        logger.error("Failed to fetch total listed projects:", countError);
+        enrichContext({ outcome: "error", error: { name: "DatabaseError", message: countError instanceof Error ? countError.message : "Count query failed" } });
+        logger.error("Failed to count projects", countError);
         response(res, 500, "Failed to fetch total listed projects");
         return;
       }
 
+      // Enforce max 2 projects for new listings
       if (projectCount >= 2) {
+        enrichContext({ outcome: "validation_failed", reason: "max_projects_reached" });
         response(res, 400, "Only two projects can be listed at a time");
         return;
       }
     }
 
     if (isNaN(existingImageCount) || isNaN(existingVideoCount)) {
+      enrichContext({ outcome: "validation_failed", reason: "invalid_counts" });
       response(res, 400, "Invalid count values provided");
       return;
     }
 
     const result = fileMetadataSchema.safeParse(metadata);
     if (!result.success) {
+      enrichContext({ outcome: "validation_failed" });
       response(
         res,
         400,
@@ -275,11 +314,14 @@ const getPreSignedUrlForProjectMediaUpload = asyncHandler(
       return;
     }
 
+    // Media limits: Calculate allowed new images based on existing ones.
     const allowedImagesCount = MAX_ALLOWED_IMAGES - existingImageCount;
     const metadataFileCheck = {
       image: 0,
       video: 0,
     };
+
+    // Count exact file types from new metadata to enforce limits.
     metadata.forEach((file: FileMetaData) => {
       if (file.fileType === "image/png" || file.fileType === "image/jpeg")
         metadataFileCheck.image++;
@@ -287,6 +329,7 @@ const getPreSignedUrlForProjectMediaUpload = asyncHandler(
     });
 
     if (!existingImageCount && metadataFileCheck.image === 0) {
+      enrichContext({ outcome: "validation_failed", reason: "no_images" });
       response(res, 400, "At least one image is required");
       return;
     }
@@ -294,6 +337,7 @@ const getPreSignedUrlForProjectMediaUpload = asyncHandler(
       metadataFileCheck.image > allowedImagesCount ||
       (metadataFileCheck.video && existingVideoCount)
     ) {
+      enrichContext({ outcome: "validation_failed", reason: "too_many_files" });
       response(res, 400, "Sent more files than allowed");
       return;
     }
@@ -307,11 +351,13 @@ const getPreSignedUrlForProjectMediaUpload = asyncHandler(
     );
 
     if (urlError) {
-      logger.error("Error generating pre-signed urls:", urlError);
+      enrichContext({ outcome: "error", error: { name: "S3Error", message: urlError instanceof Error ? urlError.message : "S3 presign failed" } });
+      logger.error("Failed to generate presigned URLs", urlError);
       if (urlError instanceof Error) throw new ApiError(urlError.message, 400);
       else throw new ApiError("Something went wrong", 500);
     }
 
+    enrichContext({ outcome: "success", urls_generated: preSignedUrls.length });
     response(
       res,
       200,
@@ -323,10 +369,19 @@ const getPreSignedUrlForProjectMediaUpload = asyncHandler(
 
 const validateMediaUploadAndStoreProject = asyncHandler(
   async (req: Request, res: Response) => {
-    if (!req.user) throw new ApiError("Error during validation", 401);
+    enrichContext({ action: "store_project" });
+
+    if (!req.user) {
+      enrichContext({ outcome: "unauthorized" });
+      throw new ApiError("Error during validation", 401);
+    }
 
     const { modificationType, projectData } = req.body;
     const userid = new mongoose.Types.ObjectId(req.user._id);
+    enrichContext({
+      entity: { type: "project", github_repo_id: projectData?.github_repo_id },
+      modification_type: modificationType
+    });
 
     if (modificationType === "new") {
       const [projectCount, countError] = await tryCatch(
@@ -334,11 +389,13 @@ const validateMediaUploadAndStoreProject = asyncHandler(
       );
 
       if (countError) {
-        logger.error("Failed to fetch total listed projects:", countError);
+        enrichContext({ outcome: "error", error: { name: "DatabaseError", message: countError instanceof Error ? countError.message : "Count query failed" } });
+        logger.error("Failed to count projects", countError);
         response(res, 500, "Failed to fetch total listed projects");
         return;
       }
       if (projectCount >= 2) {
+        enrichContext({ outcome: "validation_failed", reason: "max_projects_reached" });
         response(res, 400, "Only two projects can be listed at a time");
         return;
       }
@@ -346,6 +403,7 @@ const validateMediaUploadAndStoreProject = asyncHandler(
 
     const result = projectFormDataSchema.safeParse(projectData);
     if (!result.success) {
+      enrichContext({ outcome: "validation_failed" });
       response(
         res,
         400,
@@ -363,10 +421,12 @@ const validateMediaUploadAndStoreProject = asyncHandler(
     );
 
     if (encryptedTokenError) {
+      enrichContext({ outcome: "error", error: { name: "DatabaseError", message: encryptedTokenError instanceof Error ? encryptedTokenError.message : "Query failed" } });
       throw new ApiError("Something went wrong", 500);
     }
 
     if (!userData?.github_access_token) {
+      enrichContext({ outcome: "unauthorized", reason: "missing_token" });
       response(res, 401, "GitHub access token not found");
       return;
     }
@@ -381,6 +441,7 @@ const validateMediaUploadAndStoreProject = asyncHandler(
     );
 
     if (dcryptedTokenError) {
+      enrichContext({ outcome: "error", error: { name: "DecryptionError" } });
       throw new ApiError("Something went wrong", 500);
     }
 
@@ -403,6 +464,7 @@ const validateMediaUploadAndStoreProject = asyncHandler(
         const status = (githubError as AxiosError).response?.status;
 
         if (status === 404) {
+          enrichContext({ outcome: "not_found", reason: "repo_not_found" });
           response(
             res,
             404,
@@ -410,15 +472,18 @@ const validateMediaUploadAndStoreProject = asyncHandler(
           );
           return;
         } else if (status === 403) {
+          enrichContext({ outcome: "unauthorized", reason: "repo_access_denied" });
           response(res, 403, "Access denied to the repository");
           return;
         } else {
-          logger.error("GitHub API error:", githubError);
+          enrichContext({ outcome: "error", error: { name: "GitHubAPIError", code: String(status) } });
+          logger.error("GitHub API error", githubError);
           response(res, 500, "Failed to verify repository access");
           return;
         }
       } else {
-        logger.error("GitHub API error:", githubError);
+        enrichContext({ outcome: "error", error: { name: "GitHubAPIError" } });
+        logger.error("GitHub API error", githubError);
         throw new ApiError("Failed to verify repository access", 500);
       }
     }
@@ -434,15 +499,18 @@ const validateMediaUploadAndStoreProject = asyncHandler(
     );
 
     if (projectError) {
-      logger.error("Error fetching project:", projectError);
+      enrichContext({ outcome: "error", error: { name: "DatabaseError" } });
+      logger.error("Failed to fetch project", projectError);
       throw new ApiError("Something went wrong", 500);
     }
 
     if (project && modificationType === "new") {
+      enrichContext({ outcome: "validation_failed", reason: "project_exists" });
       response(res, 400, "Project already exists");
       return;
     }
     if (!project && modificationType === "existing") {
+      enrichContext({ outcome: "not_found", reason: "project_not_found" });
       response(res, 400, "Project does not exist");
       return;
     }
@@ -450,6 +518,7 @@ const validateMediaUploadAndStoreProject = asyncHandler(
     let validatedExistingImages: string[] = [];
     let validatedExistingVideo: string = "";
 
+    // Verify ownership of existing media to prevent hijacking
     if (modificationType === "existing" && project) {
       validatedExistingImages = existingImages.filter((url: string) =>
         project.project_images?.includes(url)
@@ -471,6 +540,7 @@ const validateMediaUploadAndStoreProject = asyncHandler(
     const allowedImagesCount = 5 - validatedExistingImages.length;
 
     if (!validatedExistingImages.length && project_images.length === 0) {
+      enrichContext({ outcome: "validation_failed", reason: "no_images" });
       response(res, 400, "At least one image is required");
       return;
     }
@@ -479,6 +549,7 @@ const validateMediaUploadAndStoreProject = asyncHandler(
       project_images.length > allowedImagesCount ||
       (project_video && validatedExistingVideo)
     ) {
+      enrichContext({ outcome: "validation_failed", reason: "too_many_files" });
       response(res, 400, "Sent more files than allowed");
       return;
     }
@@ -497,7 +568,8 @@ const validateMediaUploadAndStoreProject = asyncHandler(
     );
 
     if (urlError) {
-      logger.error("Error verifying uploads:", urlError);
+      enrichContext({ outcome: "error", error: { name: "S3ValidationError" } });
+      logger.error("Failed to verify uploads", urlError);
       if (urlError instanceof Error) throw new ApiError(urlError.message, 400);
       else throw new ApiError("Couldn't verify uploads. Try again.", 500);
     }
@@ -540,6 +612,7 @@ const validateMediaUploadAndStoreProject = asyncHandler(
         (url) => !updatedMedia.includes(url)
       );
 
+      // Queue unused media for background cleanup
       for (const media of mediaToRemove) {
         const S3Uploadkey = media.replace(
           `${process.env.S3_CLOUDFRONT_DISTRIBUTION as string}/`,
@@ -558,17 +631,24 @@ const validateMediaUploadAndStoreProject = asyncHandler(
       );
 
       if (createError) {
-        logger.error("Error storing project data:", createError);
+        enrichContext({ outcome: "error", error: { name: "DatabaseError" } });
+        logger.error("Failed to update project", createError);
         throw new ApiError("Something went wrong", 500);
       }
     }
+    enrichContext({ outcome: "success" });
     response(res, 200, "Project listed/modified successfully");
   }
 );
 
 const getTotalListedProjects = asyncHandler(
   async (req: Request, res: Response) => {
-    if (!req.user) throw new ApiError("Error during validation", 401);
+    enrichContext({ action: "get_total_listed_projects" });
+
+    if (!req.user) {
+      enrichContext({ outcome: "unauthorized" });
+      throw new ApiError("Error during validation", 401);
+    }
 
     const userid = new mongoose.Types.ObjectId(req.user._id);
     const [projectCount, countError] = await tryCatch(
@@ -576,13 +656,15 @@ const getTotalListedProjects = asyncHandler(
     );
 
     if (countError) {
-      logger.error("Failed to fetch total listed projects:", countError);
+      enrichContext({ outcome: "error", error: { name: "DatabaseError" } });
+      logger.error("Failed to count listed projects", countError);
       response(res, 200, "Failed to fetch total listed projects", {
         totalListedProjects: -1,
       });
       return;
     }
 
+    enrichContext({ outcome: "success", project_count: projectCount });
     response(res, 200, "Total listed projects fetched successfully", {
       totalListedProjects: projectCount,
     });
@@ -591,7 +673,12 @@ const getTotalListedProjects = asyncHandler(
 
 const getTotalActiveProjects = asyncHandler(
   async (req: Request, res: Response) => {
-    if (!req.user) throw new ApiError("Error during validation", 401);
+    enrichContext({ action: "get_total_active_projects" });
+
+    if (!req.user) {
+      enrichContext({ outcome: "unauthorized" });
+      throw new ApiError("Error during validation", 401);
+    }
 
     const userid = new mongoose.Types.ObjectId(req.user._id);
     const [projectCount, countError] = await tryCatch(
@@ -602,13 +689,15 @@ const getTotalActiveProjects = asyncHandler(
     );
 
     if (countError) {
-      logger.error("Failed to fetch total listed projects:", countError);
+      enrichContext({ outcome: "error", error: { name: "DatabaseError" } });
+      logger.error("Failed to count active projects", countError);
       response(res, 200, "Failed to fetch total listed projects", {
         totalActiveProjects: -1,
       });
       return;
     }
 
+    enrichContext({ outcome: "success", active_project_count: projectCount });
     response(res, 200, "Total active projects fetched successfully", {
       totalActiveProjects: projectCount,
     });
@@ -617,10 +706,16 @@ const getTotalActiveProjects = asyncHandler(
 
 const getInitialProjectData = asyncHandler(
   async (req: Request, res: Response) => {
-    if (!req.user) throw new ApiError("Error during validation", 401);
+    enrichContext({ action: "get_initial_project_data" });
+
+    if (!req.user) {
+      enrichContext({ outcome: "unauthorized" });
+      throw new ApiError("Error during validation", 401);
+    }
 
     const userid = new mongoose.Types.ObjectId(req.user._id);
 
+    const dbStartTime = performance.now();
     const [projectData, projectError] = await tryCatch(
       Project.find({ userid })
         .select({
@@ -644,13 +739,16 @@ const getInitialProjectData = asyncHandler(
           });
         })
     );
+    enrichContext({ db_latency_ms: Math.round(performance.now() - dbStartTime) });
 
     if (projectError) {
-      logger.error("Failed to fetch project data:", projectError);
+      enrichContext({ outcome: "error", error: { name: "DatabaseError" } });
+      logger.error("Failed to fetch initial project data", projectError);
       response(res, 500, "Failed to fetch project data. Try again later.");
       return;
     }
 
+    enrichContext({ outcome: "success", projects_count: projectData?.length || 0 });
     response(
       res,
       200,
@@ -662,12 +760,18 @@ const getInitialProjectData = asyncHandler(
 
 const getSpecificProjectData = asyncHandler(
   async (req: Request, res: Response) => {
-    if (!req.user) throw new ApiError("Error during validation", 401);
+    enrichContext({ action: "get_specific_project_data" });
+
+    if (!req.user) {
+      enrichContext({ outcome: "unauthorized" });
+      throw new ApiError("Error during validation", 401);
+    }
 
     const userid = new mongoose.Types.ObjectId(req.user._id);
 
     const result = githubRepoIdSchema.safeParse(req.query);
     if (!result.success) {
+      enrichContext({ outcome: "validation_failed" });
       response(
         res,
         400,
@@ -677,6 +781,8 @@ const getSpecificProjectData = asyncHandler(
       );
       return;
     }
+
+    enrichContext({ entity: { type: "project", github_repo_id: req.query.github_repo_id as string } });
 
     const [projectData, projectError] = await tryCatch(
       Project.findOne({
@@ -688,28 +794,37 @@ const getSpecificProjectData = asyncHandler(
     );
 
     if (projectError) {
-      logger.error("Failed to fetch project data:", projectError);
+      enrichContext({ outcome: "error", error: { name: "DatabaseError" } });
+      logger.error("Failed to fetch specific project", projectError);
       response(res, 500, "Failed to fetch project data. Try again later.");
       return;
     }
 
     if (!projectData) {
+      enrichContext({ outcome: "not_found" });
       response(res, 404, "Invalid Repo ID. No such records found.");
       return;
     }
 
+    enrichContext({ outcome: "success" });
     response(res, 200, "Project data fetched successfully", projectData);
   }
 );
 
 const toggleProjectListing = asyncHandler(
   async (req: Request, res: Response) => {
-    if (!req.user) throw new ApiError("Error during validation", 401);
+    enrichContext({ action: "toggle_project_listing" });
+
+    if (!req.user) {
+      enrichContext({ outcome: "unauthorized" });
+      throw new ApiError("Error during validation", 401);
+    }
 
     const userid = new mongoose.Types.ObjectId(req.user._id);
 
     const result = githubRepoIdSchema.safeParse(req.body);
     if (!result.success) {
+      enrichContext({ outcome: "validation_failed" });
       response(
         res,
         400,
@@ -720,6 +835,8 @@ const toggleProjectListing = asyncHandler(
       return;
     }
 
+    enrichContext({ entity: { type: "project", github_repo_id: req.body.github_repo_id } });
+
     const [updatedProject, updateError] = await tryCatch(
       Project.findOneAndUpdate(
         { userid, github_repo_id: req.body.github_repo_id },
@@ -729,16 +846,19 @@ const toggleProjectListing = asyncHandler(
     );
 
     if (updateError) {
-      logger.error("Failed to toggle project status:", updateError);
+      enrichContext({ outcome: "error", error: { name: "DatabaseError" } });
+      logger.error("Failed to toggle project status", updateError);
       response(res, 500, "Failed to toggle project status. Try again later.");
       return;
     }
 
     if (!updatedProject) {
+      enrichContext({ outcome: "not_found" });
       response(res, 404, "Invalid Repo ID. No such records found.");
       return;
     }
 
+    enrichContext({ outcome: "success", new_status: updatedProject.isActive });
     response(res, 200, "Project listing status toggled successfully", {
       status: updatedProject.isActive,
     });
@@ -747,12 +867,18 @@ const toggleProjectListing = asyncHandler(
 
 const deleteProjectListing = asyncHandler(
   async (req: Request, res: Response) => {
-    if (!req.user) throw new ApiError("Error during validation", 401);
+    enrichContext({ action: "delete_project_listing" });
+
+    if (!req.user) {
+      enrichContext({ outcome: "unauthorized" });
+      throw new ApiError("Error during validation", 401);
+    }
 
     const userid = new mongoose.Types.ObjectId(req.user._id);
 
     const result = githubRepoIdSchema.safeParse(req.query);
     if (!result.success) {
+      enrichContext({ outcome: "validation_failed" });
       response(
         res,
         400,
@@ -763,6 +889,8 @@ const deleteProjectListing = asyncHandler(
       return;
     }
 
+    enrichContext({ entity: { type: "project", github_repo_id: req.query.github_repo_id as string } });
+
     const [projectData, projectError] = await tryCatch(
       Project.findOne({
         userid,
@@ -771,7 +899,8 @@ const deleteProjectListing = asyncHandler(
     );
 
     if (projectError) {
-      logger.error("Failed to delete project:", projectError);
+      enrichContext({ outcome: "error", error: { name: "DatabaseError" } });
+      logger.error("Failed to fetch project for deletion", projectError);
       response(res, 500, "Failed to delete listed project. Try again later.");
       return;
     }
@@ -784,12 +913,14 @@ const deleteProjectListing = asyncHandler(
     );
 
     if (deleteError) {
-      logger.error("Failed to delete project:", projectError);
+      enrichContext({ outcome: "error", error: { name: "DatabaseError" } });
+      logger.error("Failed to delete project", deleteError);
       response(res, 500, "Failed to delete listed project. Try again later.");
       return;
     }
 
     if (deleteResponse.deletedCount == 0) {
+      enrichContext({ outcome: "not_found" });
       response(res, 404, "No such project was listed. Invalid Request.");
       return;
     }
@@ -798,6 +929,8 @@ const deleteProjectListing = asyncHandler(
       ...(projectData?.project_images ? projectData.project_images : []),
       ...(projectData?.project_video ? [projectData.project_video] : []),
     ];
+
+    enrichContext({ media_cleanup_count: toBeDeletedKeys.length });
 
     for (const key of toBeDeletedKeys) {
       const S3Uploadkey = key.replace(
@@ -809,16 +942,23 @@ const deleteProjectListing = asyncHandler(
         redisClient.zadd("media-cleanup-schedule", Date.now(), S3Uploadkey)
       );
 
-      if (redisError) logger.error("Failed to delete object:", redisError);
+      if (redisError) {
+        enrichContext({ cleanup_queue_error: true });
+        logger.error("Failed to queue media for cleanup", redisError);
+      }
     }
 
+    enrichContext({ outcome: "success" });
     response(res, 200, "Project was deleted successfully");
   }
 );
 
 const searchProject = asyncHandler(async (req: Request, res: Response) => {
+  enrichContext({ action: "search_projects" });
+
   const validationResult = searchProjectSchema.safeParse(req.body);
   if (!validationResult.success) {
+    enrichContext({ outcome: "validation_failed" });
     response(
       res,
       400,
@@ -830,13 +970,22 @@ const searchProject = asyncHandler(async (req: Request, res: Response) => {
   }
 
   const { searchTerm, projectTypes, sortBy, limit, offset } = req.body;
+  enrichContext({
+    search: {
+      term: searchTerm || null,
+      filters: { projectTypes, sortBy },
+    }
+  });
 
+  const dbStartTime = performance.now();
   const [searchData, searchError] = await tryCatch(
     searchAndFilterProjects(searchTerm, projectTypes, sortBy, limit, offset)
   );
+  enrichContext({ db_latency_ms: Math.round(performance.now() - dbStartTime) });
 
   if (searchError) {
-    logger.error("Failed to fetch project data:", searchError);
+    enrichContext({ outcome: "error", error: { name: "DatabaseError" } });
+    logger.error("Failed to search projects", searchError);
     response(res, 500, "Failed to fetch project data. Try again later.");
     return;
   }
@@ -846,6 +995,11 @@ const searchProject = asyncHandler(async (req: Request, res: Response) => {
   const hasPrevPage = offset > 0;
   const totalPages = Math.ceil(totalCount / limit);
   const currentPage = Math.floor(offset / limit) + 1;
+
+  enrichContext({
+    outcome: "success",
+    search: { results_count: totalCount },
+  });
 
   response(res, 200, "Projects fetched successfully", {
     projects,

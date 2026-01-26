@@ -9,7 +9,12 @@ const dbConnect = async () => {
 
   if (error) throw error;
 
-  logger.info(`🍀 MongoDB connected at host: ${connection.connection.host}`);
+  logger.info({
+    event: "database_connected",
+    database: "mongodb",
+    host: connection.connection.host,
+  });
 };
 
 export default dbConnect;
+

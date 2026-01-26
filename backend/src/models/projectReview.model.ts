@@ -35,23 +35,3 @@ reviewSchema.index({ projectId: 1, rating: -1 });
 reviewSchema.index({ userId: 1, projectId: 1 }, { unique: true });
 
 export const Review = model("Review", reviewSchema);
-
-// const updateProjectRating = async (projectId) => {
-//   const stats = await Review.aggregate([
-//     { $match: { projectId: new mongoose.Types.ObjectId(projectId) } },
-//     {
-//       $group: {
-//         _id: null,
-//         avgRating: { $avg: "$rating" },
-//         totalReviews: { $sum: 1 }
-//       }
-//     }
-//   ]);
-
-//   const { avgRating = 0, totalReviews = 0 } = stats[0] || {};
-
-//   await Project.findByIdAndUpdate(projectId, {
-//     avgRating: Math.round(avgRating * 10) / 10, // Round to 1 decimal
-//     totalReviews
-//   });
-// };
