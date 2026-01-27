@@ -14,8 +14,8 @@ export default function Footer() {
   return (
     <footer className="py-12 relative z-10 border-t border-white/5">
       <div className="container mx-auto px-4 max-w-6xl">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8 mb-8">
-          <div>
+        <div className="flex flex-col md:flex-row justify-between items-center md:items-start gap-8 mb-8">
+          <div className="flex flex-col items-center md:items-start text-center md:text-left">
             <Link to="/" className="block text-xl font-bold mb-2 hover:opacity-80 transition-opacity">
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500">
                 DevExchange
@@ -26,7 +26,7 @@ export default function Footer() {
             </p>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-6 sm:gap-8 items-start sm:items-center">
+          <div className="flex flex-col sm:flex-row gap-6 sm:gap-8 items-center">
             <div className="flex gap-4">
               {socialLinks.map((social, index) => (
                 <a
@@ -42,7 +42,7 @@ export default function Footer() {
               ))}
             </div>
             
-            <div className="flex gap-6">
+            <div className="flex flex-wrap justify-center gap-6">
               {legalLinks.map((link) => (
                 <Link
                   key={link.name}
@@ -56,7 +56,7 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4">
+        <div className="pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4 text-center md:text-left">
           <p className="text-gray-500 text-sm">
             © {new Date().getFullYear()} DevExchange. Open source under MIT License.
           </p>
