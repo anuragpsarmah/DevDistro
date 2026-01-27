@@ -19,6 +19,6 @@ export interface SidebarProps {
 export type BuyerDashboardTabTypes =
   | "Marketplace"
   | "Cart"
-  | "Account Settings"
-  | "Order History"
-  | "Wallet Connection";
+  | "Settings"
+  | "Orders"
+  | "Wallet";

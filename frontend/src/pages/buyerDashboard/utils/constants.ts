@@ -4,7 +4,7 @@ import { SolanaLogo } from "@/components/ui/solanaLogo";
 export const sidebarItems = [
   { icon: Store, label: "Marketplace" },
   { icon: ShoppingCart, label: "Cart" },
-  { icon: User, label: "Account Settings" },
-  { icon: History, label: "Order History" },
-  { icon: SolanaLogo, label: "Wallet Connection" },
+  { icon: User, label: "Settings" },
+  { icon: History, label: "Orders" },
+  { icon: SolanaLogo, label: "Wallet" },
 ] as const;

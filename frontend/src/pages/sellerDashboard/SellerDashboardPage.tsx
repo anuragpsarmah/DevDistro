@@ -18,11 +18,22 @@ export default function SellerDashboardPage({
 }: SellerDashboardPageProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [activeTab, setActiveTab] =
-    useState<SellerDashboardTabTypes>("Dashboard Overview");
+    useState<SellerDashboardTabTypes>("Overview");
   const navigate = useNavigate();
 
   return (
-    <div className="flex h-screen bg-gray-900 text-white relative overflow-hidden">
+    <div className="min-h-screen flex text-white relative overflow-hidden bg-[#030712]">
+      <div
+        className="fixed inset-0 pointer-events-none"
+        style={{
+          background: `
+            radial-gradient(ellipse 100% 80% at 50% 0%, rgba(88, 28, 135, 0.15) 0%, transparent 60%),
+            radial-gradient(circle at 20% 50%, rgba(59, 130, 246, 0.05) 0%, transparent 40%),
+            radial-gradient(circle at 80% 70%, rgba(139, 92, 246, 0.05) 0%, transparent 40%),
+            #030712
+          `,
+        }}
+      />
       <BackgroundDots />
 
       <Sidebar
@@ -35,20 +46,20 @@ export default function SellerDashboardPage({
       />
 
       <main className="flex-1 p-8 overflow-auto relative z-10">
-        {activeTab === "Dashboard Overview" && (
+        {activeTab === "Overview" && (
           <DashboardOverviewTab logout={logout} />
         )}
-        {activeTab === "Account Settings" && (
+        {activeTab === "Settings" && (
           <AccountSettingsTab logout={logout} />
         )}
-        {activeTab === "List New Project" && (
+        {activeTab === "List Project" && (
           <ListNewProjectTab logout={logout} setActiveTab={setActiveTab} />
         )}
-        {activeTab === "Manage Projects" && (
+        {activeTab === "My Projects" && (
           <ManageProjectsTab logout={logout} />
         )}
-        {activeTab === "Order History" && <></>}
-        {activeTab === "Wallet Connection" && (
+        {activeTab === "Orders" && <></>}
+        {activeTab === "Wallet" && (
           <BillingAndPaymentsTab logout={logout} />
         )}
       </main>

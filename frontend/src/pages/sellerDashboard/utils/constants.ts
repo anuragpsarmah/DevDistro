@@ -7,12 +7,12 @@ import {
 } from "./types";
 
 export const sidebarItems = [
-  { icon: BarChart2, label: "Dashboard Overview" },
-  { icon: User, label: "Account Settings" },
-  { icon: PlusSquare, label: "List New Project" },
-  { icon: Layers, label: "Manage Projects" },
-  { icon: History, label: "Order History" },
-  { icon: SolanaLogo, label: "Wallet Connection" },
+  { icon: BarChart2, label: "Overview" },
+  { icon: User, label: "Settings" },
+  { icon: PlusSquare, label: "List Project" },
+  { icon: Layers, label: "My Projects" },
+  { icon: History, label: "Orders" },
+  { icon: SolanaLogo, label: "Wallet" },
 ] as const;
 
 export const INITIAL_CHART_DATA: ChartDataObject[] = [

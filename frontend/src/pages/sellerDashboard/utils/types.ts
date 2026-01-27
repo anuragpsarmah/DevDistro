@@ -3,12 +3,12 @@ import { PROJECT_TYPES } from "./constants";
 import { PublicKey } from "@solana/web3.js";
 
 export type SellerDashboardTabTypes =
-  | "Dashboard Overview"
-  | "Account Settings"
-  | "List New Project"
-  | "Manage Projects"
-  | "Order History"
-  | "Wallet Connection";
+  | "Overview"
+  | "Settings"
+  | "List Project"
+  | "My Projects"
+  | "Orders"
+  | "Wallet";
 export interface ChartDataObject {
   month: string;
   sales: number;
@@ -117,8 +117,8 @@ export interface RepoImportProps {
   handleRefresh?: () => Promise<unknown>;
   totalListedProjectsDataLoading: boolean;
   totalListedProjectsData:
-    | { data: { totalListedProjects: number } }
-    | undefined;
+  | { data: { totalListedProjects: number } }
+  | undefined;
 }
 
 export interface ProjectListingFormProps {

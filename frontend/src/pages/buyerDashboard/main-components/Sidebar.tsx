@@ -15,7 +15,7 @@ export default function Sidebar({
 }: SidebarProps) {
   return (
     <>
-      <aside className="hidden lg:flex flex-col w-64 bg-gray-800 border-r border-gray-700 relative z-10">
+      <aside className="hidden lg:flex flex-col w-64 2xl:w-72 h-screen sticky top-0 bg-gray-900/60 backdrop-blur-xl border-r border-white/10 relative z-10">
         <SidebarContent
           activeTab={activeTab}
           setActiveTab={setActiveTab}
@@ -26,7 +26,7 @@ export default function Sidebar({
       <div className="lg:hidden">
         <button
           onClick={() => setIsSidebarOpen(true)}
-          className="fixed top-4 left-4 z-20 p-2 bg-gray-800 rounded-md shadow-md"
+          className="fixed top-4 left-4 z-20 p-2 bg-gray-900/80 backdrop-blur-xl rounded-md shadow-md border border-white/10"
           aria-label="Open sidebar"
         >
           <Menu className="h-6 w-6 text-white" />
@@ -48,7 +48,7 @@ export default function Sidebar({
                 animate={{ x: 0 }}
                 exit={{ x: "-100%" }}
                 transition={{ duration: 0.3 }}
-                className="fixed top-0 left-0 bottom-0 w-64 bg-gray-800 z-40"
+                className="fixed top-0 left-0 bottom-0 w-64 bg-gray-900/95 backdrop-blur-xl border-r border-white/10 z-40"
               >
                 <button
                   onClick={() => setIsSidebarOpen(false)}
@@ -90,8 +90,8 @@ function SidebarContent({
         </h2>
         <p className="text-sm text-gray-400 mt-1">Buyer Marketplace</p>
       </div>
-      <nav className="flex-1">
-        <ul className="space-y-3 px-3">
+      <nav className="flex-1 overflow-y-auto py-2">
+        <ul className="space-y-1 2xl:space-y-2 px-3 2xl:px-4">
           {sidebarItems.map((item, index) => (
             <SidebarItem
               key={index}
@@ -105,13 +105,13 @@ function SidebarContent({
           ))}
         </ul>
       </nav>
-      <div className="p-4 space-y-3 border-t border-gray-700">
+      <div className="p-4 space-y-3 border-t border-white/10">
         <button
-          className="w-full py-2 px-4 text-gray-300 hover:text-white font-medium rounded-md transition-all duration-300 ease-in-out bg-gray-700 flex items-center justify-center gap-2 hover:bg-gray-600"
+          className="w-full py-2 px-4 text-gray-300 hover:text-white font-medium rounded-md transition-all duration-300 ease-in-out bg-white/5 border border-white/10 flex items-center justify-center gap-2 hover:bg-white/10"
           onClick={onSwitchToSeller}
         >
-          <Repeat className="h-5 w-5" />
-          Switch to Seller Space
+          <Repeat className="h-4 w-4 flex-shrink-0" />
+          <span className="whitespace-nowrap">Switch to Seller</span>
         </button>
         <button
           className="w-full py-2 px-4 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-medium rounded-md transition-all duration-300 transform hover:shadow-lg"
@@ -140,16 +140,19 @@ function SidebarItem({
       <button
         onClick={onClick}
         className={cn(
-          "flex w-full items-center gap-3 rounded-md px-3 py-2.5 transition-colors duration-200",
+          "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 2xl:py-3 text-sm transition-colors duration-150",
           isActive
-            ? "bg-gray-700 text-white"
-            : "text-gray-300 hover:bg-gray-700 hover:text-white",
-          "focus:outline-none focus-visible:ring focus-visible:ring-blue-500 focus-visible:ring-opacity-50"
+            ? "bg-white/10 text-white"
+            : "text-gray-400 hover:text-white hover:bg-white/5",
+          "focus:outline-none"
         )}
       >
-        <Icon className="h-5 w-5" />
-        <span>{label}</span>
-        <ChevronRight className="h-4 w-4 ml-auto" />
+        <Icon className="h-4 w-4 flex-shrink-0" />
+        <span className="truncate">{label}</span>
+        <ChevronRight className={cn(
+          "h-4 w-4 ml-auto flex-shrink-0 transition-transform",
+          isActive && "text-purple-400"
+        )} />
       </button>
     </li>
   );

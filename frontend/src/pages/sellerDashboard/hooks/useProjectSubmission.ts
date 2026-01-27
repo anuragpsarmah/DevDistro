@@ -123,7 +123,7 @@ export const useProjectSubmission = ({
       successToast(
         finalResponse?.message || "Project listed/modified successfully"
       );
-      if (setActiveTab) setActiveTab("Manage Projects");
+      if (setActiveTab) setActiveTab("My Projects");
       if (handleReturnToAllListings) handleReturnToAllListings();
     }
     setIsSubmitting(false);
