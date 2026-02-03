@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X } from "lucide-react";
 import { SidebarContentProps, SidebarProps } from "../utils/types";
 import { sidebarItems } from "../utils/constants";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 
 export default function Sidebar({
   activeTab,
@@ -84,6 +84,17 @@ function SidebarContent({
   onSwitchToBuyer,
 }: SidebarContentProps) {
   const [hoveredTab, setHoveredTab] = useState<string | null>(null);
+  const [animationDirection, setAnimationDirection] = useState<"up" | "down" | null>(null);
+  const prevActiveIndexRef = useRef<number>(-1);
+
+  // Calculate direction when activeTab changes
+  useEffect(() => {
+    const currentIndex = sidebarItems.findIndex(item => item.label === activeTab);
+    if (prevActiveIndexRef.current !== -1 && currentIndex !== prevActiveIndexRef.current) {
+      setAnimationDirection(currentIndex > prevActiveIndexRef.current ? "down" : "up");
+    }
+    prevActiveIndexRef.current = currentIndex;
+  }, [activeTab]);
 
   return (
     <div className="flex flex-col h-full">
@@ -104,6 +115,7 @@ function SidebarContent({
               {...item}
               isActive={activeTab === item.label}
               isHovered={hoveredTab === item.label}
+              animationDirection={animationDirection}
               onMouseEnter={() => setHoveredTab(item.label)}
               onClick={() => {
                 setActiveTab(item.label);
@@ -137,6 +149,7 @@ function SidebarItem({
   label,
   isActive,
   isHovered,
+  animationDirection,
   onClick,
   onMouseEnter,
 }: {
@@ -144,10 +157,14 @@ function SidebarItem({
   label: string;
   isActive: boolean;
   isHovered: boolean;
+  animationDirection: "up" | "down" | null;
   onClick: () => void;
   onMouseEnter: () => void;
 }) {
-  const showHoverHighlight = isHovered && !isActive;
+  // Use slower spring for downward (top-to-bottom) animation, faster for upward
+  const springConfig = animationDirection === "down"
+    ? { stiffness: 280, damping: 32 }  // Slower for downward
+    : { stiffness: 350, damping: 30 }; // Faster for upward (original)
 
   return (
     <li className="relative">
@@ -160,15 +177,18 @@ function SidebarItem({
         )}
         style={{ willChange: "transform" }}
       >
-        {showHoverHighlight && (
+        {/* Hover highlight - rendered when hovered, invisible on active tab to keep layoutId animation smooth */}
+        {isHovered && (
           <motion.div
             layoutId="sidebar-hover-highlight"
             className="absolute inset-0 bg-white/5 rounded-lg"
             initial={false}
+            animate={{ opacity: isActive ? 0 : 1 }}
             transition={{
               type: "spring",
               stiffness: 350,
               damping: 30,
+              opacity: { duration: 0.1 },
             }}
             style={{ willChange: "transform" }}
           />
@@ -180,8 +200,7 @@ function SidebarItem({
             initial={false}
             transition={{
               type: "spring",
-              stiffness: 350,
-              damping: 30,
+              ...springConfig,
             }}
             style={{ willChange: "transform" }}
           />
