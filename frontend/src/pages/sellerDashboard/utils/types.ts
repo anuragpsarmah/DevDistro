@@ -117,7 +117,7 @@ export interface RepoImportProps {
   handleRefresh?: () => Promise<unknown>;
   totalListedProjectsDataLoading: boolean;
   totalListedProjectsData:
-  | { data: { totalListedProjects: number } }
+  | { data: { totalListedProjects: number; projectListingLimit: number } }
   | undefined;
 }
 

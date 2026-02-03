@@ -271,20 +271,26 @@ const getPreSignedUrlForProjectMediaUpload = asyncHandler(
     enrichContext({ modification_type: modificationType });
 
     if (modificationType === "new") {
-      const [projectCount, countError] = await tryCatch(
-        Project.countDocuments({ userid })
+      const [queryResult, countError] = await tryCatch(
+        Promise.all([
+          Project.countDocuments({ userid }),
+          User.findById(userid).select("project_listing_limit").lean(),
+        ])
       );
 
-      if (countError) {
+      if (countError || !queryResult) {
         enrichContext({ outcome: "error", error: { name: "DatabaseError", message: countError instanceof Error ? countError.message : "Count query failed" } });
         logger.error("Failed to count projects", countError);
         response(res, 500, "Failed to fetch total listed projects");
         return;
       }
 
-      if (projectCount >= 2) {
+      const [projectCount, userData] = queryResult;
+      const projectListingLimit = userData?.project_listing_limit ?? parseInt(process.env.DEFAULT_PROJECT_LISTING_LIMIT || "2", 10);
+
+      if (projectCount >= projectListingLimit) {
         enrichContext({ outcome: "validation_failed", reason: "max_projects_reached" });
-        response(res, 400, "Only two projects can be listed at a time");
+        response(res, 400, `Only ${projectListingLimit} projects can be listed at a time`);
         return;
       }
     }
@@ -387,19 +393,26 @@ const validateMediaUploadAndStoreProject = asyncHandler(
     });
 
     if (modificationType === "new") {
-      const [projectCount, countError] = await tryCatch(
-        Project.countDocuments({ userid })
+      const [queryResult, countError] = await tryCatch(
+        Promise.all([
+          Project.countDocuments({ userid }),
+          User.findById(userid).select("project_listing_limit").lean(),
+        ])
       );
 
-      if (countError) {
+      if (countError || !queryResult) {
         enrichContext({ outcome: "error", error: { name: "DatabaseError", message: countError instanceof Error ? countError.message : "Count query failed" } });
         logger.error("Failed to count projects", countError);
         response(res, 500, "Failed to fetch total listed projects");
         return;
       }
-      if (projectCount >= 2) {
+
+      const [projectCount, userData] = queryResult;
+      const projectListingLimit = userData?.project_listing_limit ?? parseInt(process.env.DEFAULT_PROJECT_LISTING_LIMIT || "2", 10);
+
+      if (projectCount >= projectListingLimit) {
         enrichContext({ outcome: "validation_failed", reason: "max_projects_reached" });
-        response(res, 400, "Only two projects can be listed at a time");
+        response(res, 400, `Only ${projectListingLimit} projects can be listed at a time`);
         return;
       }
     }
@@ -660,22 +673,30 @@ const getTotalListedProjects = asyncHandler(
     }
 
     const userid = new mongoose.Types.ObjectId(req.user._id);
-    const [projectCount, countError] = await tryCatch(
-      Project.countDocuments({ userid })
+    const [queryResult, countError] = await tryCatch(
+      Promise.all([
+        Project.countDocuments({ userid }),
+        User.findById(userid).select("project_listing_limit").lean(),
+      ])
     );
 
-    if (countError) {
+    if (countError || !queryResult) {
       enrichContext({ outcome: "error", error: { name: "DatabaseError" } });
       logger.error("Failed to count listed projects", countError);
       response(res, 200, "Failed to fetch total listed projects", {
         totalListedProjects: -1,
+        projectListingLimit: parseInt(process.env.DEFAULT_PROJECT_LISTING_LIMIT || "2", 10),
       });
       return;
     }
 
+    const [projectCount, userData] = queryResult;
+    const projectListingLimit = userData?.project_listing_limit ?? parseInt(process.env.DEFAULT_PROJECT_LISTING_LIMIT || "2", 10);
+
     enrichContext({ outcome: "success", project_count: projectCount });
     response(res, 200, "Total listed projects fetched successfully", {
       totalListedProjects: projectCount,
+      projectListingLimit,
     });
   }
 );

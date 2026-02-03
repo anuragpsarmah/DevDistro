@@ -235,6 +235,7 @@ const githubLogin = asyncHandler(async (req: Request, res: Response) => {
         username,
         profile_image_url: profile_image_url,
         github_access_token: encryptedAccessToken,
+        project_listing_limit: parseInt(process.env.DEFAULT_PROJECT_LISTING_LIMIT || "2", 10),
       })
     );
     enrichContext({ db_write_latency_ms: Math.round(performance.now() - createStartTime) });
@@ -264,7 +265,7 @@ const githubLogin = asyncHandler(async (req: Request, res: Response) => {
     response(
       res,
       200,
-      "User login successful",
+      "User login successful. New User created.",
       {
         id: newUser.id,
         username,

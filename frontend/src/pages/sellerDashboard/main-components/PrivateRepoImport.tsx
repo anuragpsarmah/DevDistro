@@ -36,7 +36,7 @@ export default function PrivateRepoImport({
               totalListedProjectsData &&
               totalListedProjectsData.data.totalListedProjects !== -1 &&
               totalListedProjectsData.data.totalListedProjects !== 0 &&
-              `${totalListedProjectsData.data.totalListedProjects} / 2`}
+              `${totalListedProjectsData.data.totalListedProjects} / ${totalListedProjectsData.data.projectListingLimit}`}
           </span>
         </h2>
 
@@ -66,7 +66,7 @@ export default function PrivateRepoImport({
               disabled={
                 !totalListedProjectsDataLoading &&
                 totalListedProjectsData &&
-                (totalListedProjectsData.data.totalListedProjects >= 2 ||
+                (totalListedProjectsData.data.totalListedProjects >= totalListedProjectsData.data.projectListingLimit ||
                   totalListedProjectsData.data.totalListedProjects === -1)
               }
               className="pl-10 bg-white/5 border-white/10 text-gray-300 w-full focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus:border-indigo-500/50 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -125,7 +125,7 @@ export default function PrivateRepoImport({
 
             {!totalListedProjectsDataLoading &&
               totalListedProjectsData &&
-              (totalListedProjectsData.data.totalListedProjects >= 2 ||
+              (totalListedProjectsData.data.totalListedProjects >= totalListedProjectsData.data.projectListingLimit ||
                 totalListedProjectsData.data.totalListedProjects === -1) && (
                 <div className="absolute inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center rounded-lg p-4">
                   <div className="relative w-full max-w-sm">
@@ -140,13 +140,13 @@ export default function PrivateRepoImport({
                         </div>
 
                         <h3 className="text-lg font-medium text-gray-200 mb-2">
-                          {totalListedProjectsData.data.totalListedProjects >= 2
+                          {totalListedProjectsData.data.totalListedProjects >= totalListedProjectsData.data.projectListingLimit
                             ? "Limit Reached"
                             : "Error"}
                         </h3>
                         <p className="text-gray-500 text-sm leading-relaxed">
-                          {totalListedProjectsData.data.totalListedProjects >= 2
-                            ? "Only two projects can be listed at a time."
+                          {totalListedProjectsData.data.totalListedProjects >= totalListedProjectsData.data.projectListingLimit
+                            ? `Only ${totalListedProjectsData.data.projectListingLimit} projects can be listed at a time.`
                             : "Something went wrong. Please refresh."}
                         </p>
                       </div>

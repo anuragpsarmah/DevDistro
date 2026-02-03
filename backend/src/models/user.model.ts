@@ -49,6 +49,10 @@ const userSchema = new Schema(
       unique: true,
       index: true,
     },
+    project_listing_limit: {
+      type: Number,
+      default: null,
+    },
   },
   { timestamps: true }
 );
