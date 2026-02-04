@@ -22,17 +22,32 @@ export const profileInformationSchema = z.object({
   profile_visibility: z.boolean().optional(),
 });
 
-export const walletAddressSchema = z.object({
-  wallet_address: z.string().refine(
-    (address) => {
-      if (address === "") return true;
+export const walletAddressSchema = z
+  .object({
+    wallet_address: z.string().refine(
+      (address) => {
+        if (address === "") return true;
 
-      const base58Regex = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
-      return base58Regex.test(address);
+        const base58Regex = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
+        return base58Regex.test(address);
+      },
+      {
+        message:
+          "Invalid Solana wallet address format. Must be a base58-encoded string of 32-44 characters.",
+      }
+    ),
+    signature: z.string().optional(),
+    message: z.string().optional(),
+  })
+  .refine(
+    (data) => {
+      if (data.wallet_address !== "") {
+        return !!data.signature && !!data.message;
+      }
+      return true;
     },
     {
       message:
-        "Invalid Solana wallet address format. Must be a base58-encoded string of 32-44 characters.",
+        "Signature and message are required when setting a wallet address",
     }
-  ),
-});
+  );

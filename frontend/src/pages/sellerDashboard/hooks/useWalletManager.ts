@@ -1,14 +1,18 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { WalletName } from "@solana/wallet-adapter-base";
-import { useWalletModal } from "@solana/wallet-adapter-react-ui";
 import { tryCatch } from "@/utils/tryCatch.util";
 import { errorToast } from "@/components/ui/customToast";
+import bs58 from "bs58";
 
 interface UseWalletManagerProps {
   walletAddress: string | null;
   isLoading: boolean;
-  onWalletConnect: (address: string) => Promise<void>;
+  onWalletConnect: (
+    address: string,
+    signature: string,
+    message: string
+  ) => Promise<void>;
   onWalletDisconnect: () => Promise<void>;
 }
 
@@ -25,8 +29,8 @@ export const useWalletManager = ({
   onWalletConnect,
   onWalletDisconnect,
 }: UseWalletManagerProps) => {
-  const { publicKey, disconnect, wallets, select, connected } = useWallet();
-  const { setVisible } = useWalletModal();
+  const { publicKey, disconnect, wallets, select, connected, signMessage } =
+    useWallet();
 
   const [detectedWallets, setDetectedWallets] = useState<
     (typeof wallets)[number][]
@@ -35,18 +39,26 @@ export const useWalletManager = ({
     []
   );
   const [localProcessing, setLocalProcessing] = useState(false);
+  const [isSigningMessage, setIsSigningMessage] = useState(false);
 
-  const displayAddress = walletAddress || publicKey?.toString();
+  const publicKeyString = publicKey?.toString() || null;
+
+  const displayAddress = walletAddress || publicKeyString;
   const isMounted = useRef(true);
   const intentionalOperation = useRef(false);
 
-  const hasWalletMismatch = Boolean(
-    walletAddress &&
-    publicKey &&
-    connected &&
-    publicKey.toString() !== walletAddress
-  );
-  const hasStoredButNotConnected = Boolean(walletAddress && !connected);
+  const hasWalletMismatch = useMemo(() => {
+    return Boolean(
+      walletAddress &&
+      publicKeyString &&
+      connected &&
+      publicKeyString !== walletAddress
+    );
+  }, [walletAddress, publicKeyString, connected]);
+
+  const hasStoredButNotConnected = useMemo(() => {
+    return Boolean(walletAddress && !connected);
+  }, [walletAddress, connected]);
 
   useEffect(() => {
     return () => {
@@ -96,23 +108,37 @@ export const useWalletManager = ({
         isLoading ||
         localProcessing ||
         intentionalOperation.current ||
-        !isMounted.current
+        !isMounted.current ||
+        isSigningMessage
       )
         return;
 
-      if (publicKey && !walletAddress && connected) {
+      if (publicKey && !walletAddress && connected && signMessage) {
         setLocalProcessing(true);
+        setIsSigningMessage(true);
         intentionalOperation.current = true;
-        const [, error] = await tryCatch(() =>
-          onWalletConnect(publicKey.toString())
-        );
+
+        const [, error] = await tryCatch(async () => {
+          const message = `DevExchange Wallet Verification\nAddress: ${publicKey.toString()}\nTimestamp: ${Date.now()}`;
+          const messageBytes = new TextEncoder().encode(message);
+
+          const signatureBytes = await signMessage(messageBytes);
+          const signature = bs58.encode(signatureBytes);
+
+          await onWalletConnect(publicKey.toString(), signature, message);
+        });
 
         if (error) {
           console.error("Failed to sync wallet to backend:", error);
+          errorToast(
+            "Failed to verify wallet ownership. Please try connecting again."
+          );
+          await disconnect();
         }
 
         if (isMounted.current) {
           setLocalProcessing(false);
+          setIsSigningMessage(false);
           setTimeout(() => {
             intentionalOperation.current = false;
           }, 500);
@@ -128,6 +154,8 @@ export const useWalletManager = ({
     isLoading,
     onWalletConnect,
     localProcessing,
+    signMessage,
+    isSigningMessage,
   ]);
 
   const handleCopyAddress = () => {
@@ -138,10 +166,9 @@ export const useWalletManager = ({
     }
   };
 
-  const handleSelectWallet = (selectedWallet: WalletAdapter): void => {
+  const handleSelectWallet = async (selectedWallet: WalletAdapter): Promise<void> => {
     if (isLoading || localProcessing) return;
     select(selectedWallet.adapter.name as WalletName);
-    setVisible(true);
   };
 
   const handleWalletRedirect = (url: string): void => {
@@ -150,14 +177,18 @@ export const useWalletManager = ({
 
   const viewOnExplorer = () => {
     if (displayAddress) {
+      const network = import.meta.env.VITE_SOLANA_NETWORK?.toLowerCase();
+      const clusterParam = network === "mainnet" || network === "mainnet-beta"
+        ? ""
+        : `?cluster=${network || "devnet"}`;
       window.open(
-        `https://explorer.solana.com/address/${displayAddress}`,
+        `https://explorer.solana.com/address/${displayAddress}${clusterParam}`,
         "_blank"
       );
     }
   };
 
-  const isProcessing = isLoading || localProcessing;
+  const isProcessing = isLoading || localProcessing || isSigningMessage;
 
   return {
     detectedWallets,
@@ -174,3 +205,4 @@ export const useWalletManager = ({
     viewOnExplorer,
   };
 };
+

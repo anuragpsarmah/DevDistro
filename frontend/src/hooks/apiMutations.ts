@@ -5,6 +5,7 @@ import {
   ProfileUpdateData,
   projectListingValidatedFormData,
   ProjectMediaMetadata,
+  WalletUpdatePayload,
 } from "@/utils/types";
 import { useHandleError } from "./useHandleErrors";
 import { tryCatch } from "@/utils/tryCatch.util";
@@ -219,19 +220,26 @@ const useUpdateWalletAddressMutation = ({ logout }: mutationParameter) => {
   let operationInProgress = false;
 
   return useMutation({
-    mutationFn: async (wallet_address: string) => {
+    mutationFn: async (data: WalletUpdatePayload | string) => {
       if (operationInProgress) {
         throw new Error("Operation already in progress");
       }
 
       operationInProgress = true;
 
+      const payload =
+        typeof data === "string"
+          ? { wallet_address: data }
+          : {
+            wallet_address: data.address,
+            signature: data.signature,
+            message: data.message,
+          };
+
       const [response, error] = await tryCatch(
-        axios.put(
-          `${backend_uri}/profile/updateWalletAddress`,
-          { wallet_address },
-          { withCredentials: true }
-        )
+        axios.put(`${backend_uri}/profile/updateWalletAddress`, payload, {
+          withCredentials: true,
+        })
       );
 
       if (response) successToast("Wallet address updated successfully");

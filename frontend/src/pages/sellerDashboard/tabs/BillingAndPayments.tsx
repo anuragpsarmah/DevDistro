@@ -1,4 +1,4 @@
-import { useCallback, useRef, useEffect } from "react";
+import { useCallback, useRef, useEffect, useState } from "react";
 import AnimatedLoadWrapper from "@/components/wrappers/AnimatedLoadWrapper";
 import ConnectToWallet from "../main-components/ConnectToWallet";
 import { useUpdateWalletAddressMutation } from "@/hooks/apiMutations";
@@ -15,8 +15,8 @@ export default function BillingAndPaymentsTab({
   logout,
 }: BillingAndPaymentsTabProps) {
   const pendingOperation = useRef(false);
-  const isInitializing = useRef(true);
   const hasInitialized = useRef(false);
+  const [isInitializing, setIsInitializing] = useState(true);
 
   const { publicKey, connected, disconnect } = useWallet();
 
@@ -36,38 +36,31 @@ export default function BillingAndPaymentsTab({
   useEffect(() => {
     if (!existingAddressLoading && walletData && !hasInitialized.current) {
       hasInitialized.current = true;
-      isInitializing.current = true;
 
-      let disconnectFlag = false;
-
-      const cleanupSilentConnection = async () => {
-        if (!existingAddress && connected && publicKey) {
+      // Only need cleanup if: no stored address BUT wallet is connected (silent connection)
+      const needsCleanup = !existingAddress && connected && publicKey;
+      
+      if (needsCleanup) {
+        setIsInitializing(true);
+        
+        const cleanupSilentConnection = async () => {
           const [, error] = await tryCatch(() => disconnect());
           if (error) {
-            console.error(
-              "Error disconnecting silently connected wallet:",
-              error
-            );
-            errorToast(
-              "Error disconnecting silently connected wallet. Refresh the page."
-            );
-          } else {
-            disconnectFlag = true;
+            console.error("Error disconnecting silently connected wallet:", error);
+            errorToast("Error disconnecting silently connected wallet. Refresh the page.");
           }
-        } else {
-          disconnectFlag = true;
-        }
-      };
+          setTimeout(() => {
+            setIsInitializing(false);
+          }, 500);
+        };
 
-      cleanupSilentConnection();
-
-      const timer = setTimeout(() => {
-        if (disconnectFlag) isInitializing.current = false;
-      }, 500);
+        cleanupSilentConnection();
+      } else {
+        setIsInitializing(false);
+      }
 
       return () => {
-        clearTimeout(timer);
-        isInitializing.current = false;
+        setIsInitializing(false);
       };
     }
   }, [
@@ -80,13 +73,15 @@ export default function BillingAndPaymentsTab({
   ]);
 
   const handleWalletConnect = useCallback(
-    async (address: string) => {
-      if (isInitializing.current || pendingOperation.current) return;
+    async (address: string, signature: string, message: string) => {
+      if (isInitializing || pendingOperation.current) return;
       if (existingAddressLoading || isUpdating) return;
       if (address === existingAddress) return;
 
       pendingOperation.current = true;
-      const [, error] = await tryCatch(() => updateWalletAddressMutate(address));
+      const [, error] = await tryCatch(() =>
+        updateWalletAddressMutate({ address, signature, message })
+      );
 
       setTimeout(() => {
         pendingOperation.current = false;
@@ -99,11 +94,12 @@ export default function BillingAndPaymentsTab({
       isUpdating,
       existingAddress,
       updateWalletAddressMutate,
+      isInitializing,
     ]
   );
 
   const handleWalletDisconnect = useCallback(async () => {
-    if (isInitializing.current || pendingOperation.current) return;
+    if (isInitializing || pendingOperation.current) return;
     if (existingAddressLoading || isUpdating) return;
     if (!existingAddress) return;
 
@@ -120,9 +116,10 @@ export default function BillingAndPaymentsTab({
     isUpdating,
     existingAddress,
     updateWalletAddressMutate,
+    isInitializing,
   ]);
 
-  const isLoading = existingAddressLoading || isUpdating;
+  const isLoading = existingAddressLoading || isUpdating || isInitializing;
 
   return (
     <AnimatedLoadWrapper>

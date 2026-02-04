@@ -9,30 +9,38 @@ import { clusterApiUrl } from "@solana/web3.js";
 import {
   PhantomWalletAdapter,
   SolflareWalletAdapter,
-  CoinbaseWalletAdapter,
-  LedgerWalletAdapter,
-  CloverWalletAdapter,
-  TorusWalletAdapter,
 } from "@solana/wallet-adapter-wallets";
+
+import "@solana/wallet-adapter-react-ui/styles.css";
 
 interface SolanaWalletProviderProps {
   children: ReactNode;
-  network?: WalletAdapterNetwork;
 }
+
+const getNetwork = (): WalletAdapterNetwork => {
+  const envNetwork = import.meta.env.VITE_SOLANA_NETWORK?.toLowerCase();
+  switch (envNetwork) {
+    case "mainnet":
+    case "mainnet-beta":
+      return WalletAdapterNetwork.Mainnet;
+    case "testnet":
+      return WalletAdapterNetwork.Testnet;
+    case "devnet":
+    default:
+      return WalletAdapterNetwork.Devnet;
+  }
+};
 
 export const SolanaWalletProvider: FC<SolanaWalletProviderProps> = ({
   children,
-  network = WalletAdapterNetwork.Devnet,
 }) => {
+  const network = getNetwork();
   const endpoint = useMemo(() => clusterApiUrl(network), [network]);
+  
   const wallets = useMemo(() => {
-    const adapters = [
+const adapters = [
       new PhantomWalletAdapter(),
       new SolflareWalletAdapter({ network }),
-      new CoinbaseWalletAdapter(),
-      new LedgerWalletAdapter(),
-      new CloverWalletAdapter(),
-      new TorusWalletAdapter(),
     ];
     return adapters;
   }, [network]);

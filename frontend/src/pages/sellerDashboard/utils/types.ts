@@ -306,7 +306,11 @@ export interface ConnectToWalletProps {
   walletAddress: string | null;
   isLoading: boolean;
   isError: boolean;
-  onWalletConnect: (address: string) => Promise<void>;
+  onWalletConnect: (
+    address: string,
+    signature: string,
+    message: string
+  ) => Promise<void>;
   onWalletDisconnect: () => Promise<void>;
 }
 

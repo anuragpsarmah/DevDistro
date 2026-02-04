@@ -16,6 +16,12 @@ export interface walletAddressData {
   wallet_address: string;
 }
 
+export interface WalletUpdatePayload {
+  address: string;
+  signature?: string;
+  message?: string;
+}
+
 export interface ProjectMediaMetadata {
   originalName: string;
   fileType: string;

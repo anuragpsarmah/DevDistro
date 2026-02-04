@@ -18,10 +18,6 @@ export const WalletConnect = ({
     const walletLinks: WalletLinks = {
       Phantom: "https://phantom.app/",
       Solflare: "https://solflare.com/",
-      "Coinbase Wallet": "https://www.coinbase.com/wallet",
-      Ledger: "https://www.ledger.com/",
-      Clover: "https://clover.finance/",
-      Torus: "https://tor.us/",
     };
 
     return walletLinks[walletName] || "#";

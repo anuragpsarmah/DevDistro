@@ -12,6 +12,7 @@ import {
 import logger from "../logger/logger";
 import { tryCatch } from "../utils/tryCatch.util";
 import { enrichContext } from "../utils/asyncContext";
+import { verifyWalletSignature } from "../utils/walletVerification.util";
 
 const getProfileInformation = asyncHandler(
   async (req: Request, res: Response) => {
@@ -257,7 +258,7 @@ const updateWalletAddress = asyncHandler(
     const userId = new mongoose.Types.ObjectId(req.user._id);
     enrichContext({ entity: { type: "user", id: userId.toString() } });
 
-    const { wallet_address } = req.body;
+    const { wallet_address, signature, message } = req.body;
 
     const result = walletAddressSchema.safeParse(req.body);
     if (!result.success) {
@@ -270,6 +271,65 @@ const updateWalletAddress = asyncHandler(
         result.error.errors[0].message
       );
       return;
+    }
+
+    if (wallet_address && signature && message) {
+      const messageRegex = /^DevExchange Wallet Verification\nAddress: ([1-9A-HJ-NP-Za-km-z]{32,44})\nTimestamp: (\d+)$/;
+      const match = message.match(messageRegex);
+
+      if (!match) {
+        enrichContext({ outcome: "validation_failed", reason: "invalid_message_format" });
+        logger.warn("Invalid message format for wallet verification", { wallet_address });
+        response(res, 400, "Invalid verification message format.");
+        return;
+      }
+
+      const [, messageAddress, timestampStr] = match;
+
+      if (messageAddress !== wallet_address) {
+        enrichContext({ outcome: "validation_failed", reason: "address_mismatch" });
+        logger.warn("Address mismatch in wallet verification", {
+          submitted: wallet_address,
+          in_message: messageAddress
+        });
+        response(res, 400, "Address mismatch. Please try connecting again.");
+        return;
+      }
+
+      const timestamp = parseInt(timestampStr, 10);
+      const now = Date.now();
+      const fiveMinutesMs = 5 * 60 * 1000;
+
+      if (isNaN(timestamp) || now - timestamp > fiveMinutesMs || timestamp > now + 60000) {
+        enrichContext({ outcome: "validation_failed", reason: "timestamp_expired" });
+        logger.warn("Expired or invalid timestamp in wallet verification", {
+          timestamp,
+          current: now
+        });
+        response(res, 400, "Verification expired. Please try connecting again.");
+        return;
+      }
+
+      const isValidSignature = verifyWalletSignature(
+        wallet_address,
+        signature,
+        message
+      );
+
+      if (!isValidSignature) {
+        enrichContext({ outcome: "validation_failed" });
+        logger.warn("Wallet signature verification failed", {
+          wallet_address,
+        });
+        response(
+          res,
+          400,
+          "Signature verification failed. Please try connecting your wallet again."
+        );
+        return;
+      }
+
+      enrichContext({ signature_verified: true });
     }
 
     const dbStartTime = performance.now();
