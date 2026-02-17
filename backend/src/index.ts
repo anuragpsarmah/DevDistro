@@ -6,7 +6,7 @@ import { app } from "./app";
 import logger from "./logger/logger";
 import { redisInitialization } from "./initializations/redis-initialization";
 import { Redis } from "ioredis";
-import S3Service from "./S3/S3Service";
+import S3Service from "./services/S3.service";
 import S3CleanupService from "./workers/S3Cleanup.worker";
 
 

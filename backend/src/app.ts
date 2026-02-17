@@ -16,8 +16,7 @@ app.use(
 );
 app.use(loggerMiddleware);
 
-/* Mounting webhook route must be before express.json() so that the raw body
-   is preserved for HMAC signature verification*/
+/* Mounting webhook route before express.json() so that the raw body is preserved for HMAC signature verification*/
 import { webhookRouter } from "./routes/webhook.routes";
 app.use(
   "/api/webhooks",
