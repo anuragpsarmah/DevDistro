@@ -192,7 +192,7 @@ const githubLogin = asyncHandler(async (req: Request, res: Response) => {
     );
 
     Object.assign(existingUser, {
-      github_access_token: encryptedAccessToken,
+      github_user_token: encryptedAccessToken,
       username,
       name: name || "",
       profile_image_url,
@@ -234,7 +234,7 @@ const githubLogin = asyncHandler(async (req: Request, res: Response) => {
         name: name || "",
         username,
         profile_image_url: profile_image_url,
-        github_access_token: encryptedAccessToken,
+        github_user_token: encryptedAccessToken,
         project_listing_limit: parseInt(process.env.DEFAULT_PROJECT_LISTING_LIMIT || "2", 10),
       })
     );

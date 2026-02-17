@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Wallet, CheckCircle, Copy, ExternalLink, LogOut } from "lucide-react";
+import { Wallet, CheckCircle, Copy, ExternalLink, LogOut, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { WalletDisconnectProps } from "../utils/types";
 import { SolanaLogo } from "@/components/ui/solanaLogo";
@@ -149,7 +149,7 @@ export const WalletDisconnect = ({
           >
             {isProcessing ? (
               <>
-                <div className="animate-spin h-4 w-4 border-2 border-red-400 border-t-transparent rounded-full" />
+                <Loader2 className="h-4 w-4 animate-spin text-red-400" />
                 <span>Disconnecting...</span>
               </>
             ) : (

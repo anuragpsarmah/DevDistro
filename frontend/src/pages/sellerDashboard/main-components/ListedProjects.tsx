@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { ListedProjectsProps } from "../utils/types";
 import { Toggle } from "@/components/ui/toggle";
 import {
@@ -7,7 +8,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Eye, EyeOff, Edit, Trash2 } from "lucide-react";
+import { Eye, EyeOff, Edit, Trash2, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ErrorScreenListedProjects } from "../sub-components/ErrorScreens";
 import { NoProjectsScreen } from "../sub-components/NoProjectsScreen";
@@ -24,7 +25,9 @@ const ListedProjects = ({
   handleUIStateChange,
   setFormProps,
 }: ListedProjectsProps) => {
+  const queryClient = useQueryClient();
   const [projectStatuses, setProjectStatuses] = useState<Array<boolean>>([]);
+  const [togglingIndices, setTogglingIndices] = useState<Set<number>>(new Set());
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [projectToDelete, setProjectToDelete] = useState<number | null>(null);
 
@@ -35,12 +38,24 @@ const ListedProjects = ({
   }, [initialProjectData, isLoading, isError]);
 
   const handleProjectToggle = async (index: number) => {
-    const updatedStatuses = [...projectStatuses];
-    updatedStatuses[index] = !updatedStatuses[index];
+    if (togglingIndices.has(index)) return;
+
+    setTogglingIndices((prev) => new Set(prev).add(index));
     const response = await handleToggleProjectListing(
       initialProjectData[index].github_repo_id
     );
-    if (response) setProjectStatuses(updatedStatuses);
+    if (response) {
+      setProjectStatuses((prev) => {
+        const updated = [...prev];
+        updated[index] = !updated[index];
+        return updated;
+      });
+    }
+    setTogglingIndices((prev) => {
+      const next = new Set(prev);
+      next.delete(index);
+      return next;
+    });
   };
 
   const handleDeleteClick = (index: number) => {
@@ -53,7 +68,9 @@ const ListedProjects = ({
       const response = await handleDeleteProjectListing(
         initialProjectData[projectToDelete].github_repo_id
       );
-      if (response) initialProjectData.splice(projectToDelete, 1);
+      if (response) {
+        queryClient.invalidateQueries({ queryKey: ["initialProjectDataQuery"] });
+      }
     }
     setDeleteDialogOpen(false);
     setProjectToDelete(null);
@@ -97,47 +114,51 @@ const ListedProjects = ({
               <div className="relative z-10 flex flex-col h-full">
                 <div className="relative mb-4">
               <div className="absolute top-2 right-2 z-10 flex items-center space-x-2">
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Toggle
-                      aria-label="Toggle project active status"
-                      pressed={projectStatuses[idx]}
-                      onPressedChange={() => handleProjectToggle(idx)}
-                      className="bg-white/10 hover:bg-white/20 rounded-lg border border-white/5 hover:border-white/10 transition-all duration-200 p-1.5"
+                {!project.github_access_revoked && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Toggle
+                        aria-label="Toggle project active status"
+                        pressed={projectStatuses[idx]}
+                        onPressedChange={() => handleProjectToggle(idx)}
+                        className="bg-white/10 hover:bg-white/20 rounded-lg border border-white/5 hover:border-white/10 transition-all duration-200 p-1.5"
+                      >
+                        {projectStatuses[idx] ? (
+                          <Eye className="h-4 w-4 text-gray-300" />
+                        ) : (
+                          <EyeOff className="h-4 w-4 text-gray-500" />
+                        )}
+                      </Toggle>
+                    </TooltipTrigger>
+                    <TooltipContent
+                      side="bottom"
+                      className="bg-gray-900/95 backdrop-blur-xl text-gray-200 border-white/10"
                     >
-                      {projectStatuses[idx] ? (
-                        <Eye className="h-4 w-4 text-gray-300" />
-                      ) : (
-                        <EyeOff className="h-4 w-4 text-gray-500" />
-                      )}
-                    </Toggle>
-                  </TooltipTrigger>
-                  <TooltipContent
-                    side="bottom"
-                    className="bg-gray-900/95 backdrop-blur-xl text-gray-200 border-white/10"
-                  >
-                    {projectStatuses[idx] ? "Unlist Project" : "List Project"}
-                  </TooltipContent>
-                </Tooltip>
+                      {projectStatuses[idx] ? "Unlist Project" : "List Project"}
+                    </TooltipContent>
+                  </Tooltip>
+                )}
 
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleEditProject(idx)}
-                      className="bg-white/10 hover:bg-white/20 rounded-lg border border-white/5 hover:border-white/10 transition-all duration-200 p-1.5"
+                {!project.github_access_revoked && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleEditProject(idx)}
+                        className="bg-white/10 hover:bg-white/20 rounded-lg border border-white/5 hover:border-white/10 transition-all duration-200 p-1.5"
+                      >
+                        <Edit className="h-4 w-4 text-gray-300" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent
+                      side="bottom"
+                      className="bg-gray-900/95 backdrop-blur-xl text-gray-200 border-white/10"
                     >
-                      <Edit className="h-4 w-4 text-gray-300" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent
-                    side="bottom"
-                    className="bg-gray-900/95 backdrop-blur-xl text-gray-200 border-white/10"
-                  >
-                    Modify Project
-                  </TooltipContent>
-                </Tooltip>
+                      Modify Project
+                    </TooltipContent>
+                  </Tooltip>
+                )}
 
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -164,8 +185,8 @@ const ListedProjects = ({
                   alt={project.title}
                   className="w-full h-full object-cover"
                   style={{
-                    opacity: projectStatuses[idx] ? 1 : 0.5,
-                    filter: projectStatuses[idx] ? "none" : "grayscale(80%)",
+                    opacity: projectStatuses[idx] && !project.github_access_revoked ? 1 : 0.5,
+                    filter: projectStatuses[idx] && !project.github_access_revoked ? "none" : "grayscale(80%)",
                   }}
                 />
               </div>
@@ -176,12 +197,21 @@ const ListedProjects = ({
               </div>
             </div>
 
+            {project.github_access_revoked && (
+              <div className="flex items-start gap-2 px-3 py-3 rounded-lg bg-amber-500/10 border border-amber-500/20 mt-2 mb-2">
+                <AlertTriangle className="h-4 w-4 text-amber-400 flex-shrink-0 mt-0.5" />
+                <p className="text-xs text-amber-300/90">
+                  GitHub access revoked. Reinstall the GitHub App with access to this repository to restore.
+                </p>
+              </div>
+            )}
+
             <div className="flex flex-col flex-grow space-y-4">
               <p
                 className={`
-                  text-gray-300 
+                  text-gray-300
                   line-clamp-3
-                  ${!projectStatuses[idx] ? "opacity-50" : ""}
+                  ${!projectStatuses[idx] || project.github_access_revoked ? "opacity-50" : ""}
                 `}
               >
                 {truncateText(project.description, 120)}

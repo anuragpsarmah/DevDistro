@@ -8,61 +8,63 @@ import ApiError from "../utils/ApiError.util";
 
 const getPrivateReposFromCache = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
-    if (req.user) {
-      const redisKey = privateRepoPrefix(req.user._id);
+    if (!req.user) {
+      throw new ApiError("Error during validation", 401);
+    }
 
-      try {
-        const cached_private_repositories = await redisClient.get(redisKey);
+    const page = parseInt(req.query.page as string) || 1;
+    const redisKey = privateRepoPrefix(req.user._id);
 
-        if (cached_private_repositories) {
-          const cachedData = JSON.parse(cached_private_repositories);
-
-          if (req.rateLimited) {
+    try {
+      if (req.query.refreshStatus === "true") {
+        if (req.rateLimited) {
+          const cachedData = await redisClient.hget(redisKey, `page:${page}`);
+          if (cachedData) {
+            const parsed = JSON.parse(cachedData);
             response(
               res,
               200,
               req.rateLimitMessage || "Too many requests. Cached data fetched.",
-              [...cachedData, { isRateLimited: true }]
+              { ...parsed, isRateLimited: true }
             );
             return;
           }
-
-          if (req.query.refreshStatus === "false") {
-            response(
-              res,
-              200,
-              "Repos fetched from cache successfully",
-              cachedData
-            );
-            return;
-          }
-
-          next();
-        } else {
-          if (req.rateLimited) {
-            response(
-              res,
-              429,
-              "Too many refresh requests and no cached data available",
-              null
-            );
-            return;
-          }
-
-          next();
-        }
-      } catch (error) {
-        logger.error("Redis error:", error);
-
-        if (req.rateLimited) {
-          response(res, 429, "Too many requests and cache unavailable", null);
+          response(
+            res,
+            429,
+            "Too many refresh requests and no cached data available",
+            null
+          );
           return;
         }
 
+        await redisClient.del(redisKey);
         next();
+        return;
       }
-    } else {
-      throw new ApiError("Error during validation", 401);
+
+      const cachedData = await redisClient.hget(redisKey, `page:${page}`);
+
+      if (cachedData) {
+        response(
+          res,
+          200,
+          "Repos fetched from cache",
+          JSON.parse(cachedData)
+        );
+        return;
+      }
+
+      next();
+    } catch (error) {
+      logger.error("Redis error:", error);
+
+      if (req.rateLimited) {
+        response(res, 429, "Too many requests and cache unavailable", null);
+        return;
+      }
+
+      next();
     }
   }
 );

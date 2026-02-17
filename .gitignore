@@ -4,6 +4,8 @@
 */logs
 */dist
 
-*/dump.txt
-
 */tsconfig.app.tsbuildinfo
+
+.claude
+
+dump

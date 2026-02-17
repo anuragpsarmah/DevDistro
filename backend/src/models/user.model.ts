@@ -2,7 +2,7 @@ import { model, Schema } from "mongoose";
 
 const userSchema = new Schema(
   {
-    github_access_token: {
+    github_user_token: {
       type: String,
       required: [true, "GitHub access token is required"],
     },

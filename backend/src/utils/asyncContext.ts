@@ -10,7 +10,7 @@ export interface LogContext {
         github_id?: string;
     };
     action?: string;
-    outcome?: "success" | "error" | "validation_failed" | "unauthorized" | "not_found";
+    outcome?: "success" | "error" | "validation_failed" | "unauthorized" | "not_found" | "forbidden" | "organization_rejected" | "installation_owned_by_another_user" | "invalid_state" | "account_mismatch";
     entity?: {
         type?: string;
         id?: string;

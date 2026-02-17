@@ -15,6 +15,16 @@ app.use(
   })
 );
 app.use(loggerMiddleware);
+
+/* Mounting webhook route must be before express.json() so that the raw body
+   is preserved for HMAC signature verification*/
+import { webhookRouter } from "./routes/webhook.routes";
+app.use(
+  "/api/webhooks",
+  express.raw({ type: "application/json" }),
+  webhookRouter
+);
+
 app.use(express.json());
 app.use(cookieParser());
 
@@ -40,9 +50,11 @@ import { profileRouter } from "./routes/profile.routes";
 import { salesRouter } from "./routes/sales.routes";
 import { reviewRouter } from "./routes/reviews.routes";
 import { projectRouter } from "./routes/projects.routes";
+import { githubAppRouter } from "./routes/githubApp.routes";
 
 app.use("/api/auth", authRouter);
 app.use("/api/profile", profileRouter);
 app.use("/api/sales", salesRouter);
 app.use("/api/reviews", reviewRouter);
 app.use("/api/projects", projectRouter);
+app.use("/api/github-app", githubAppRouter);

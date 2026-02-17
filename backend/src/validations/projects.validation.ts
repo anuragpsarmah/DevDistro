@@ -7,11 +7,6 @@ export const projectFormDataSchema = z.object({
       required_error: "Price is required",
     })
     .min(0, "Price should be greater than or equal to 0."),
-  isActive: z
-    .boolean({
-      required_error: "IsActive flag is required",
-    })
-    .optional(),
   title: z
     .string({
       required_error: "Title is required",

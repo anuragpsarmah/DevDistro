@@ -1,4 +1,6 @@
 import dotenv from "dotenv";
+dotenv.config();
+
 import dbConnect from "./initializations/db-connect";
 import { app } from "./app";
 import logger from "./logger/logger";
@@ -7,7 +9,7 @@ import { Redis } from "ioredis";
 import S3Service from "./S3/S3Service";
 import S3CleanupService from "./workers/S3Cleanup.worker";
 
-dotenv.config();
+
 
 const PORT = process.env.PORT ? Number(process.env.PORT) : 3000;
 const DBretiers = process.env.RETRIES ? Number(process.env.RETRIES) : 3;

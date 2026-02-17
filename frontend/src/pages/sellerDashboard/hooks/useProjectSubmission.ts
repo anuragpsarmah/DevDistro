@@ -12,7 +12,9 @@ export const useProjectSubmission = ({
   modificationType,
   setActiveTab,
   handleReturnToAllListings,
+  onRepoAccessError,
   github_repo_id,
+  installation_id,
 }: UseProjectSubmissionProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -64,6 +66,7 @@ export const useProjectSubmission = ({
       ...(formData.video ? [formData.video] : []),
     ];
     const totalFiles = allFiles.length;
+    let completedFiles = 0;
 
     const [keys, error] = await tryCatch<string[]>(() =>
       Promise.all(
@@ -76,7 +79,8 @@ export const useProjectSubmission = ({
             },
           });
 
-          setUploadProgress(((index + 1) / totalFiles) * 100);
+          completedFiles++;
+          setUploadProgress((completedFiles / totalFiles) * 100);
 
           return urlData.key;
         })
@@ -92,6 +96,7 @@ export const useProjectSubmission = ({
 
     const validatedProjectData = {
       github_repo_id: github_repo_id || "",
+      installation_id: installation_id,
       title: formData.title,
       description: formData.description,
       project_type: formData.projectType,
@@ -114,10 +119,25 @@ export const useProjectSubmission = ({
       validatedProjectData.project_video = keys[formData.images.length];
     }
 
-    const finalResponse = (await handleValidateUploadAndStoreProject(
-      validatedProjectData,
-      modificationType
-    )) as { message: string };
+    const [finalResponse, storeError] = await tryCatch(
+      handleValidateUploadAndStoreProject(
+        validatedProjectData,
+        modificationType
+      ) as Promise<{ message: string }>
+    );
+
+    if (storeError) {
+      if (
+        axios.isAxiosError(storeError) &&
+        (storeError.response?.status === 404 ||
+          storeError.response?.status === 403)
+      ) {
+        if (onRepoAccessError) onRepoAccessError();
+      }
+      setIsSubmitting(false);
+      setUploadProgress(0);
+      return;
+    }
 
     if (finalResponse) {
       successToast(

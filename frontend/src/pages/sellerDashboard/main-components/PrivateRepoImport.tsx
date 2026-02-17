@@ -1,10 +1,19 @@
-import { useState } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { RepoImportProps } from "../utils/types";
-import { Search, Lock, Github, RefreshCw, AlertCircle } from "lucide-react";
+import { Search, Lock, Github, RefreshCw, AlertCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { RepoImportSkeleton } from "../sub-components/Skeletons";
+
+function formatRelativeTime(isoDate: string): string {
+  const diffMs = Date.now() - new Date(isoDate).getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  if (diffMins < 60) return `${diffMins}m`;
+  const diffHours = Math.floor(diffMins / 60);
+  if (diffHours < 24) return `${diffHours}h`;
+  return `${Math.floor(diffHours / 24)}d`;
+}
 
 export default function PrivateRepoImport({
   userData,
@@ -14,17 +23,42 @@ export default function PrivateRepoImport({
   totalListedProjectsData,
   setFormPropsAndSwitchUI,
   handleRefresh,
+  isRefreshing,
+  fetchNextPage,
+  hasNextPage,
+  isFetchingNextPage,
 }: RepoImportProps) {
   const [searchQuery, setSearchQuery] = useState("");
-
-  const handleImportClick = (index: number) => {
-    setFormPropsAndSwitchUI(privateRepoData[index]);
-  };
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const filteredRepos = privateRepoData.filter((repo) => {
     if (!repo.name) return false;
     return repo.name.toLowerCase().includes(searchQuery.toLowerCase());
   });
+
+  const handleScroll = useCallback(() => {
+    if (searchQuery || !hasNextPage || isFetchingNextPage) return;
+
+    const viewport = scrollContainerRef.current?.querySelector(
+      "[data-radix-scroll-area-viewport]"
+    ) as HTMLElement | null;
+    if (!viewport) return;
+
+    const { scrollTop, scrollHeight, clientHeight } = viewport;
+    if (scrollHeight - scrollTop - clientHeight < 300) {
+      fetchNextPage();
+    }
+  }, [searchQuery, hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+  useEffect(() => {
+    const viewport = scrollContainerRef.current?.querySelector(
+      "[data-radix-scroll-area-viewport]"
+    ) as HTMLElement | null;
+    if (!viewport) return;
+
+    viewport.addEventListener("scroll", handleScroll);
+    return () => viewport.removeEventListener("scroll", handleScroll);
+  }, [handleScroll]);
 
   return (
     <div className="h-full flex flex-col">
@@ -50,9 +84,10 @@ export default function PrivateRepoImport({
               variant="ghost"
               size="icon"
               onClick={handleRefresh}
+              disabled={isRefreshing}
               className="h-8 w-8 hover:bg-white/10 text-gray-400 hover:text-white"
             >
-              <RefreshCw className="h-4 w-4" />
+              <RefreshCw className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
             </Button>
           </div>
 
@@ -73,7 +108,7 @@ export default function PrivateRepoImport({
             />
           </div>
 
-          <div className="relative flex-1 min-h-0 mb-2">
+          <div ref={scrollContainerRef} className="relative flex-1 min-h-0 mb-2">
             <ScrollArea className="h-full rounded-lg border border-white/10">
               <div className="space-y-2 p-4">
                 {repoDataLoading || totalListedProjectsDataLoading ? (
@@ -81,40 +116,48 @@ export default function PrivateRepoImport({
                     <RepoImportSkeleton key={index} />
                   ))
                 ) : filteredRepos.length > 0 ? (
-                  filteredRepos.map((repo, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center justify-between p-4 rounded-lg bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/10 transition-all duration-200"
-                    >
-                      <div className="flex items-center space-x-3 w-full">
-                        <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-blue-500/20 to-purple-500/20 flex items-center justify-center text-gray-300 font-medium border border-white/10">
-                          {repo.name.charAt(0).toUpperCase()}
-                        </div>
-                        <div className="truncate flex-1">
-                          <div className="flex items-center space-x-2">
-                            <span className="text-gray-200 font-medium truncate">
-                              {repo.name.length > 30
-                                ? repo.name.slice(0, 27) + "..."
-                                : repo.name}
-                            </span>
-                            <div className="flex items-center space-x-1">
-                              <Lock className="h-4 w-4 text-gray-500" />
-                              <span className="text-gray-500 text-sm">
-                                {repo.updated_at}
+                  <>
+                    {filteredRepos.map((repo) => (
+                      <div
+                        key={repo.github_repo_id}
+                        className="flex items-center justify-between p-4 rounded-lg bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/10 transition-all duration-200"
+                      >
+                        <div className="flex items-center space-x-3 w-full">
+                          <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-blue-500/20 to-purple-500/20 flex items-center justify-center text-gray-300 font-medium border border-white/10">
+                            {repo.name.charAt(0).toUpperCase()}
+                          </div>
+                          <div className="truncate flex-1">
+                            <div className="flex items-center space-x-2">
+                              <span className="text-gray-200 font-medium truncate">
+                                {repo.name.length > 30
+                                  ? repo.name.slice(0, 27) + "..."
+                                  : repo.name}
                               </span>
+                              <div className="flex items-center space-x-1">
+                                <Lock className="h-4 w-4 text-gray-500" />
+                                <span className="text-gray-500 text-sm">
+                                  {formatRelativeTime(repo.updated_at)}
+                                </span>
+                              </div>
                             </div>
                           </div>
+                          <Button
+                            variant="default"
+                            className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 hover:from-blue-500/20 hover:to-purple-500/20 text-blue-100 border border-blue-500/20 hover:border-blue-500/40 shrink-0 transition-all duration-200 rounded-xl"
+                            onClick={() => setFormPropsAndSwitchUI(repo)}
+                          >
+                            Import
+                          </Button>
                         </div>
-                        <Button
-                          variant="default"
-                          className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 hover:from-blue-500/20 hover:to-purple-500/20 text-blue-100 border border-blue-500/20 hover:border-blue-500/40 shrink-0 transition-all duration-200 rounded-xl"
-                          onClick={() => handleImportClick(index)}
-                        >
-                          Import
-                        </Button>
                       </div>
-                    </div>
-                  ))
+                    ))}
+
+                    {isFetchingNextPage && (
+                      <div className="flex justify-center py-4">
+                        <Loader2 className="h-5 w-5 animate-spin text-purple-400" />
+                      </div>
+                    )}
+                  </>
                 ) : (
                   <div className="text-center text-gray-400 py-8">
                     No matching repositories found.
@@ -130,10 +173,10 @@ export default function PrivateRepoImport({
                 <div className="absolute inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center rounded-lg p-4">
                   <div className="relative w-full max-w-sm">
                     <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-pink-500/10 blur-2xl rounded-2xl pointer-events-none opacity-50" />
-                    
+
                     <div className="relative bg-gray-900/95 backdrop-blur-xl p-6 rounded-2xl shadow-2xl border border-white/10 overflow-hidden">
                       <div className="absolute inset-0 bg-gradient-to-br from-blue-500/[0.02] to-purple-600/[0.02] pointer-events-none" />
-                      
+
                       <div className="relative z-10 flex flex-col items-center text-center">
                         <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center mb-4 border border-white/5">
                           <AlertCircle className="w-6 h-6 text-gray-400" />

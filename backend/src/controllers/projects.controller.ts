@@ -22,6 +22,8 @@ import {
   searchProjectSchema,
 } from "../validations/projects.validation";
 import { Project } from "../models/project.model";
+import { GitHubAppInstallation } from "../models/githubAppInstallation.model";
+import { githubAppService } from "../services/githubApp.service";
 import { MAX_ALLOWED_IMAGES } from "../types/constants";
 import { tryCatch } from "../utils/tryCatch.util";
 import { enrichContext } from "../utils/asyncContext";
@@ -112,7 +114,6 @@ const searchAndFilterProjects = async (
 
 const getPrivateRepos = asyncHandler(async (req: Request, res: Response) => {
   enrichContext({ action: "get_private_repos" });
-  const { ENCRYPTION_KEY_32, ENCRYPTION_IV } = process.env;
 
   if (req.rateLimited) {
     enrichContext({ outcome: "error", reason: "rate_limited" });
@@ -130,124 +131,86 @@ const getPrivateRepos = asyncHandler(async (req: Request, res: Response) => {
     throw new ApiError("Error during validation", 401);
   }
 
-  const redisKey = privateRepoPrefix(req.user._id);
   const userId = new mongoose.Types.ObjectId(req.user._id);
-  enrichContext({ entity: { type: "github_repos", id: userId.toString() } });
+  const page = parseInt(req.query.page as string) || 1;
+  const redisKey = privateRepoPrefix(req.user._id);
+  enrichContext({ entity: { type: "github_repos", id: userId.toString() }, page });
 
-  const dbStartTime = performance.now();
-  const [userData, userError] = await tryCatch(User.findById(userId));
-  enrichContext({ db_latency_ms: Math.round(performance.now() - dbStartTime) });
-
-  if (userError) {
-    enrichContext({ outcome: "error", error: { name: "DatabaseError", message: userError instanceof Error ? userError.message : "Failed to fetch user" } });
-    logger.error("Failed to fetch user for repos", userError);
-    throw new ApiError("Something went wrong", 500);
-  }
-
-  if (!userData) {
-    enrichContext({ outcome: "not_found" });
-    response(res, 401, "Unauthorized Access");
-    return;
-  }
-
-  const [github_access_token, decryptionError] = await tryCatch(() =>
-    decrypt(
-      userData?.github_access_token,
-      ENCRYPTION_KEY_32 as string,
-      ENCRYPTION_IV as string
-    )
+  const [installation, error] = await tryCatch(
+    GitHubAppInstallation.findOne({
+      user_id: userId,
+      suspended_at: null,
+    })
   );
 
-  if (decryptionError) {
-    enrichContext({ outcome: "error", error: { name: "DecryptionError", message: decryptionError instanceof Error ? decryptionError.message : "Decryption failed" } });
-    logger.error("Failed to decrypt GitHub token", decryptionError);
+  if (error) {
+    enrichContext({ outcome: "error", error: { name: "DatabaseError" } });
+    logger.error("Failed to fetch installation", error);
     throw new ApiError("Something went wrong", 500);
+  }
+
+  if (!installation) {
+    enrichContext({ outcome: "success", has_installation: false });
+    response(res, 200, "No GitHub App installation found", {
+      needsInstallation: true,
+      installUrl: githubAppService.getInstallUrl(req.user._id),
+      repos: [],
+      page: 1,
+      hasMore: false,
+      totalCount: 0,
+    });
+    return;
   }
 
   const apiStartTime = performance.now();
-  let [private_repositories, fetchError] = await tryCatch(
-    axios.get(`https://api.github.com/user/repos`, {
-      headers: {
-        Authorization: `Bearer ${github_access_token}`,
-      },
-      params: {
-        visibility: "private",
-      },
-    })
+  const [result, repoError] = await tryCatch(
+    githubAppService.getInstallationRepos(installation.installation_id, page)
   );
   enrichContext({ external_api_latency_ms: Math.round(performance.now() - apiStartTime) });
 
-  if (fetchError) {
-    enrichContext({ outcome: "error", error: { name: "GitHubAPIError", message: fetchError instanceof Error ? fetchError.message : "Failed to fetch repos" } });
-    logger.error("Failed to fetch GitHub repos", fetchError);
-    throw new ApiError("Something went wrong", 500);
+  if (repoError || !result) {
+    logger.error("Failed to fetch repos for installation", {
+      installation_id: installation.installation_id,
+      page,
+      error: repoError,
+    });
+    throw new ApiError("Failed to fetch repositories", 500);
   }
 
-  if (
-    !private_repositories ||
-    !private_repositories.data ||
-    private_repositories.data.length === 0
-  ) {
-    enrichContext({ outcome: "success", repos_count: 0 });
-    response(res, 200, "No private repositories found", []);
-    return;
-  }
+  const { repos, totalCount } = result;
+  const privateRepos = repos.filter((repo) => repo.private);
 
-  const currentDate = new Date();
+  const formattedRepos = privateRepos.map((repo) => ({
+    github_repo_id: repo.id.toString(),
+    name: repo.name,
+    description: repo.description || "",
+    language: repo.language || "",
+    updated_at: repo.updated_at,
+    installation_id: installation.installation_id,
+  }));
 
-  private_repositories = private_repositories.data
-    .map((repo: any) => {
-      const updatedDate = new Date(repo?.updated_at);
-      const differenceInMs = currentDate.getTime() - updatedDate.getTime();
+  const totalPages = Math.ceil(totalCount / 100);
+  const hasMore = page < totalPages;
 
-      let updatedAtDisplay;
-      if (differenceInMs >= 86400000) {
-        updatedAtDisplay = `${Math.floor(differenceInMs / 86400000)}d`;
-      } else if (differenceInMs >= 3600000) {
-        updatedAtDisplay = `${Math.floor(differenceInMs / 3600000)}h`;
-      } else {
-        updatedAtDisplay = `${Math.floor(differenceInMs / 60000)}m`;
-      }
-
-      return {
-        github_repo_id: repo?.id || null,
-        name: repo?.name || "",
-        description: repo?.description || "",
-        language: repo?.language || "",
-        updated_at_display: updatedAtDisplay,
-        updated_at_ms: differenceInMs,
-      };
-    })
-    .sort((a: any, b: any) => a.updated_at_ms - b.updated_at_ms)
-    .map(
-      ({
-        updated_at_display,
-        updated_at_ms,
-        ...repo
-      }: {
-        [key: string]: any;
-      }) => ({
-        ...repo,
-        updated_at: updated_at_display,
-      })
-    );
-
-  const CACHE_DURATION = 60 * 60 * 24;
+  const responseData = {
+    repos: formattedRepos,
+    page,
+    hasMore,
+    totalCount,
+  };
+  const CACHE_DURATION = 60 * 60;
   const [, cacheError] = await tryCatch(
-    redisClient.setex(
-      redisKey,
-      CACHE_DURATION,
-      JSON.stringify(private_repositories)
-    )
+    redisClient.hset(redisKey, `page:${page}`, JSON.stringify(responseData))
   );
-
-  if (cacheError) {
+  if (!cacheError) {
+    await tryCatch(redisClient.expire(redisKey, CACHE_DURATION));
+  } else {
     enrichContext({ cache_error: true });
     logger.error("Redis caching error", cacheError);
   }
 
-  enrichContext({ outcome: "success", repos_count: Array.isArray(private_repositories) ? private_repositories.length : 0 });
-  response(res, 200, "Repos fetched successfully", private_repositories);
+  enrichContext({ outcome: "success", repos_count: formattedRepos.length, page, hasMore });
+  response(res, 200, "Repos fetched successfully", responseData);
 });
 
 const getPreSignedUrlForProjectMediaUpload = asyncHandler(
@@ -269,6 +232,12 @@ const getPreSignedUrlForProjectMediaUpload = asyncHandler(
       modificationType,
     } = req.body;
     enrichContext({ modification_type: modificationType });
+
+    if (modificationType !== "new" && modificationType !== "existing") {
+      enrichContext({ outcome: "validation_failed", reason: "invalid_modification_type" });
+      response(res, 400, "Invalid modification type");
+      return;
+    }
 
     if (modificationType === "new") {
       const [queryResult, countError] = await tryCatch(
@@ -295,7 +264,14 @@ const getPreSignedUrlForProjectMediaUpload = asyncHandler(
       }
     }
 
-    if (isNaN(existingImageCount) || isNaN(existingVideoCount)) {
+    if (
+      isNaN(existingImageCount) ||
+      isNaN(existingVideoCount) ||
+      existingImageCount < 0 ||
+      existingVideoCount < 0 ||
+      !Number.isInteger(existingImageCount) ||
+      !Number.isInteger(existingVideoCount)
+    ) {
       enrichContext({ outcome: "validation_failed", reason: "invalid_counts", requested_counts: { existingImageCount, existingVideoCount } });
       response(res, 400, "Invalid count values provided");
       return;
@@ -392,6 +368,12 @@ const validateMediaUploadAndStoreProject = asyncHandler(
       modification_type: modificationType
     });
 
+    if (modificationType !== "new" && modificationType !== "existing") {
+      enrichContext({ outcome: "validation_failed", reason: "invalid_modification_type" });
+      response(res, 400, "Invalid modification type");
+      return;
+    }
+
     if (modificationType === "new") {
       const [queryResult, countError] = await tryCatch(
         Promise.all([
@@ -430,35 +412,42 @@ const validateMediaUploadAndStoreProject = asyncHandler(
       return;
     }
 
-    const { ENCRYPTION_KEY_32, ENCRYPTION_IV } = process.env;
+    const installationId = projectData.installation_id;
 
-    const [userData, encryptedTokenError] = await tryCatch(
-      User.findById(userid).select("github_access_token")
-    );
-
-    if (encryptedTokenError) {
-      enrichContext({ outcome: "error", error: { name: "DatabaseError", message: encryptedTokenError instanceof Error ? encryptedTokenError.message : "Query failed" } });
-      throw new ApiError("Something went wrong", 500);
-    }
-
-    if (!userData?.github_access_token) {
-      enrichContext({ outcome: "unauthorized", reason: "missing_token" });
-      response(res, 401, "GitHub access token not found");
+    if (!installationId) {
+      enrichContext({ outcome: "validation_failed", reason: "missing_installation_id" });
+      response(res, 400, "Installation ID is required");
       return;
     }
 
-    const [decrypted_github_access_token, dcryptedTokenError] = await tryCatch(
-      () =>
-        decrypt(
-          userData.github_access_token,
-          ENCRYPTION_KEY_32 as string,
-          ENCRYPTION_IV as string
-        )
+    const [installation, installError] = await tryCatch(
+      GitHubAppInstallation.findOne({
+        installation_id: installationId,
+        user_id: userid,
+        suspended_at: null,
+      })
     );
 
-    if (dcryptedTokenError) {
-      enrichContext({ outcome: "error", error: { name: "DecryptionError" } });
+    if (installError) {
+      enrichContext({ outcome: "error", error: { name: "DatabaseError" } });
+      logger.error("Failed to verify installation", installError);
       throw new ApiError("Something went wrong", 500);
+    }
+
+    if (!installation) {
+      enrichContext({ outcome: "unauthorized", reason: "no_installation_access" });
+      response(res, 403, "No access to this GitHub App installation");
+      return;
+    }
+
+    const [installationToken, tokenError] = await tryCatch(
+      githubAppService.getInstallationToken(installationId)
+    );
+
+    if (tokenError || !installationToken) {
+      enrichContext({ outcome: "error", error: { name: "TokenError" } });
+      logger.error("Failed to get installation token", tokenError);
+      throw new ApiError("Failed to verify repository access", 500);
     }
 
     const [, githubError] = await tryCatch(
@@ -466,7 +455,8 @@ const validateMediaUploadAndStoreProject = asyncHandler(
         `https://api.github.com/repositories/${projectData.github_repo_id}`,
         {
           headers: {
-            Authorization: `Bearer ${decrypted_github_access_token}`,
+            Authorization: `Bearer ${installationToken}`,
+            Accept: "application/vnd.github+json",
           },
         }
       )
@@ -484,7 +474,7 @@ const validateMediaUploadAndStoreProject = asyncHandler(
           response(
             res,
             404,
-            "Repository not found or you don't have access to it"
+            "Repository not found or not accessible via this installation"
           );
           return;
         } else if (status === 403) {
@@ -538,7 +528,6 @@ const validateMediaUploadAndStoreProject = asyncHandler(
     let validatedExistingImages: string[] = [];
     let validatedExistingVideo: string = "";
 
-    // Verify ownership of existing media to prevent hijacking
     if (modificationType === "existing" && project) {
       validatedExistingImages = existingImages.filter((url: string) =>
         project.project_images?.includes(url)
@@ -599,15 +588,18 @@ const validateMediaUploadAndStoreProject = asyncHandler(
     const preSignedImageUrls = preSignedUrls.slice(0, project_images.length);
     const preSignedVideoUrl = preSignedUrls[project_images.length] || "";
 
-    const {
-      existingImages: _,
-      existingVideo: __,
-      ...filteredProjectData
-    } = {
-      ...projectData,
+    const filteredProjectData = {
+      github_repo_id: projectData.github_repo_id,
+      title: result.data.title,
+      description: result.data.description,
+      project_type: result.data.project_type,
+      tech_stack: result.data.tech_stack,
+      live_link: result.data.live_link,
+      price: result.data.price,
       project_images: [...preSignedImageUrls, ...validatedExistingImages],
       project_video: validatedExistingVideo || preSignedVideoUrl,
       userid,
+      github_installation_id: installationId,
     };
 
     if (modificationType === "new") {
@@ -750,23 +742,20 @@ const getInitialProjectData = asyncHandler(
       Project.find({ userid })
         .select({
           _id: 0,
-          userid: 0,
-          price: 0,
-          project_type: 0,
-          live_link: 0,
-          project_video: 0,
-          createdAt: 0,
-          updatedAt: 0,
-          __v: 0,
+          github_repo_id: 1,
+          title: 1,
+          description: 1,
+          tech_stack: 1,
+          isActive: 1,
+          github_access_revoked: 1,
           project_images: { $slice: 1 },
         })
+        .lean()
         .then((result) => {
-          return result.map((project) => {
-            return {
-              ...project.toObject(),
-              project_images: project.project_images[0],
-            };
-          });
+          return result.map((project) => ({
+            ...project,
+            project_images: project.project_images?.[0] ?? "",
+          }));
         })
     );
     enrichContext({ db_latency_ms: Math.round(performance.now() - dbStartTime) });
@@ -819,7 +808,7 @@ const getSpecificProjectData = asyncHandler(
         userid,
         github_repo_id: req.query.github_repo_id,
       }).select(
-        "-_id -__v -createdAt -updatedAt -userid -title -description -isActive -tech_stack"
+        "github_repo_id github_installation_id price project_type live_link project_images project_video"
       )
     );
 
@@ -866,6 +855,51 @@ const toggleProjectListing = asyncHandler(
     }
 
     enrichContext({ entity: { type: "project", github_repo_id: req.body.github_repo_id } });
+
+    const [queryResult, countError] = await tryCatch(
+      Promise.all([
+        Project.findOne({
+          userid,
+          github_repo_id: req.body.github_repo_id,
+        }).select("github_access_revoked"),
+        User.findById(userid).select("project_listing_limit").lean(),
+      ])
+    );
+
+    if (countError || !queryResult) {
+      enrichContext({ outcome: "error", error: { name: "DatabaseError" } });
+      logger.error("Failed to find project", countError);
+      response(res, 500, "Failed to toggle project status. Try again later.");
+      return;
+    }
+
+    const [existingProject, userData] = queryResult;
+
+    if (!existingProject) {
+      enrichContext({ outcome: "not_found" });
+      response(res, 404, "Invalid Repo ID. No such records found.");
+      return;
+    }
+
+    if (existingProject.github_access_revoked) {
+      enrichContext({ outcome: "forbidden", reason: "github_access_revoked" });
+      response(
+        res,
+        403,
+        "Cannot toggle project status. GitHub repository access has been revoked. Please reinstall the GitHub App with access to this repository."
+      );
+      return;
+    }
+
+    if (!existingProject.isActive && userData?.project_listing_limit === 0) {
+      enrichContext({ outcome: "forbidden", reason: "project_listing_limit_reached" });
+      response(
+        res,
+        403,
+        "Cannot toggle project status. Project listing limit reached. Please upgrade your plan to list more projects."
+      );
+      return;
+    }
 
     const [updatedProject, updateError] = await tryCatch(
       Project.findOneAndUpdate(

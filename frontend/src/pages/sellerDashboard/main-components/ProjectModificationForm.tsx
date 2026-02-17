@@ -61,7 +61,9 @@ export default function ProjectModificationForm({
     modificationType: "existing",
     setActiveTab,
     handleReturnToAllListings,
+    onRepoAccessError: handleReturnToAllListings,
     github_repo_id: formProps.github_repo_id || "",
+    installation_id: formProps.github_installation_id,
   });
 
   const onSubmit = () => {

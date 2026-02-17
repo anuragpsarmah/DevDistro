@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import BackgroundDots from "@/components/ui/backgroundDots";
 import Sidebar from "./main-components/Sidebar";
 import AccountSettingsTab from "./tabs/AccountSettingsTab";
@@ -16,9 +16,11 @@ interface SellerDashboardPageProps {
 export default function SellerDashboardPage({
   logout,
 }: SellerDashboardPageProps) {
+  const location = useLocation();
+  const initialTab = (location.state as { activeTab?: SellerDashboardTabTypes })?.activeTab || "Overview";
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [activeTab, setActiveTab] =
-    useState<SellerDashboardTabTypes>("Overview");
+    useState<SellerDashboardTabTypes>(initialTab);
   const navigate = useNavigate();
 
   return (

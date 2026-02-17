@@ -43,6 +43,7 @@ export interface PrivateRepoData {
   language: string;
   updated_at: string;
   github_repo_id: string;
+  installation_id?: number;
 }
 
 export type ProjectType = (typeof PROJECT_TYPES)[number];
@@ -115,6 +116,10 @@ export interface RepoImportProps {
   repoDataLoading: boolean;
   setFormPropsAndSwitchUI: (curr: PrivateRepoData) => void;
   handleRefresh?: () => Promise<unknown>;
+  isRefreshing?: boolean;
+  fetchNextPage: () => void;
+  hasNextPage: boolean;
+  isFetchingNextPage: boolean;
   totalListedProjectsDataLoading: boolean;
   totalListedProjectsData:
   | { data: { totalListedProjects: number; projectListingLimit: number } }
@@ -228,6 +233,7 @@ export interface ProjectMediaMetadata {
 
 export interface projectListingValidatedFormData {
   github_repo_id: string;
+  installation_id?: number;
   title: string;
   description: string;
   project_type: string;
@@ -256,6 +262,7 @@ export interface ProjectMediaUploaderProps {
 export interface InitialProjectData {
   github_repo_id: string;
   isActive: boolean;
+  github_access_revoked?: boolean;
   title: string;
   description: string;
   tech_stack: string[];
@@ -283,6 +290,7 @@ export interface formPropsType {
   project_images: Array<string>;
   project_type: string;
   project_video: string;
+  github_installation_id?: number;
 }
 
 export interface UseProjectSubmissionProps {
@@ -299,7 +307,9 @@ export interface UseProjectSubmissionProps {
   modificationType: string;
   setActiveTab?: (curr: SellerDashboardTabTypes) => void;
   handleReturnToAllListings?: () => void;
+  onRepoAccessError?: () => void;
   github_repo_id: string;
+  installation_id?: number;
 }
 
 export interface ConnectToWalletProps {

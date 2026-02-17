@@ -28,7 +28,7 @@ export const projectMediaUploadLimiter = rateLimit({
 export const getPrivateReposRefreshLimiter: RequestHandler = (() => {
   const requestCounts = new Map<string, { count: number; resetTime: number }>();
   const WINDOW_MS = 60 * 1000;
-  const LIMIT = 1;
+  const LIMIT = 5;
 
   return (req, res, next) => {
     if (req.query.refreshStatus !== "true") {

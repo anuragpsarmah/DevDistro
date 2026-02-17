@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
 import axios from "axios";
 import { useHandleError } from "./useHandleErrors";
 import { errorToast, successToast } from "@/components/ui/customToast";
@@ -167,18 +167,35 @@ const useTotalListedProjectsQuery = ({ logout }: queryParameter) => {
   });
 };
 
-const usePrivateReposQuery = (
-  refreshStatus: string,
-  { logout }: queryParameter
-) => {
+const useInstallationStatusQuery = ({ logout }: queryParameter) => {
   const { handleError } = useHandleError({ logout });
   return useQuery({
-    queryKey: ["privateRepoQuery", refreshStatus],
-    queryFn: async ({ queryKey }) => {
-      const [, refreshStatus] = queryKey;
+    queryKey: ["installationStatusQuery"],
+    queryFn: async () => {
+      const [response, error] = await tryCatch(
+        axios.get(`${backend_uri}/github-app/status`, {
+          withCredentials: true,
+        })
+      );
+
+      if (error) {
+        handleError(error);
+        throw error;
+      }
+      return response.data;
+    },
+    refetchOnWindowFocus: false,
+  });
+};
+
+const usePrivateReposInfiniteQuery = ({ logout }: queryParameter) => {
+  const { handleError } = useHandleError({ logout });
+  return useInfiniteQuery({
+    queryKey: ["privateRepoQuery"],
+    queryFn: async ({ pageParam }) => {
       const [response, error] = await tryCatch(
         axios.get(
-          `${backend_uri}/projects/getPrivateRepos?refreshStatus=${refreshStatus}`,
+          `${backend_uri}/projects/getPrivateRepos?page=${pageParam}`,
           {
             withCredentials: true,
           }
@@ -189,12 +206,47 @@ const usePrivateReposQuery = (
         handleError(error);
         throw error;
       }
-      if (response.data.data[response.data.data.length - 1].isRateLimited)
+
+      const data = response.data.data;
+
+      if (data?.needsInstallation) {
+        return {
+          repos: [],
+          page: 1,
+          hasMore: false,
+          totalCount: 0,
+          needsInstallation: true,
+        };
+      }
+
+      if (data?.isRateLimited) {
         successToast(
           response.data.message || "Too many requests. Cached data fetched."
         );
-      return response.data;
+      }
+
+      return data as {
+        repos: Array<{
+          github_repo_id: string;
+          name: string;
+          description: string;
+          language: string;
+          updated_at: string;
+          installation_id: number;
+        }>;
+        page: number;
+        hasMore: boolean;
+        totalCount: number;
+        needsInstallation?: boolean;
+        isRateLimited?: boolean;
+      };
     },
+    getNextPageParam: (lastPage) => {
+      if (lastPage?.needsInstallation) return undefined;
+      if (lastPage?.hasMore) return lastPage.page + 1;
+      return undefined;
+    },
+    initialPageParam: 1,
     refetchOnWindowFocus: false,
   });
 };
@@ -276,7 +328,8 @@ export {
   useProfileInformationQuery,
   useFeaturedReviewQuery,
   useTotalListedProjectsQuery,
-  usePrivateReposQuery,
+  useInstallationStatusQuery,
+  usePrivateReposInfiniteQuery,
   useInitialProjectDataQuery,
   useSpecificProjectDataQuery,
   useGetWalletAddress,

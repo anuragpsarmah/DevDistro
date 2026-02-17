@@ -18,6 +18,11 @@ const projectSchema = new Schema(
       type: Boolean,
       default: true,
     },
+    github_access_revoked: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
     title: {
       type: String,
       required: [true, "Project title is required"],
@@ -48,6 +53,11 @@ const projectSchema = new Schema(
     github_repo_id: {
       type: String,
       required: [true, "GitHub repository ID is required"],
+      index: true,
+    },
+    github_installation_id: {
+      type: Number,
+      required: false, // Optional during migration
       index: true,
     },
     avgRating: {

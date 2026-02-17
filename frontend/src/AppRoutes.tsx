@@ -1,6 +1,7 @@
 import { createBrowserRouter } from "react-router-dom";
 import AuthPage from "@/pages/auth/AuthPage";
 import LoginValidationPage from "@/pages/auth/LoginValidationPage";
+import AppInstallCallbackPage from "@/pages/auth/AppInstallCallbackPage";
 import ProfileSelectionPage from "@/pages/profileSelection/ProfileSelectionPage";
 import ErrorPage from "@/pages/error/ErrorPage";
 import LandingPage from "@/pages/landing/LandingPage";
@@ -23,6 +24,14 @@ export const router = createBrowserRouter([
   {
     path: "/loginValidation",
     element: <LoginValidationPage />,
+  },
+  {
+    path: "/app-install-callback",
+    element: (
+      <ProtectedRouteWrapper>
+        <AppInstallCallbackPage />
+      </ProtectedRouteWrapper>
+    ),
   },
   {
     path: "/profile-selection",

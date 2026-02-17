@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import BackgroundDots from "@/components/ui/backgroundDots";
-import { GithubIcon, Code2, ArrowRight, ShieldAlert, X } from "lucide-react";
+import { GithubIcon, Code2, ArrowRight } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuthValidationQuery } from "@/hooks/apiQueries";
 import Header from "@/pages/landing/components/header";
@@ -13,7 +13,6 @@ export default function AuthPage() {
   const navigate = useNavigate();
   const { data, isLoading, isError } = useAuthValidationQuery();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [showWarningModal, setShowWarningModal] = useState(false);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -36,11 +35,7 @@ export default function AuthPage() {
   }, []);
 
   const handleLoginClick = () => {
-    setShowWarningModal(true);
-  };
-
-  const handleProceedWithLogin = () => {
-    window.location.href = `https://github.com/login/oauth/authorize?client_id=${clientID}&scope=read:user,repo`;
+    window.location.href = `https://github.com/login/oauth/authorize?client_id=${clientID}&scope=read:user`;
   };
 
   const handleAuthNavigate = () => {
@@ -169,65 +164,6 @@ export default function AuthPage() {
       </main>
 
       <Footer />
-
-      <AnimatePresence>
-        {showWarningModal && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
-            onClick={() => setShowWarningModal(false)}
-          >
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              transition={{ duration: 0.2 }}
-              className="relative w-full max-w-md bg-gray-900/60 backdrop-blur-xl rounded-2xl border border-white/10 shadow-2xl overflow-hidden"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="absolute inset-0 bg-gradient-to-br from-blue-500/[0.02] to-purple-600/[0.02] pointer-events-none" />
-              
-              <div className="relative p-6">
-                <button
-                  onClick={() => setShowWarningModal(false)}
-                  className="absolute top-4 right-4 text-gray-500 hover:text-white transition-colors"
-                >
-                  <X size={20} />
-                </button>
-
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center">
-                    <ShieldAlert size={20} className="text-amber-400" />
-                  </div>
-                  <h3 className="text-lg font-bold text-white">Security Recommendation</h3>
-                </div>
-
-                <div className="space-y-4 text-sm text-gray-300 mb-6">
-                  <p>
-                    DevExchange requires a GitHub Access Token to verify your identity and list your repositories. While we encrypt all tokens using <strong className="text-white">AES-256 encryption</strong> and transmit data over <strong className="text-white">secure SSL/TLS connections</strong>, we recommend taking an extra precaution:
-                  </p>
-                  <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-4">
-                    <p className="text-amber-200">
-                      <strong>Create a dedicated GitHub account</strong> for DevExchange. Avoid connecting accounts that have access to sensitive private repositories not intended for sale.
-                    </p>
-                  </div>
-                </div>
-
-                <button
-                  className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 hover:opacity-90 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300"
-                  onClick={handleProceedWithLogin}
-                >
-                  <GithubIcon className="w-4 h-4" />
-                  <span>I Understand, Continue</span>
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 }

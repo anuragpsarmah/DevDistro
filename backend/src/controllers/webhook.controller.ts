@@ -1,0 +1,422 @@
+import { Request, Response } from "express";
+import { GitHubAppInstallation } from "../models/githubAppInstallation.model";
+import { Project } from "../models/project.model";
+import asyncHandler from "../utils/asyncHandler.util";
+import response from "../utils/response.util";
+import { tryCatch } from "../utils/tryCatch.util";
+import { enrichContext } from "../utils/asyncContext";
+import { githubAppService } from "../services/githubApp.service";
+import logger from "../logger/logger";
+import { redisClient } from "..";
+import { privateRepoPrefix } from "../utils/redisPrefixGenerator.util";
+
+interface WebhookPayload {
+  action: string;
+  installation?: {
+    id: number;
+    account: {
+      login: string;
+      id: number;
+      type: string;
+    };
+    repository_selection: "all" | "selected";
+    suspended_at?: string | null;
+    suspended_by?: { login: string };
+  };
+  repositories_added?: Array<{
+    id: number;
+    name: string;
+    full_name: string;
+    private: boolean;
+  }>;
+  repositories_removed?: Array<{
+    id: number;
+    name: string;
+    full_name: string;
+  }>;
+  repository?: {
+    id: number;
+    name: string;
+    full_name: string;
+    private: boolean;
+  };
+  sender: {
+    login: string;
+    id: number;
+  };
+}
+
+const handleWebhook = asyncHandler(async (req: Request, res: Response) => {
+  const event = req.headers["x-github-event"] as string;
+  const signature = req.headers["x-hub-signature-256"] as string;
+  const deliveryId = req.headers["x-github-delivery"] as string;
+
+  enrichContext({
+    action: "webhook_received",
+    webhook_event: event,
+    webhook_delivery_id: deliveryId,
+  });
+
+  const rawBody = Buffer.isBuffer(req.body)
+    ? req.body.toString("utf8")
+    : typeof req.body === "string"
+      ? req.body
+      : JSON.stringify(req.body);
+
+  if (!githubAppService.verifyWebhookSignature(rawBody, signature)) {
+    enrichContext({ outcome: "unauthorized" });
+    logger.warn("Invalid webhook signature", { deliveryId });
+    response(res, 401, "Invalid signature");
+    return;
+  }
+
+  const payload: WebhookPayload = Buffer.isBuffer(req.body)
+    ? JSON.parse(req.body.toString("utf8"))
+    : typeof req.body === "string"
+      ? JSON.parse(req.body)
+      : req.body;
+
+  logger.info("Webhook received", {
+    event,
+    action: payload.action,
+    delivery_id: deliveryId,
+  });
+
+  try {
+    switch (event) {
+      case "ping":
+        logger.info("Webhook ping received", { deliveryId });
+        break;
+      case "installation":
+        await handleInstallationEvent(payload);
+        break;
+      case "installation_repositories":
+        await handleInstallationRepositoriesEvent(payload);
+        break;
+      case "repository":
+        await handleRepositoryEvent(payload);
+        break;
+      default:
+        logger.info("Unhandled webhook event", { event });
+    }
+
+    enrichContext({ outcome: "success" });
+    response(res, 200, "Webhook processed");
+  } catch (error) {
+    enrichContext({ outcome: "error" });
+    logger.error("Webhook processing failed", { error, event, deliveryId });
+    response(res, 200, "Webhook processing failed but acknowledged");
+  }
+});
+
+async function handleInstallationEvent(payload: WebhookPayload) {
+  const { action, installation } = payload;
+
+  if (!installation) {
+    logger.warn("Installation event missing installation data");
+    return;
+  }
+
+  const installationId = installation.id;
+
+  switch (action) {
+    case "created":
+      logger.info("Installation created webhook", { installationId });
+      break;
+
+    case "deleted":
+      const [deletedInstallation] = await tryCatch(
+        GitHubAppInstallation.findOneAndDelete({
+          installation_id: installationId,
+        })
+      );
+
+      if (deletedInstallation) {
+        const [updateResult] = await tryCatch(
+          Project.updateMany(
+            { github_installation_id: installationId },
+            { isActive: false, github_access_revoked: true }
+          )
+        );
+
+        if (deletedInstallation.user_id) {
+          const [, cacheError] = await tryCatch(
+            redisClient.del(
+              privateRepoPrefix(deletedInstallation.user_id.toString())
+            )
+          );
+          if (cacheError) {
+            logger.error(
+              "Failed to clear private repos cache after installation deletion",
+              { installationId, cacheError }
+            );
+          }
+        }
+
+        logger.info("Installation deleted, projects marked as access revoked", {
+          installationId,
+          account: installation.account.login,
+          affectedProjects: updateResult?.modifiedCount || 0,
+        });
+      }
+      break;
+
+    case "suspend":
+      await tryCatch(
+        GitHubAppInstallation.updateOne(
+          { installation_id: installationId },
+          {
+            suspended_at: installation.suspended_at
+              ? new Date(installation.suspended_at)
+              : new Date(),
+          }
+        )
+      );
+
+      const [suspendResult] = await tryCatch(
+        Project.updateMany(
+          { github_installation_id: installationId },
+          { isActive: false, github_access_revoked: true }
+        )
+      );
+
+      const [suspendedInstallation] = await tryCatch(
+        GitHubAppInstallation.findOne({
+          installation_id: installationId,
+        }).select("user_id")
+      );
+      if (suspendedInstallation?.user_id) {
+        const [, suspendCacheError] = await tryCatch(
+          redisClient.del(
+            privateRepoPrefix(suspendedInstallation.user_id.toString())
+          )
+        );
+        if (suspendCacheError) {
+          logger.error("Failed to clear private repos cache after suspend", {
+            installationId,
+            suspendCacheError,
+          });
+        }
+      }
+
+      logger.info("Installation suspended, projects deactivated", {
+        installationId,
+        affectedProjects: suspendResult?.modifiedCount || 0,
+      });
+      break;
+
+    case "unsuspend":
+      await tryCatch(
+        GitHubAppInstallation.updateOne(
+          { installation_id: installationId },
+          { suspended_at: null }
+        )
+      );
+
+      const [unsuspendResult] = await tryCatch(
+        Project.updateMany(
+          {
+            github_installation_id: installationId,
+            github_access_revoked: true,
+          },
+          { isActive: true, github_access_revoked: false }
+        )
+      );
+
+      const [unsuspendedInstallation] = await tryCatch(
+        GitHubAppInstallation.findOne({
+          installation_id: installationId,
+        }).select("user_id")
+      );
+      if (unsuspendedInstallation?.user_id) {
+        const [, unsuspendCacheError] = await tryCatch(
+          redisClient.del(
+            privateRepoPrefix(unsuspendedInstallation.user_id.toString())
+          )
+        );
+        if (unsuspendCacheError) {
+          logger.error("Failed to clear private repos cache after unsuspend", {
+            installationId,
+            unsuspendCacheError,
+          });
+        }
+      }
+
+      logger.info("Installation unsuspended, projects reactivated", {
+        installationId,
+        affectedProjects: unsuspendResult?.modifiedCount || 0,
+      });
+      break;
+
+    default:
+      logger.info("Unhandled installation action", { action, installationId });
+  }
+}
+
+async function handleInstallationRepositoriesEvent(payload: WebhookPayload) {
+  const { action, installation, repositories_added, repositories_removed } =
+    payload;
+
+  if (!installation) {
+    logger.warn("Installation repositories event missing installation data");
+    return;
+  }
+
+  const installationId = installation.id;
+
+  if (action === "added" && repositories_added) {
+    const [installationDoc] = await tryCatch(
+      GitHubAppInstallation.findOne({ installation_id: installationId }).select(
+        "user_id"
+      )
+    );
+
+    if (installationDoc && installationDoc.user_id) {
+      const addedRepoIdStrings = repositories_added.map((r) => r.id.toString());
+      const [reactivateResult] = await tryCatch(
+        Project.updateMany(
+          {
+            userid: installationDoc.user_id,
+            github_repo_id: { $in: addedRepoIdStrings },
+            github_access_revoked: true,
+          },
+          {
+            isActive: true,
+            github_access_revoked: false,
+            github_installation_id: installationId,
+          }
+        )
+      );
+
+      if (
+        reactivateResult?.modifiedCount &&
+        reactivateResult.modifiedCount > 0
+      ) {
+        logger.info(
+          "Projects reactivated after repo access restored via webhook",
+          {
+            installationId,
+            reactivatedCount: reactivateResult.modifiedCount,
+          }
+        );
+      }
+
+      const [, cacheError] = await tryCatch(
+        redisClient.del(privateRepoPrefix(installationDoc.user_id.toString()))
+      );
+      if (cacheError) {
+        logger.error("Failed to clear private repos cache after repos added", {
+          installationId,
+          cacheError,
+        });
+      }
+    }
+
+    logger.info("Repositories added to installation", {
+      installationId,
+      count: repositories_added.length,
+    });
+  }
+
+  if (action === "removed" && repositories_removed) {
+    const removedRepoIds = repositories_removed.map((r) => r.id);
+    const removedRepoIdStrings = removedRepoIds.map((id) => id.toString());
+    const [updateResult] = await tryCatch(
+      Project.updateMany(
+        {
+          github_installation_id: installationId,
+          github_repo_id: { $in: removedRepoIdStrings },
+        },
+        { isActive: false, github_access_revoked: true }
+      )
+    );
+
+    const [removedInstallationDoc] = await tryCatch(
+      GitHubAppInstallation.findOne({ installation_id: installationId }).select(
+        "user_id"
+      )
+    );
+    if (removedInstallationDoc?.user_id) {
+      const [, cacheError] = await tryCatch(
+        redisClient.del(
+          privateRepoPrefix(removedInstallationDoc.user_id.toString())
+        )
+      );
+      if (cacheError) {
+        logger.error(
+          "Failed to clear private repos cache after repos removed",
+          { installationId, cacheError }
+        );
+      }
+    }
+
+    logger.info(
+      "Repositories removed from installation, projects marked as access revoked",
+      {
+        installationId,
+        repoCount: repositories_removed.length,
+        affectedProjects: updateResult?.modifiedCount || 0,
+      }
+    );
+  }
+}
+
+async function handleRepositoryEvent(payload: WebhookPayload) {
+  const { action, repository } = payload;
+
+  if (!repository) {
+    logger.warn("Repository event missing repository data");
+    return;
+  }
+
+  const repoId = repository.id.toString();
+
+  switch (action) {
+    case "deleted":
+      const [result] = await tryCatch(
+        Project.updateMany(
+          { github_repo_id: repoId },
+          { isActive: false, github_access_revoked: true }
+        )
+      );
+
+      const [affectedProjects] = await tryCatch(
+        Project.find({ github_repo_id: repoId }).select("userid").lean()
+      );
+      if (affectedProjects && affectedProjects.length > 0) {
+        const uniqueUserIds = [
+          ...new Set(affectedProjects.map((p) => p.userid.toString())),
+        ];
+        for (const userId of uniqueUserIds) {
+          const [, cacheError] = await tryCatch(
+            redisClient.del(privateRepoPrefix(userId))
+          );
+          if (cacheError) {
+            logger.error(
+              "Failed to clear private repos cache after repo deletion",
+              { repoId, userId, cacheError }
+            );
+          }
+        }
+      }
+
+      logger.info(
+        "Repository deleted, projects deactivated and access revoked",
+        {
+          repoId,
+          affectedCount: result?.modifiedCount || 0,
+        }
+      );
+      break;
+
+    case "privatized":
+    case "publicized":
+      logger.info("Repository visibility changed", { repoId, action });
+      break;
+
+    default:
+      logger.info("Unhandled repository action", { action, repoId });
+  }
+}
+
+export { handleWebhook };

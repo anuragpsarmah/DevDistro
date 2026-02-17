@@ -26,14 +26,6 @@ export default function ProjectListingForm({
   const [video, setVideo] = useState<File | null>(null);
   const [price, setPrice] = useState<number>(0.1);
 
-  const { handleSubmit, isSubmitting, uploadProgress } = useProjectSubmission({
-    handleGetPreSignedUrls,
-    handleValidateUploadAndStoreProject,
-    modificationType: "new",
-    setActiveTab,
-    github_repo_id: formProps.github_repo_id,
-  });
-
   const handleDifferentProjectImport = () => {
     setFormPropsAndSwitchUI({
       name: "",
@@ -41,8 +33,19 @@ export default function ProjectListingForm({
       language: "",
       updated_at: "",
       github_repo_id: "",
+      installation_id: undefined,
     });
   };
+
+  const { handleSubmit, isSubmitting, uploadProgress } = useProjectSubmission({
+    handleGetPreSignedUrls,
+    handleValidateUploadAndStoreProject,
+    modificationType: "new",
+    setActiveTab,
+    onRepoAccessError: handleDifferentProjectImport,
+    github_repo_id: formProps.github_repo_id,
+    installation_id: formProps.installation_id,
+  });
 
   const onSubmit = () => {
     handleSubmit({

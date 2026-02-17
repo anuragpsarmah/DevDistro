@@ -6,27 +6,23 @@ export default {
     fontFamily: {
       sans: ['Inter', 'system-ui', 'sans-serif'],
     },
-    animation: {
-      shimmer: "shimmer 2s linear infinite",
-    },
-    keyframes: {
-      shimmer: {
-        from: {
-          backgroundPosition: "0 0",
-        },
-        to: {
-          backgroundPosition: "-200% 0",
-        },
-      },
-    },
     extend: {
       animation: {
+        shimmer: "shimmer 2s linear infinite",
         move: "move 5s linear infinite",
         "fade-in-up": "fadeInUp 0.6s ease forwards",
         "float": "float 6s ease-in-out infinite",
         "pulse-glow": "pulseGlow 2s ease-in-out infinite",
       },
       keyframes: {
+        shimmer: {
+          from: {
+            backgroundPosition: "0 0",
+          },
+          to: {
+            backgroundPosition: "-200% 0",
+          },
+        },
         move: {
           "0%": { transform: "translateX(-200px)" },
           "100%": { transform: "translateX(200px)" },
