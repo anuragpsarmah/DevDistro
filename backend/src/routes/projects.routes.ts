@@ -10,12 +10,16 @@ import {
   getSpecificProjectData,
   deleteProjectListing,
   getTotalActiveProjects,
+  getRepoZipStatus,
+  retryRepoZipUpload,
+  refreshRepoZip,
 } from "../controllers/projects.controller";
 import { getPrivateReposFromCache } from "../cache/projects.cache";
 import {
   getPrivateReposRefreshLimiter,
   toggleProjectListingLimiter,
   projectMediaUploadLimiter,
+  refreshRepoZipLimiter,
 } from "../utils/rateLimitConfig.util";
 
 export const projectRouter = Router();
@@ -56,3 +60,12 @@ projectRouter
 projectRouter
   .route("/deleteProjectListing")
   .delete(sessionValidation, deleteProjectListing);
+projectRouter
+  .route("/getRepoZipStatus")
+  .get(sessionValidation, getRepoZipStatus);
+projectRouter
+  .route("/retryRepoZipUpload")
+  .post(sessionValidation, retryRepoZipUpload);
+projectRouter
+  .route("/refreshRepoZip")
+  .post(refreshRepoZipLimiter, sessionValidation, refreshRepoZip);

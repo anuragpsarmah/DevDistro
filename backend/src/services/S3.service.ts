@@ -4,7 +4,9 @@ import {
   HeadObjectCommand,
   DeleteObjectCommand,
 } from "@aws-sdk/client-s3";
+import { Upload } from "@aws-sdk/lib-storage";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { Readable } from "stream";
 import crypto from "crypto";
 import { FileMetaData, UploadMetadata } from "../types/types";
 import { redisClient } from "..";
@@ -156,6 +158,26 @@ export default class S3Service {
     } catch (error) {
       throw error;
     }
+  }
+
+  async uploadStream(
+    key: string,
+    stream: Readable,
+    contentType: string
+  ): Promise<void> {
+    const upload = new Upload({
+      client: this.s3Client,
+      params: {
+        Bucket: process.env.S3_BUCKET as string,
+        Key: key,
+        Body: stream,
+        ContentType: contentType,
+      },
+      queueSize: 4,
+      partSize: 10 * 1024 * 1024,
+    });
+
+    await upload.done();
   }
 
   async deleteObject(key: string) {

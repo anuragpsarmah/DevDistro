@@ -12,7 +12,7 @@ import {
   ProjectSort,
   SortOption,
 } from "../types/types";
-import { redisClient, s3Service } from "..";
+import { redisClient, s3Service, repoZipUploadService } from "..";
 import logger from "../logger/logger";
 import { privateRepoPrefix } from "../utils/redisPrefixGenerator.util";
 import {
@@ -134,7 +134,10 @@ const getPrivateRepos = asyncHandler(async (req: Request, res: Response) => {
   const userId = new mongoose.Types.ObjectId(req.user._id);
   const page = parseInt(req.query.page as string) || 1;
   const redisKey = privateRepoPrefix(req.user._id);
-  enrichContext({ entity: { type: "github_repos", id: userId.toString() }, page });
+  enrichContext({
+    entity: { type: "github_repos", id: userId.toString() },
+    page,
+  });
 
   const [installation, error] = await tryCatch(
     GitHubAppInstallation.findOne({
@@ -166,7 +169,9 @@ const getPrivateRepos = asyncHandler(async (req: Request, res: Response) => {
   const [result, repoError] = await tryCatch(
     githubAppService.getInstallationRepos(installation.installation_id, page)
   );
-  enrichContext({ external_api_latency_ms: Math.round(performance.now() - apiStartTime) });
+  enrichContext({
+    external_api_latency_ms: Math.round(performance.now() - apiStartTime),
+  });
 
   if (repoError || !result) {
     logger.error("Failed to fetch repos for installation", {
@@ -209,7 +214,12 @@ const getPrivateRepos = asyncHandler(async (req: Request, res: Response) => {
     logger.error("Redis caching error", cacheError);
   }
 
-  enrichContext({ outcome: "success", repos_count: formattedRepos.length, page, hasMore });
+  enrichContext({
+    outcome: "success",
+    repos_count: formattedRepos.length,
+    page,
+    hasMore,
+  });
   response(res, 200, "Repos fetched successfully", responseData);
 });
 
@@ -234,7 +244,10 @@ const getPreSignedUrlForProjectMediaUpload = asyncHandler(
     enrichContext({ modification_type: modificationType });
 
     if (modificationType !== "new" && modificationType !== "existing") {
-      enrichContext({ outcome: "validation_failed", reason: "invalid_modification_type" });
+      enrichContext({
+        outcome: "validation_failed",
+        reason: "invalid_modification_type",
+      });
       response(res, 400, "Invalid modification type");
       return;
     }
@@ -248,18 +261,36 @@ const getPreSignedUrlForProjectMediaUpload = asyncHandler(
       );
 
       if (countError || !queryResult) {
-        enrichContext({ outcome: "error", error: { name: "DatabaseError", message: countError instanceof Error ? countError.message : "Count query failed" } });
+        enrichContext({
+          outcome: "error",
+          error: {
+            name: "DatabaseError",
+            message:
+              countError instanceof Error
+                ? countError.message
+                : "Count query failed",
+          },
+        });
         logger.error("Failed to count projects", countError);
         response(res, 500, "Failed to fetch total listed projects");
         return;
       }
 
       const [projectCount, userData] = queryResult;
-      const projectListingLimit = userData?.project_listing_limit ?? parseInt(process.env.DEFAULT_PROJECT_LISTING_LIMIT || "2", 10);
+      const projectListingLimit =
+        userData?.project_listing_limit ??
+        parseInt(process.env.DEFAULT_PROJECT_LISTING_LIMIT || "2", 10);
 
       if (projectCount >= projectListingLimit) {
-        enrichContext({ outcome: "validation_failed", reason: "max_projects_reached" });
-        response(res, 400, `Only ${projectListingLimit} projects can be listed at a time`);
+        enrichContext({
+          outcome: "validation_failed",
+          reason: "max_projects_reached",
+        });
+        response(
+          res,
+          400,
+          `Only ${projectListingLimit} projects can be listed at a time`
+        );
         return;
       }
     }
@@ -272,7 +303,11 @@ const getPreSignedUrlForProjectMediaUpload = asyncHandler(
       !Number.isInteger(existingImageCount) ||
       !Number.isInteger(existingVideoCount)
     ) {
-      enrichContext({ outcome: "validation_failed", reason: "invalid_counts", requested_counts: { existingImageCount, existingVideoCount } });
+      enrichContext({
+        outcome: "validation_failed",
+        reason: "invalid_counts",
+        requested_counts: { existingImageCount, existingVideoCount },
+      });
       response(res, 400, "Invalid count values provided");
       return;
     }
@@ -320,8 +355,8 @@ const getPreSignedUrlForProjectMediaUpload = asyncHandler(
           max_images: MAX_ALLOWED_IMAGES,
           existing_images: existingImageCount,
           requested_video: metadataFileCheck.video > 0,
-          existing_video: existingVideoCount > 0
-        }
+          existing_video: existingVideoCount > 0,
+        },
       });
       response(res, 400, "Sent more files than allowed");
       return;
@@ -336,7 +371,14 @@ const getPreSignedUrlForProjectMediaUpload = asyncHandler(
     );
 
     if (urlError) {
-      enrichContext({ outcome: "error", error: { name: "S3Error", message: urlError instanceof Error ? urlError.message : "S3 presign failed" } });
+      enrichContext({
+        outcome: "error",
+        error: {
+          name: "S3Error",
+          message:
+            urlError instanceof Error ? urlError.message : "S3 presign failed",
+        },
+      });
       logger.error("Failed to generate presigned URLs", urlError);
       if (urlError instanceof Error) throw new ApiError(urlError.message, 400);
       else throw new ApiError("Something went wrong", 500);
@@ -365,11 +407,14 @@ const validateMediaUploadAndStoreProject = asyncHandler(
     const userid = new mongoose.Types.ObjectId(req.user._id);
     enrichContext({
       entity: { type: "project", github_repo_id: projectData?.github_repo_id },
-      modification_type: modificationType
+      modification_type: modificationType,
     });
 
     if (modificationType !== "new" && modificationType !== "existing") {
-      enrichContext({ outcome: "validation_failed", reason: "invalid_modification_type" });
+      enrichContext({
+        outcome: "validation_failed",
+        reason: "invalid_modification_type",
+      });
       response(res, 400, "Invalid modification type");
       return;
     }
@@ -383,18 +428,36 @@ const validateMediaUploadAndStoreProject = asyncHandler(
       );
 
       if (countError || !queryResult) {
-        enrichContext({ outcome: "error", error: { name: "DatabaseError", message: countError instanceof Error ? countError.message : "Count query failed" } });
+        enrichContext({
+          outcome: "error",
+          error: {
+            name: "DatabaseError",
+            message:
+              countError instanceof Error
+                ? countError.message
+                : "Count query failed",
+          },
+        });
         logger.error("Failed to count projects", countError);
         response(res, 500, "Failed to fetch total listed projects");
         return;
       }
 
       const [projectCount, userData] = queryResult;
-      const projectListingLimit = userData?.project_listing_limit ?? parseInt(process.env.DEFAULT_PROJECT_LISTING_LIMIT || "2", 10);
+      const projectListingLimit =
+        userData?.project_listing_limit ??
+        parseInt(process.env.DEFAULT_PROJECT_LISTING_LIMIT || "2", 10);
 
       if (projectCount >= projectListingLimit) {
-        enrichContext({ outcome: "validation_failed", reason: "max_projects_reached" });
-        response(res, 400, `Only ${projectListingLimit} projects can be listed at a time`);
+        enrichContext({
+          outcome: "validation_failed",
+          reason: "max_projects_reached",
+        });
+        response(
+          res,
+          400,
+          `Only ${projectListingLimit} projects can be listed at a time`
+        );
         return;
       }
     }
@@ -415,7 +478,10 @@ const validateMediaUploadAndStoreProject = asyncHandler(
     const installationId = projectData.installation_id;
 
     if (!installationId) {
-      enrichContext({ outcome: "validation_failed", reason: "missing_installation_id" });
+      enrichContext({
+        outcome: "validation_failed",
+        reason: "missing_installation_id",
+      });
       response(res, 400, "Installation ID is required");
       return;
     }
@@ -435,7 +501,10 @@ const validateMediaUploadAndStoreProject = asyncHandler(
     }
 
     if (!installation) {
-      enrichContext({ outcome: "unauthorized", reason: "no_installation_access" });
+      enrichContext({
+        outcome: "unauthorized",
+        reason: "no_installation_access",
+      });
       response(res, 403, "No access to this GitHub App installation");
       return;
     }
@@ -478,11 +547,17 @@ const validateMediaUploadAndStoreProject = asyncHandler(
           );
           return;
         } else if (status === 403) {
-          enrichContext({ outcome: "unauthorized", reason: "repo_access_denied" });
+          enrichContext({
+            outcome: "unauthorized",
+            reason: "repo_access_denied",
+          });
           response(res, 403, "Access denied to the repository");
           return;
         } else {
-          enrichContext({ outcome: "error", error: { name: "GitHubAPIError", code: String(status) } });
+          enrichContext({
+            outcome: "error",
+            error: { name: "GitHubAPIError", code: String(status) },
+          });
           logger.error("GitHub API error", githubError);
           response(res, 500, "Failed to verify repository access");
           return;
@@ -511,7 +586,13 @@ const validateMediaUploadAndStoreProject = asyncHandler(
     }
 
     if (project) {
-      enrichContext({ entity: { type: "project", id: project._id.toString(), github_repo_id: project.github_repo_id } });
+      enrichContext({
+        entity: {
+          type: "project",
+          id: project._id.toString(),
+          github_repo_id: project.github_repo_id,
+        },
+      });
     }
 
     if (project && modificationType === "new") {
@@ -538,7 +619,10 @@ const validateMediaUploadAndStoreProject = asyncHandler(
       }
 
       if (validatedExistingImages.length !== existingImages.length) {
-        enrichContext({ security_warning: "unowned_images_attempt", unowned_count: existingImages.length - validatedExistingImages.length });
+        enrichContext({
+          security_warning: "unowned_images_attempt",
+          unowned_count: existingImages.length - validatedExistingImages.length,
+        });
         logger.warn(
           `Security: User ${userid} sent ${existingImages.length - validatedExistingImages.length} unowned image URL(s)`
         );
@@ -603,14 +687,27 @@ const validateMediaUploadAndStoreProject = asyncHandler(
     };
 
     if (modificationType === "new") {
-      const [, createError] = await tryCatch(
+      const [newProject, createError] = await tryCatch(
         Project.create(filteredProjectData)
       );
 
-      if (createError) {
+      if (createError || !newProject) {
         logger.error("Error storing project data:", createError);
         throw new ApiError("Something went wrong", 500);
       }
+
+      repoZipUploadService
+        .processRepoZipUpload(
+          newProject._id.toString(),
+          projectData.github_repo_id,
+          installationId
+        )
+        .catch((err) => {
+          logger.error("Background repo ZIP upload failed", {
+            projectId: newProject._id.toString(),
+            error: err instanceof Error ? err.message : "Unknown error",
+          });
+        });
     } else {
       const currentMedia = [
         ...(project?.project_images ?? []),
@@ -677,13 +774,18 @@ const getTotalListedProjects = asyncHandler(
       logger.error("Failed to count listed projects", countError);
       response(res, 200, "Failed to fetch total listed projects", {
         totalListedProjects: -1,
-        projectListingLimit: parseInt(process.env.DEFAULT_PROJECT_LISTING_LIMIT || "2", 10),
+        projectListingLimit: parseInt(
+          process.env.DEFAULT_PROJECT_LISTING_LIMIT || "2",
+          10
+        ),
       });
       return;
     }
 
     const [projectCount, userData] = queryResult;
-    const projectListingLimit = userData?.project_listing_limit ?? parseInt(process.env.DEFAULT_PROJECT_LISTING_LIMIT || "2", 10);
+    const projectListingLimit =
+      userData?.project_listing_limit ??
+      parseInt(process.env.DEFAULT_PROJECT_LISTING_LIMIT || "2", 10);
 
     enrichContext({ outcome: "success", project_count: projectCount });
     response(res, 200, "Total listed projects fetched successfully", {
@@ -748,6 +850,7 @@ const getInitialProjectData = asyncHandler(
           tech_stack: 1,
           isActive: 1,
           github_access_revoked: 1,
+          repo_zip_status: 1,
           project_images: { $slice: 1 },
         })
         .lean()
@@ -758,7 +861,9 @@ const getInitialProjectData = asyncHandler(
           }));
         })
     );
-    enrichContext({ db_latency_ms: Math.round(performance.now() - dbStartTime) });
+    enrichContext({
+      db_latency_ms: Math.round(performance.now() - dbStartTime),
+    });
 
     if (projectError) {
       enrichContext({ outcome: "error", error: { name: "DatabaseError" } });
@@ -767,7 +872,10 @@ const getInitialProjectData = asyncHandler(
       return;
     }
 
-    enrichContext({ outcome: "success", projects_count: projectData?.length || 0 });
+    enrichContext({
+      outcome: "success",
+      projects_count: projectData?.length || 0,
+    });
     response(
       res,
       200,
@@ -801,7 +909,12 @@ const getSpecificProjectData = asyncHandler(
       return;
     }
 
-    enrichContext({ entity: { type: "project", github_repo_id: req.query.github_repo_id as string } });
+    enrichContext({
+      entity: {
+        type: "project",
+        github_repo_id: req.query.github_repo_id as string,
+      },
+    });
 
     const [projectData, projectError] = await tryCatch(
       Project.findOne({
@@ -854,7 +967,9 @@ const toggleProjectListing = asyncHandler(
       return;
     }
 
-    enrichContext({ entity: { type: "project", github_repo_id: req.body.github_repo_id } });
+    enrichContext({
+      entity: { type: "project", github_repo_id: req.body.github_repo_id },
+    });
 
     const [queryResult, countError] = await tryCatch(
       Promise.all([
@@ -892,7 +1007,10 @@ const toggleProjectListing = asyncHandler(
     }
 
     if (!existingProject.isActive && userData?.project_listing_limit === 0) {
-      enrichContext({ outcome: "forbidden", reason: "project_listing_limit_reached" });
+      enrichContext({
+        outcome: "forbidden",
+        reason: "project_listing_limit_reached",
+      });
       response(
         res,
         403,
@@ -922,7 +1040,15 @@ const toggleProjectListing = asyncHandler(
       return;
     }
 
-    enrichContext({ outcome: "success", new_status: updatedProject.isActive, entity: { type: "project", id: updatedProject._id.toString(), github_repo_id: updatedProject.github_repo_id } });
+    enrichContext({
+      outcome: "success",
+      new_status: updatedProject.isActive,
+      entity: {
+        type: "project",
+        id: updatedProject._id.toString(),
+        github_repo_id: updatedProject.github_repo_id,
+      },
+    });
     response(res, 200, "Project listing status toggled successfully", {
       status: updatedProject.isActive,
     });
@@ -953,13 +1079,18 @@ const deleteProjectListing = asyncHandler(
       return;
     }
 
-    enrichContext({ entity: { type: "project", github_repo_id: req.query.github_repo_id as string } });
+    enrichContext({
+      entity: {
+        type: "project",
+        github_repo_id: req.query.github_repo_id as string,
+      },
+    });
 
     const [projectData, projectError] = await tryCatch(
       Project.findOne({
         userid,
         github_repo_id: req.query.github_repo_id,
-      }).select("project_images project_video _id")
+      }).select("project_images project_video repo_zip_s3_key _id")
     );
 
     if (projectError) {
@@ -970,7 +1101,13 @@ const deleteProjectListing = asyncHandler(
     }
 
     if (projectData) {
-      enrichContext({ entity: { type: "project", id: projectData._id.toString(), github_repo_id: req.query.github_repo_id as string } });
+      enrichContext({
+        entity: {
+          type: "project",
+          id: projectData._id.toString(),
+          github_repo_id: req.query.github_repo_id as string,
+        },
+      });
     }
 
     const [deleteResponse, deleteError] = await tryCatch(
@@ -1016,6 +1153,21 @@ const deleteProjectListing = asyncHandler(
       }
     }
 
+    if (projectData?.repo_zip_s3_key) {
+      const [, zipCleanupError] = await tryCatch(
+        redisClient.zadd(
+          "media-cleanup-schedule",
+          Date.now(),
+          projectData.repo_zip_s3_key
+        )
+      );
+
+      if (zipCleanupError) {
+        enrichContext({ cleanup_queue_error: true });
+        logger.error("Failed to queue repo ZIP for cleanup", zipCleanupError);
+      }
+    }
+
     enrichContext({ outcome: "success" });
     response(res, 200, "Project was deleted successfully");
   }
@@ -1042,7 +1194,7 @@ const searchProject = asyncHandler(async (req: Request, res: Response) => {
     search: {
       term: searchTerm || null,
       filters: { projectTypes, sortBy },
-    }
+    },
   });
 
   const dbStartTime = performance.now();
@@ -1090,6 +1242,237 @@ const searchProject = asyncHandler(async (req: Request, res: Response) => {
   });
 });
 
+const getRepoZipStatus = asyncHandler(async (req: Request, res: Response) => {
+  enrichContext({ action: "get_repo_zip_status" });
+
+  if (!req.user) {
+    enrichContext({ outcome: "unauthorized" });
+    throw new ApiError("Error during validation", 401);
+  }
+
+  const userid = new mongoose.Types.ObjectId(req.user._id);
+  const result = githubRepoIdSchema.safeParse(req.query);
+  if (!result.success) {
+    enrichContext({ outcome: "validation_failed" });
+    response(
+      res,
+      400,
+      "Query validation failed",
+      {},
+      result.error.errors[0].message
+    );
+    return;
+  }
+
+  const [project, error] = await tryCatch(
+    Project.findOne({
+      userid,
+      github_repo_id: req.query.github_repo_id,
+    })
+      .select("repo_zip_status repo_zip_error")
+      .lean()
+  );
+
+  if (error) {
+    enrichContext({ outcome: "error", error: { name: "DatabaseError" } });
+    logger.error("Failed to fetch repo zip status", error);
+    throw new ApiError("Something went wrong", 500);
+  }
+
+  if (!project) {
+    enrichContext({ outcome: "not_found" });
+    response(res, 404, "Project not found");
+    return;
+  }
+
+  enrichContext({ outcome: "success" });
+  response(res, 200, "Repo ZIP status fetched", {
+    repo_zip_status: project.repo_zip_status,
+    repo_zip_error: project.repo_zip_error,
+  });
+});
+
+const retryRepoZipUpload = asyncHandler(async (req: Request, res: Response) => {
+  enrichContext({ action: "retry_repo_zip_upload" });
+
+  if (!req.user) {
+    enrichContext({ outcome: "unauthorized" });
+    throw new ApiError("Error during validation", 401);
+  }
+
+  const userid = new mongoose.Types.ObjectId(req.user._id);
+  const result = githubRepoIdSchema.safeParse(req.body);
+  if (!result.success) {
+    enrichContext({ outcome: "validation_failed" });
+    response(
+      res,
+      400,
+      "Payload validation failed",
+      {},
+      result.error.errors[0].message
+    );
+    return;
+  }
+
+  const [project, error] = await tryCatch(
+    Project.findOne({
+      userid,
+      github_repo_id: req.body.github_repo_id,
+    })
+  );
+
+  if (error) {
+    enrichContext({ outcome: "error", error: { name: "DatabaseError" } });
+    logger.error("Failed to fetch project for retry", error);
+    throw new ApiError("Something went wrong", 500);
+  }
+
+  if (!project) {
+    enrichContext({ outcome: "not_found" });
+    response(res, 404, "Project not found");
+    return;
+  }
+
+  if (project.repo_zip_status !== "FAILED") {
+    enrichContext({
+      outcome: "validation_failed",
+      reason: "not_failed_status",
+    });
+    response(res, 400, "Can only retry failed uploads");
+    return;
+  }
+
+  const [, saveError] = await tryCatch(
+    Project.updateOne(
+      { _id: project._id },
+      { repo_zip_status: "PROCESSING", $unset: { repo_zip_error: 1 } }
+    )
+  );
+
+  if (saveError) {
+    enrichContext({ outcome: "error", error: { name: "DatabaseError" } });
+    logger.error("Failed to reset project status for retry", saveError);
+    throw new ApiError("Something went wrong", 500);
+  }
+
+  // Fire-and-forget: restart background repo ZIP upload
+  repoZipUploadService
+    .processRepoZipUpload(
+      project._id.toString(),
+      project.github_repo_id,
+      project.github_installation_id!
+    )
+    .catch((err) => {
+      logger.error("Retry repo ZIP upload failed", {
+        projectId: project._id.toString(),
+        error: err instanceof Error ? err.message : "Unknown error",
+      });
+    });
+
+  enrichContext({ outcome: "success" });
+  response(res, 200, "Retry initiated");
+});
+
+const refreshRepoZip = asyncHandler(async (req: Request, res: Response) => {
+  enrichContext({ action: "refresh_repo_zip" });
+
+  if (!req.user) {
+    enrichContext({ outcome: "unauthorized" });
+    throw new ApiError("Error during validation", 401);
+  }
+
+  const userid = new mongoose.Types.ObjectId(req.user._id);
+  const result = githubRepoIdSchema.safeParse(req.body);
+  if (!result.success) {
+    enrichContext({ outcome: "validation_failed" });
+    response(
+      res,
+      400,
+      "Payload validation failed",
+      {},
+      result.error.errors[0].message
+    );
+    return;
+  }
+
+  const [project, error] = await tryCatch(
+    Project.findOne({
+      userid,
+      github_repo_id: req.body.github_repo_id,
+    })
+  );
+
+  if (error) {
+    enrichContext({ outcome: "error", error: { name: "DatabaseError" } });
+    logger.error("Failed to fetch project for refresh", error);
+    throw new ApiError("Something went wrong", 500);
+  }
+
+  if (!project) {
+    enrichContext({ outcome: "not_found" });
+    response(res, 404, "Project not found");
+    return;
+  }
+
+  if (project.repo_zip_status === "PROCESSING") {
+    enrichContext({
+      outcome: "validation_failed",
+      reason: "already_processing",
+    });
+    response(res, 400, "Upload is already in progress");
+    return;
+  }
+
+  // Schedule old ZIP for cleanup if it exists
+  if (project.repo_zip_s3_key) {
+    const [, cleanupError] = await tryCatch(
+      redisClient.zadd(
+        "media-cleanup-schedule",
+        Date.now(),
+        project.repo_zip_s3_key
+      )
+    );
+
+    if (cleanupError) {
+      logger.error("Failed to queue old repo ZIP for cleanup", cleanupError);
+    }
+  }
+
+  // Reset status and trigger re-upload
+  const [, updateError] = await tryCatch(
+    Project.updateOne(
+      { _id: project._id },
+      {
+        repo_zip_status: "PROCESSING",
+        $unset: { repo_zip_s3_key: 1, repo_zip_error: 1 },
+      }
+    )
+  );
+
+  if (updateError) {
+    enrichContext({ outcome: "error", error: { name: "DatabaseError" } });
+    logger.error("Failed to reset project for refresh", updateError);
+    throw new ApiError("Something went wrong", 500);
+  }
+
+  // Fire-and-forget: trigger background re-upload
+  repoZipUploadService
+    .processRepoZipUpload(
+      project._id.toString(),
+      project.github_repo_id,
+      project.github_installation_id!
+    )
+    .catch((err) => {
+      logger.error("Refresh repo ZIP upload failed", {
+        projectId: project._id.toString(),
+        error: err instanceof Error ? err.message : "Unknown error",
+      });
+    });
+
+  enrichContext({ outcome: "success" });
+  response(res, 200, "Refresh initiated");
+});
+
 export {
   getPrivateRepos,
   getPreSignedUrlForProjectMediaUpload,
@@ -1101,4 +1484,7 @@ export {
   toggleProjectListing,
   deleteProjectListing,
   searchProject,
+  getRepoZipStatus,
+  retryRepoZipUpload,
+  refreshRepoZip,
 };

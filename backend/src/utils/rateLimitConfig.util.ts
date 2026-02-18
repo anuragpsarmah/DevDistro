@@ -11,7 +11,6 @@ export const toggleProjectListingLimiter = rateLimit({
   limit: 6,
 });
 
-
 export const toggleWalletConnectionLimiter = rateLimit({
   windowMs: 60 * 1000,
   limit: 6,
@@ -21,6 +20,14 @@ export const projectMediaUploadLimiter = rateLimit({
   windowMs: 10 * 60 * 1000,
   limit: 5,
   message: "Too many upload requests. Please try again later.",
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+export const refreshRepoZipLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  limit: 3,
+  message: "Too many refresh requests. Please try again later.",
   standardHeaders: true,
   legacyHeaders: false,
 });

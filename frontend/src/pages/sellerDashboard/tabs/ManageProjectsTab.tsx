@@ -1,9 +1,11 @@
 import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { TransitionWrapper } from "../sub-components/TransitionWrapper";
 import AnimatedLoadWrapper from "@/components/wrappers/AnimatedLoadWrapper";
 import {
   useInitialProjectDataQuery,
   useSpecificProjectDataQuery,
+  useRepoZipStatusQuery,
 } from "@/hooks/apiQueries";
 import ListedProjects from "../main-components/ListedProjects";
 import {
@@ -11,6 +13,8 @@ import {
   usePreSignedUrlForProjectMediaUploadMutation,
   useToggleProjectListingMutation,
   useValidateMediaUploadAndStoreProjectMutation,
+  useRetryRepoZipUploadMutation,
+  useRefreshRepoZipMutation,
 } from "@/hooks/apiMutations";
 import { tryCatch } from "@/utils/tryCatch.util";
 import ProjectModificationForm from "../main-components/ProjectModificationForm";
@@ -26,6 +30,7 @@ interface ManageProjectsTabProps {
 }
 
 export default function ManageProjectsTab({ logout }: ManageProjectsTabProps) {
+  const queryClient = useQueryClient();
   const [componentIdentifier, setComponenetIdentifier] =
     useState<boolean>(true);
   const [isTransitioning, setIsTransitioning] = useState(false);
@@ -67,6 +72,16 @@ export default function ManageProjectsTab({ logout }: ManageProjectsTabProps) {
     useValidateMediaUploadAndStoreProjectMutation({
       logout,
     });
+
+  const { mutateAsync: retryRepoZipMutate } = useRetryRepoZipUploadMutation({
+    logout,
+  });
+
+  const { mutateAsync: refreshRepoZipMutate } = useRefreshRepoZipMutation({
+    logout,
+  });
+
+  const getRepoZipStatus = useRepoZipStatusQuery({ logout });
 
   const handleToggleProjectListing = async (title: string) => {
     const response = await toggleListingMutate(title);
@@ -127,6 +142,24 @@ export default function ManageProjectsTab({ logout }: ManageProjectsTabProps) {
     return response;
   };
 
+  const handleRetryRepoZipUpload = async (github_repo_id: string) => {
+    await retryRepoZipMutate(github_repo_id);
+  };
+
+  const handleRefreshRepoZip = async (github_repo_id: string) => {
+    await refreshRepoZipMutate(github_repo_id);
+  };
+
+  const handleRefreshRepoZipStatus = async (index: number) => {
+    const github_repo_id = initialData?.data?.[index]?.github_repo_id;
+    if (!github_repo_id) return;
+
+    const result = await getRepoZipStatus(github_repo_id);
+    if (result?.data?.repo_zip_status === "SUCCESS") {
+      queryClient.invalidateQueries({ queryKey: ["initialProjectDataQuery"] });
+    }
+  };
+
   return (
     <AnimatedLoadWrapper>
       <div className="flex flex-col h-[calc(100vh-3rem)] lg:h-[calc(100vh-4rem)] mt-10 lg:mt-0 md:mt-0 pb-4 lg:pb-6">
@@ -139,7 +172,9 @@ export default function ManageProjectsTab({ logout }: ManageProjectsTabProps) {
               <h1 className="text-2xl lg:text-3xl text-left font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500">
                 Manage Projects
               </h1>
-              <p className="text-xs lg:text-sm text-gray-500">View and modify your listed projects</p>
+              <p className="text-xs lg:text-sm text-gray-500">
+                View and modify your listed projects
+              </p>
             </div>
           </div>
         </div>
@@ -159,6 +194,9 @@ export default function ManageProjectsTab({ logout }: ManageProjectsTabProps) {
                   handleToggleProjectListing={handleToggleProjectListing}
                   handleDeleteProjectListing={handleDeleteProjectListing}
                   handleUIStateChange={handleUIStateChange}
+                  handleRetryRepoZipUpload={handleRetryRepoZipUpload}
+                  handleRefreshRepoZipStatus={handleRefreshRepoZipStatus}
+                  handleRefreshRepoZip={handleRefreshRepoZip}
                   setFormProps={setFormProps}
                 />
               </div>

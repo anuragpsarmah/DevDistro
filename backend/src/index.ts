@@ -7,6 +7,7 @@ import logger from "./logger/logger";
 import { redisInitialization } from "./initializations/redis-initialization";
 import { Redis } from "ioredis";
 import S3Service from "./services/S3.service";
+import RepoZipUploadService from "./services/repoZipUpload.service";
 import S3CleanupService from "./workers/S3Cleanup.worker";
 
 
@@ -16,6 +17,7 @@ const DBretiers = process.env.RETRIES ? Number(process.env.RETRIES) : 3;
 
 export let redisClient: Redis;
 export let s3Service: S3Service;
+export let repoZipUploadService: RepoZipUploadService;
 
 (async () => {
   try {
@@ -37,6 +39,7 @@ export let s3Service: S3Service;
   }
 
   s3Service = new S3Service();
+  repoZipUploadService = new RepoZipUploadService();
 
   S3CleanupService.startWorker().catch((err) => {
     logger.error("Failed to start cleanup worker:", err);

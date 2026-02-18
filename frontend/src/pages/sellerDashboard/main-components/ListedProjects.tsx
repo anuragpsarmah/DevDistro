@@ -8,7 +8,18 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Eye, EyeOff, Edit, Trash2, AlertTriangle } from "lucide-react";
+import {
+  Eye,
+  EyeOff,
+  Edit,
+  Trash2,
+  AlertTriangle,
+  Loader2,
+  XCircle,
+  RefreshCw,
+  RotateCcw,
+  PackageCheck,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ErrorScreenListedProjects } from "../sub-components/ErrorScreens";
 import { NoProjectsScreen } from "../sub-components/NoProjectsScreen";
@@ -23,6 +34,9 @@ const ListedProjects = ({
   handleToggleProjectListing,
   handleDeleteProjectListing,
   handleUIStateChange,
+  handleRetryRepoZipUpload,
+  handleRefreshRepoZipStatus,
+  handleRefreshRepoZip,
   setFormProps,
 }: ListedProjectsProps) => {
   const queryClient = useQueryClient();
@@ -30,6 +44,10 @@ const ListedProjects = ({
   const [togglingIndices, setTogglingIndices] = useState<Set<number>>(new Set());
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [projectToDelete, setProjectToDelete] = useState<number | null>(null);
+  const [zipStatuses, setZipStatuses] = useState<Record<number, string>>({});
+  const [refreshingIndices, setRefreshingIndices] = useState<Set<number>>(new Set());
+  const [retryingIndices, setRetryingIndices] = useState<Set<number>>(new Set());
+  const [refreshZipIndices, setRefreshZipIndices] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     if (initialProjectData && !isLoading && !isError) {
@@ -89,6 +107,59 @@ const ListedProjects = ({
     handleUIStateChange("form", other_props.github_repo_id);
   };
 
+  const handleRefreshStatus = async (idx: number) => {
+    if (refreshingIndices.has(idx)) return;
+    setRefreshingIndices((prev) => new Set(prev).add(idx));
+    try {
+      await handleRefreshRepoZipStatus(idx);
+      setZipStatuses((prev) => {
+        const next = { ...prev };
+        delete next[idx];
+        return next;
+      });
+    } finally {
+      setRefreshingIndices((prev) => {
+        const next = new Set(prev);
+        next.delete(idx);
+        return next;
+      });
+    }
+  };
+
+  const handleRetry = async (idx: number) => {
+    if (retryingIndices.has(idx)) return;
+    setRetryingIndices((prev) => new Set(prev).add(idx));
+    try {
+      await handleRetryRepoZipUpload(initialProjectData[idx].github_repo_id);
+      setZipStatuses((prev) => ({ ...prev, [idx]: "PROCESSING" }));
+    } finally {
+      setRetryingIndices((prev) => {
+        const next = new Set(prev);
+        next.delete(idx);
+        return next;
+      });
+    }
+  };
+
+  const getEffectiveZipStatus = (idx: number) => {
+    return zipStatuses[idx] || initialProjectData[idx].repo_zip_status;
+  };
+
+  const handleRefreshZip = async (idx: number) => {
+    if (refreshZipIndices.has(idx)) return;
+    setRefreshZipIndices((prev) => new Set(prev).add(idx));
+    try {
+      await handleRefreshRepoZip(initialProjectData[idx].github_repo_id);
+      setZipStatuses((prev) => ({ ...prev, [idx]: "PROCESSING" }));
+    } finally {
+      setRefreshZipIndices((prev) => {
+        const next = new Set(prev);
+        next.delete(idx);
+        return next;
+      });
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 2xl:grid-cols-3 gap-4 lg:gap-6 p-4 lg:p-6">
@@ -109,7 +180,7 @@ const ListedProjects = ({
         {initialProjectData.map((project, idx) => (
           <div key={idx} className="relative">
             <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-purple-500/5 to-pink-500/5 blur-xl rounded-2xl pointer-events-none" />
-            <div className="relative bg-gray-900/60 backdrop-blur-xl rounded-2xl border border-white/10 p-4 lg:p-5 transition-all duration-300 ease-in-out flex flex-col hover:border-white/20 hover:shadow-lg hover:shadow-purple-500/10 overflow-hidden">
+            <div className="relative h-full bg-gray-900/60 backdrop-blur-xl rounded-2xl border border-white/10 p-4 lg:p-5 transition-all duration-300 ease-in-out flex flex-col hover:border-white/20 hover:shadow-lg hover:shadow-purple-500/10 overflow-hidden">
               <div className="absolute inset-0 bg-gradient-to-br from-blue-500/[0.02] to-purple-600/[0.02] pointer-events-none" />
               <div className="relative z-10 flex flex-col h-full">
                 <div className="relative mb-4">
@@ -160,6 +231,28 @@ const ListedProjects = ({
                   </Tooltip>
                 )}
 
+                {!project.github_access_revoked && getEffectiveZipStatus(idx) === "SUCCESS" && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleRefreshZip(idx)}
+                        disabled={refreshZipIndices.has(idx)}
+                        className="bg-white/10 hover:bg-green-500/20 rounded-lg border border-white/5 hover:border-green-500/30 transition-all duration-200 p-1.5 disabled:opacity-50"
+                      >
+                        <PackageCheck className={`h-4 w-4 text-green-400 ${refreshZipIndices.has(idx) ? "animate-spin" : ""}`} />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent
+                      side="bottom"
+                      className="bg-gray-900/95 backdrop-blur-xl text-gray-200 border-white/10"
+                    >
+                      Re-upload repository ZIP
+                    </TooltipContent>
+                  </Tooltip>
+                )}
+
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
@@ -203,6 +296,81 @@ const ListedProjects = ({
                 <p className="text-xs text-amber-300/90">
                   GitHub access revoked. Reinstall the GitHub App with access to this repository to restore.
                 </p>
+              </div>
+            )}
+
+            {getEffectiveZipStatus(idx) === "PROCESSING" && (
+              <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg bg-blue-500/10 border border-blue-500/20 mt-2 mb-2">
+                <Loader2 className="h-4 w-4 text-blue-400 animate-spin flex-shrink-0" />
+                <span className="text-xs text-blue-300 flex-grow">
+                  Packaging repository...
+                </span>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      onClick={() => handleRefreshStatus(idx)}
+                      disabled={refreshingIndices.has(idx)}
+                      className="p-1 rounded hover:bg-blue-500/20 transition-colors disabled:opacity-50"
+                    >
+                      <RefreshCw
+                        className={`h-3.5 w-3.5 text-blue-400 ${refreshingIndices.has(idx) ? "animate-spin" : ""}`}
+                      />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent
+                    side="bottom"
+                    className="bg-gray-900/95 backdrop-blur-xl text-gray-200 border-white/10"
+                  >
+                    Refresh status
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+            )}
+
+            {getEffectiveZipStatus(idx) === "FAILED" && (
+              <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg bg-red-500/10 border border-red-500/20 mt-2 mb-2">
+                <XCircle className="h-4 w-4 text-red-400 flex-shrink-0" />
+                <span className="text-xs text-red-300 flex-grow">
+                  Upload failed
+                </span>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      onClick={() => handleRetry(idx)}
+                      disabled={retryingIndices.has(idx)}
+                      className="p-1 rounded hover:bg-red-500/20 transition-colors disabled:opacity-50"
+                    >
+                      <RotateCcw
+                        className={`h-3.5 w-3.5 text-red-400 ${retryingIndices.has(idx) ? "animate-spin" : ""}`}
+                      />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent
+                    side="bottom"
+                    className="bg-gray-900/95 backdrop-blur-xl text-gray-200 border-white/10"
+                  >
+                    Retry upload
+                  </TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      onClick={() => handleRefreshStatus(idx)}
+                      disabled={refreshingIndices.has(idx)}
+                      className="p-1 rounded hover:bg-red-500/20 transition-colors disabled:opacity-50"
+                    >
+                      <RefreshCw
+                        className={`h-3.5 w-3.5 text-red-400 ${refreshingIndices.has(idx) ? "animate-spin" : ""}`}
+                      />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent
+                    side="bottom"
+                    className="bg-gray-900/95 backdrop-blur-xl text-gray-200 border-white/10"
+                  >
+                    Refresh status
+                  </TooltipContent>
+                </Tooltip>
               </div>
             )}
 

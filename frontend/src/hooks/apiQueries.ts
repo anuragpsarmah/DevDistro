@@ -194,12 +194,9 @@ const usePrivateReposInfiniteQuery = ({ logout }: queryParameter) => {
     queryKey: ["privateRepoQuery"],
     queryFn: async ({ pageParam }) => {
       const [response, error] = await tryCatch(
-        axios.get(
-          `${backend_uri}/projects/getPrivateRepos?page=${pageParam}`,
-          {
-            withCredentials: true,
-          }
-        )
+        axios.get(`${backend_uri}/projects/getPrivateRepos?page=${pageParam}`, {
+          withCredentials: true,
+        })
       );
 
       if (error) {
@@ -319,6 +316,27 @@ const useGetWalletAddress = ({ logout }: queryParameter) => {
   });
 };
 
+const useRepoZipStatusQuery = ({ logout }: queryParameter) => {
+  const { handleError } = useHandleError({ logout });
+
+  const getStatus = async (github_repo_id: string) => {
+    const [response, error] = await tryCatch(
+      axios.get(
+        `${backend_uri}/projects/getRepoZipStatus?github_repo_id=${github_repo_id}`,
+        { withCredentials: true }
+      )
+    );
+
+    if (error) {
+      handleError(error);
+      throw error;
+    }
+    return response.data;
+  };
+
+  return getStatus;
+};
+
 export {
   useAuthValidationQuery,
   useLogoutQuery,
@@ -333,4 +351,5 @@ export {
   useInitialProjectDataQuery,
   useSpecificProjectDataQuery,
   useGetWalletAddress,
+  useRepoZipStatusQuery,
 };

@@ -260,6 +260,72 @@ const useUpdateWalletAddressMutation = ({ logout }: mutationParameter) => {
   });
 };
 
+const useRetryRepoZipUploadMutation = ({ logout }: mutationParameter) => {
+  const { handleError } = useHandleError({ logout });
+
+  let operationInProgress = false;
+
+  return useMutation({
+    mutationFn: async (github_repo_id: string) => {
+      if (operationInProgress) {
+        throw new Error("Operation already in progress");
+      }
+
+      operationInProgress = true;
+
+      const [response, error] = await tryCatch(
+        axios.post(
+          `${backend_uri}/projects/retryRepoZipUpload`,
+          { github_repo_id },
+          { withCredentials: true }
+        )
+      );
+
+      operationInProgress = false;
+
+      if (error) {
+        handleError(error);
+        throw error;
+      }
+      successToast("Retry initiated");
+      return response.data;
+    },
+  });
+};
+
+const useRefreshRepoZipMutation = ({ logout }: mutationParameter) => {
+  const { handleError } = useHandleError({ logout });
+
+  let operationInProgress = false;
+
+  return useMutation({
+    mutationFn: async (github_repo_id: string) => {
+      if (operationInProgress) {
+        throw new Error("Operation already in progress");
+      }
+
+      operationInProgress = true;
+
+      const [response, error] = await tryCatch(
+        axios.post(
+          `${backend_uri}/projects/refreshRepoZip`,
+          { github_repo_id },
+          { withCredentials: true }
+        )
+      );
+
+      operationInProgress = false;
+
+      if (error) {
+        handleError(error);
+        throw error;
+      }
+      successToast("Refresh initiated");
+      return response.data;
+    },
+  });
+};
+
 export {
   useProfileUpdateMutation,
   usePreSignedUrlForProjectMediaUploadMutation,
@@ -267,4 +333,6 @@ export {
   useToggleProjectListingMutation,
   useDeleteProjectListingMutation,
   useUpdateWalletAddressMutation,
+  useRetryRepoZipUploadMutation,
+  useRefreshRepoZipMutation,
 };

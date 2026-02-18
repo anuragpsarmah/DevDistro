@@ -57,8 +57,21 @@ const projectSchema = new Schema(
     },
     github_installation_id: {
       type: Number,
-      required: false, // Optional during migration
+      required: [true, "Installation ID is required"],
       index: true,
+    },
+    repo_zip_status: {
+      type: String,
+      enum: ["PROCESSING", "SUCCESS", "FAILED"],
+      default: "PROCESSING",
+    },
+    repo_zip_s3_key: {
+      type: String,
+      default: null,
+    },
+    repo_zip_error: {
+      type: String,
+      default: null,
     },
     avgRating: {
       type: Number,

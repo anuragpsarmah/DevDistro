@@ -26,7 +26,7 @@ const createSessionToken = (
   const session_token = jwt.sign(
     { _id: userid, username, name, profile_image_url },
     process.env.JWT_SECRET as string,
-    { expiresIn }
+    { expiresIn: expiresIn as unknown as number }
   );
 
   return session_token;

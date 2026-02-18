@@ -267,6 +267,7 @@ export interface InitialProjectData {
   description: string;
   tech_stack: string[];
   project_images: string;
+  repo_zip_status?: "PROCESSING" | "SUCCESS" | "FAILED";
 }
 
 export interface ListedProjectsProps {
@@ -274,6 +275,9 @@ export interface ListedProjectsProps {
   handleToggleProjectListing: (title: string) => Promise<unknown>;
   handleDeleteProjectListing: (title: string) => Promise<unknown>;
   handleUIStateChange: (identifier: string, title: string) => void;
+  handleRetryRepoZipUpload: (github_repo_id: string) => Promise<void>;
+  handleRefreshRepoZipStatus: (index: number) => Promise<void>;
+  handleRefreshRepoZip: (github_repo_id: string) => Promise<void>;
   isLoading: boolean;
   isError: boolean;
   setFormProps: React.Dispatch<React.SetStateAction<formPropsType>>;
