@@ -15,20 +15,20 @@ export const YearSelector: React.FC<YearSelectorProps> = ({
   isLoading = false,
 }) => {
   if (isLoading) {
-    return <Skeleton className="h-10 w-[100px] bg-white/5 rounded-md" />;
+    return <Skeleton className="h-12 w-[120px] rounded-none bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10" />;
   }
 
   return (
     <Select value={selectedYear} onValueChange={onYearChange}>
-      <SelectTrigger className="w-[100px] bg-white/5 border-white/10 text-white hover:bg-white/10 hover:border-white/20 transition-colors duration-200 focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus:border-indigo-500/50">
-        <SelectValue placeholder="Year" />
+      <SelectTrigger className="h-12 w-[120px] rounded-none bg-transparent border-2 border-black dark:border-white text-black dark:text-white font-space font-bold uppercase tracking-widest text-[10px] hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black transition-colors duration-300 focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0">
+        <SelectValue placeholder="YEAR" />
       </SelectTrigger>
-      <SelectContent className="bg-[#14152b]/90 border-white/10 text-white backdrop-blur-xl">
+      <SelectContent className="rounded-none bg-white dark:bg-[#050505] border-2 border-black dark:border-white text-black dark:text-white font-space tracking-widest uppercase text-[10px]">
         {years.map((year) => (
-          <SelectItem 
-            key={year} 
+          <SelectItem
+            key={year}
             value={year.toString()}
-            className="focus:bg-white/10 hover:bg-white/10 cursor-pointer text-gray-300 focus:text-white"
+            className="rounded-none focus:bg-red-500 focus:text-white hover:bg-red-500 hover:text-white cursor-pointer transition-colors duration-200"
           >
             {year}
           </SelectItem>

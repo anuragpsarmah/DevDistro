@@ -1,8 +1,6 @@
 import { MonthlySalesProps } from "../utils/types";
 import Chart from "../sub-components/Chart";
 import { YearSelector } from "../sub-components/YearSelector";
-import { BarChart3 } from "lucide-react";
-
 import { MonthlySalesHeaderSkeleton } from "../sub-components/Skeletons";
 
 export default function MonthlySales({
@@ -13,24 +11,22 @@ export default function MonthlySales({
   chartData,
 }: MonthlySalesProps) {
   return (
-    <div className="flex flex-col h-full">
-      <div className="flex justify-between items-center mb-3 lg:mb-4 flex-shrink-0">
-        <div className="flex items-center gap-2.5">
+    <div className="flex flex-col h-full bg-white dark:bg-[#050505] border-2 border-black dark:border-white p-6 lg:p-10 transition-colors duration-300">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8 lg:mb-12 flex-shrink-0">
+        <div className="flex flex-col gap-4">
           {isLoading ? (
             <MonthlySalesHeaderSkeleton />
           ) : (
             <>
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-blue-500/20 to-purple-500/20 flex items-center justify-center border border-white/10">
-                <BarChart3 className="w-4 h-4 text-purple-400" />
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-[2px] bg-red-500"></div>
+                <span className="font-space font-bold uppercase tracking-[0.2em] text-xs text-red-500">
+                  Performance
+                </span>
               </div>
-              <div>
-                <h2 className="text-lg lg:text-xl font-semibold text-white">
-                  Monthly Sales
-                </h2>
-                <p className="text-xs text-gray-500 hidden sm:block">
-                  Revenue trends for the selected year
-                </p>
-              </div>
+              <h2 className="font-syne text-3xl lg:text-5xl font-black uppercase tracking-widest text-black dark:text-white leading-none">
+                Monthly Sales
+              </h2>
             </>
           )}
         </div>
@@ -41,8 +37,8 @@ export default function MonthlySales({
           isLoading={isLoading}
         />
       </div>
-      
-      <div className="flex-1 min-h-0">
+
+      <div className="flex-1 min-h-[250px] border-t border-black/10 dark:border-white/10 pt-8 mt-2 relative">
         <Chart chartData={chartData} isLoading={isLoading} />
       </div>
     </div>

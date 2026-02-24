@@ -3,13 +3,15 @@ import { toast } from "@/hooks/use-toast";
 export const successToast = (message: string) => {
   toast({
     description: message,
-    className: "bg-gray-900/90 border-blue-500/30 text-blue-100 px-4 py-3 shadow-lg shadow-blue-500/10",
+    className:
+      "bg-white dark:bg-[#050505] border-black dark:border-white text-black dark:text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] px-4 py-3 toast-success",
   });
 };
 
 export const errorToast = (message: string) => {
   toast({
     description: message,
-    className: "bg-gray-900/90 border-red-500/30 text-red-200 px-4 py-3 shadow-lg shadow-red-500/10",
+    className:
+      "bg-white dark:bg-[#050505] border-red-500 text-black dark:text-white shadow-[4px_4px_0px_0px_rgba(239,68,68,1)] px-4 py-3 toast-error",
   });
 };

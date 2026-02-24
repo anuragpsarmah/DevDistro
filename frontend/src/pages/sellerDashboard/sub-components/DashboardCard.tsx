@@ -11,17 +11,14 @@ export const DashboardCard: React.FC<DashboardCardProps> = ({
   }
 
   return (
-    <div className="relative h-full">
-      <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-purple-500/5 to-pink-500/5 blur-2xl rounded-3xl pointer-events-none" />
-      <div className="relative h-full bg-gray-900/60 backdrop-blur-xl rounded-2xl border border-white/10 shadow-lg p-4 lg:p-5 flex flex-col justify-between overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-500/[0.02] to-purple-600/[0.02] pointer-events-none" />
-        
-        <div className="relative z-10">
-          <h3 className="text-xs lg:text-sm font-medium text-gray-400 mb-1.5 uppercase tracking-wide">{title}</h3>
-          <p className="text-xl lg:text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400">
-            {value}
-          </p>
-        </div>
+    <div className="relative h-full bg-white dark:bg-[#050505] border border-black/20 dark:border-white/20 p-6 lg:p-8 flex flex-col justify-between overflow-hidden transition-colors duration-300 group hover:border-red-500 dark:hover:border-red-500">
+      <div className="relative z-10 flex flex-col gap-6">
+        <h3 className="font-space font-bold uppercase tracking-[0.2em] text-[10px] text-gray-500 group-hover:text-red-500 transition-colors duration-300">
+          {title}
+        </h3>
+        <p className="font-syne text-4xl lg:text-5xl font-black uppercase tracking-widest leading-none text-black dark:text-white transition-colors duration-300 truncate">
+          {value}
+        </p>
       </div>
     </div>
   );

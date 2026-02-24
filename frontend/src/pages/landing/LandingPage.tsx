@@ -13,17 +13,6 @@ import { useAuthValidationQuery } from "@/hooks/apiQueries";
 
 export default function LandingPage() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(() => {
-    const savedTheme = localStorage.getItem("theme");
-    if (savedTheme) {
-      return savedTheme === "dark";
-    }
-    return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-  });
-
-  useEffect(() => {
-    localStorage.setItem("theme", isDarkMode ? "dark" : "light");
-  }, [isDarkMode]);
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -64,35 +53,29 @@ export default function LandingPage() {
   }, []);
 
   return (
-    <div className={isDarkMode ? "dark" : ""}>
-      <div className="min-h-screen text-gray-900 bg-gray-50 dark:text-white relative dark:bg-[#050505] font-space selection:bg-red-500 selection:text-white transition-colors duration-300">
-        <Header
-          handleAuthNavigate={handleAuthNavigate}
-          isMenuOpen={isMenuOpen}
-          setIsMenuOpen={setIsMenuOpen}
-          isDarkMode={isDarkMode}
-          setIsDarkMode={setIsDarkMode}
-        />
+    <div className="min-h-screen text-gray-900 bg-gray-50 dark:text-white relative dark:bg-[#050505] font-space selection:bg-red-500 selection:text-white transition-colors duration-300">
+      <Header
+        handleAuthNavigate={handleAuthNavigate}
+        isMenuOpen={isMenuOpen}
+        setIsMenuOpen={setIsMenuOpen}
+      />
 
-        <MobileMenu
-          handleAuthNavigate={handleAuthNavigate}
-          isMenuOpen={isMenuOpen}
-          setIsMenuOpen={setIsMenuOpen}
-          isDarkMode={isDarkMode}
-          setIsDarkMode={setIsDarkMode}
-        />
+      <MobileMenu
+        handleAuthNavigate={handleAuthNavigate}
+        isMenuOpen={isMenuOpen}
+        setIsMenuOpen={setIsMenuOpen}
+      />
 
-        <main className="relative z-10 w-full pt-16">
-          <TheIntroduction handleAuthNavigate={handleAuthNavigate} />
-          <TheRevelation />
-          <TheMechanics />
-          <Reviews />
-          <FAQ />
-          <TheClimax handleAuthNavigate={handleAuthNavigate} />
-        </main>
+      <main className="relative z-10 w-full pt-16">
+        <TheIntroduction handleAuthNavigate={handleAuthNavigate} />
+        <TheRevelation />
+        <TheMechanics />
+        <Reviews />
+        <FAQ />
+        <TheClimax handleAuthNavigate={handleAuthNavigate} />
+      </main>
 
-        <Footer />
-      </div>
+      <Footer />
     </div>
   );
 }

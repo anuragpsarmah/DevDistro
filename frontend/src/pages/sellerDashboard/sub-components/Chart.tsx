@@ -10,8 +10,8 @@ import { ChartSkeleton } from "./Skeletons";
 
 const chartConfig = {
   sales: {
-    label: "Sales",
-    color: "hsl(var(--chart-1))",
+    label: "SALES",
+    color: "#ef4444",
   },
 } satisfies ChartConfig;
 
@@ -22,35 +22,33 @@ export default function Chart({ chartData, isLoading = false }: ChartProps) {
 
   return (
     <ChartContainer config={chartConfig} className="h-full w-full [aspect-ratio:unset]">
-      <BarChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-        <defs>
-          <linearGradient id="salesGradient" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#60A5FA" />
-            <stop offset="100%" stopColor="#A855F7" />
-          </linearGradient>
-        </defs>
-        <CartesianGrid vertical={false} stroke="rgba(255, 255, 255, 0.1)" />
+      <BarChart data={chartData} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
+        <CartesianGrid vertical={false} stroke="currentColor" className="opacity-10 dark:opacity-20" strokeDasharray="3 3" />
         <XAxis
           dataKey="month"
           tickLine={false}
-          tickMargin={8}
+          tickMargin={12}
           axisLine={false}
-          tickFormatter={(value) => value.slice(0, 3)}
-          stroke="rgba(255, 255, 255, 0.5)"
-          fontSize={11}
+          tickFormatter={(value) => value.slice(0, 3).toUpperCase()}
+          tick={{ fill: 'currentColor', className: 'opacity-50 font-space text-[10px] tracking-widest' }}
         />
         <YAxis
           tickLine={false}
           axisLine={false}
-          stroke="rgba(255, 255, 255, 0.5)"
-          fontSize={11}
-          width={45}
+          tickMargin={12}
+          tick={{ fill: 'currentColor', className: 'opacity-50 font-space text-[10px] tracking-widest' }}
+          width={60}
         />
         <ChartTooltip
-          cursor={false}
-          content={<ChartTooltipContent indicator="dashed" />}
+          cursor={{ fill: "rgba(239, 68, 68, 0.1)" }}
+          content={
+            <ChartTooltipContent
+              className="w-32 rounded-none border-2 border-black dark:border-white bg-white dark:bg-[#050505] text-black dark:text-white font-space uppercase text-[10px] tracking-widest p-3"
+              indicator="line"
+            />
+          }
         />
-        <Bar dataKey="sales" fill="url(#salesGradient)" radius={4} />
+        <Bar dataKey="sales" fill="var(--color-sales)" radius={0} />
       </BarChart>
     </ChartContainer>
   );

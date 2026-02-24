@@ -3,14 +3,14 @@ import { Menu, X, Sun, Moon } from "lucide-react";
 import { motion } from "framer-motion";
 import LogoIcon from "@/assets/icons/LogoIcon";
 import { HeaderProps } from "../utils/types";
+import { useTheme } from "@/components/providers/ThemeProvider";
 
 export default function Header({
   handleAuthNavigate,
   isMenuOpen,
   setIsMenuOpen,
-  isDarkMode,
-  setIsDarkMode,
 }: HeaderProps) {
+  const { isDarkMode, toggleTheme } = useTheme();
   const location = useLocation();
   const isHome = location.pathname === "/";
 
@@ -55,7 +55,7 @@ export default function Header({
 
         <div className="hidden md:flex items-center gap-6">
           <button
-            onClick={() => setIsDarkMode(!isDarkMode)}
+            onClick={toggleTheme}
             className="text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white transition-colors"
             aria-label="Toggle theme"
           >
@@ -71,7 +71,7 @@ export default function Header({
 
         <div className="md:hidden flex items-center gap-4">
           <button
-            onClick={() => setIsDarkMode(!isDarkMode)}
+            onClick={toggleTheme}
             className="text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white transition-colors"
             aria-label="Toggle theme"
           >

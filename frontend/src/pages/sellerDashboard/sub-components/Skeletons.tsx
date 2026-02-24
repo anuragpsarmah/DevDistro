@@ -1,31 +1,28 @@
 import { Skeleton } from "@/components/ui/skeleton";
 
 export const DashboardCardSkeleton = () => (
-  <div className="bg-gray-900/40 backdrop-blur-xl rounded-2xl border border-white/10 p-5 shadow-2xl relative overflow-hidden group">
-    <div className="absolute inset-0 bg-gradient-to-br from-blue-500/[0.05] to-purple-600/[0.05] pointer-events-none" />
-    <div className="flex flex-row items-center justify-between pb-2 space-y-0 relative z-10">
-      <Skeleton className="h-4 w-24 bg-gray-700/50" />
-      <Skeleton className="h-4 w-4 bg-gray-700/50 rounded-full" />
-    </div>
-    <div className="relative z-10 mt-2">
-      <Skeleton className="h-8 w-32 bg-gray-700/50 mb-1" />
-      <Skeleton className="h-3 w-20 bg-gray-700/50" />
+  <div className="bg-black/5 dark:bg-white/5 border border-black/20 dark:border-white/20 p-6 lg:p-8 flex flex-col justify-between overflow-hidden relative">
+    <div className="relative z-10 flex flex-col gap-6">
+      <div className="flex items-center gap-3">
+        <div className="w-8 h-[2px] bg-red-500/50"></div>
+        <Skeleton className="h-3 w-24 bg-black/10 dark:bg-white/10 rounded-none" />
+      </div>
+      <Skeleton className="h-10 lg:h-12 w-32 bg-black/10 dark:bg-white/10 rounded-none" />
     </div>
   </div>
 );
 
 export const MetricCardSkeleton = () => (
-  <div className="bg-gray-900/40 backdrop-blur-xl rounded-2xl border border-white/10 p-6 shadow-2xl relative overflow-hidden">
-    <div className="absolute inset-0 bg-gradient-to-br from-blue-500/[0.05] to-purple-600/[0.05] pointer-events-none" />
-    <div className="relative z-10">
-      <Skeleton className="h-5 w-24 mb-3 bg-gray-700/50" />
-      <Skeleton className="h-8 w-32 bg-gray-700/50" />
+  <div className="bg-black/5 dark:bg-white/5 border border-black/20 dark:border-white/20 p-6 lg:p-8 relative overflow-hidden">
+    <div className="relative z-10 space-y-6">
+      <Skeleton className="h-4 w-24 bg-black/10 dark:bg-white/10 rounded-none" />
+      <Skeleton className="h-8 lg:h-10 w-32 bg-black/10 dark:bg-white/10 rounded-none" />
     </div>
   </div>
 );
 
 export const SalesMetricsSkeleton = () => (
-  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
     {[...Array(4)].map((_, index) => (
       <DashboardCardSkeleton key={index} />
     ))}
@@ -33,92 +30,107 @@ export const SalesMetricsSkeleton = () => (
 );
 
 export const MonthlySalesHeaderSkeleton = () => (
-  <div className="flex items-center gap-2.5">
-    <Skeleton className="w-8 h-8 rounded-lg bg-gray-700/50" />
-    <div className="space-y-1.5">
-      <Skeleton className="h-6 w-32 bg-gray-700/50" />
-      <Skeleton className="h-3 w-48 bg-gray-700/50 hidden sm:block" />
+  <div className="flex flex-col gap-4">
+    <div className="flex items-center gap-3">
+      <div className="w-12 h-[2px] bg-red-500/50"></div>
+      <Skeleton className="h-3 w-24 bg-black/10 dark:bg-white/10 rounded-none" />
+    </div>
+    <Skeleton className="h-10 lg:h-12 w-48 lg:w-64 bg-black/10 dark:bg-white/10 rounded-none" />
+  </div>
+);
+
+export const MonthlySalesSkeleton = () => (
+  <div className="flex flex-col h-full bg-white dark:bg-[#050505] border-2 border-black dark:border-white p-6 lg:p-10 transition-colors duration-300">
+    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8 lg:mb-12 flex-shrink-0">
+      <MonthlySalesHeaderSkeleton />
+      <Skeleton className="h-12 w-[120px] rounded-none bg-black/10 dark:bg-white/10 border-2 border-black dark:border-white" />
+    </div>
+
+    <div className="flex-1 min-h-[300px] border-t border-black/10 dark:border-white/10 pt-8 mt-2 relative">
+      <ChartSkeleton />
     </div>
   </div>
 );
 
 export const ChartSkeleton = () => (
-  <div className="flex flex-col h-full">
-    <div className="flex-1 min-h-0 relative">
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-purple-500/5 to-pink-500/5 blur-2xl rounded-3xl pointer-events-none" />
-        <div className="relative h-full bg-gray-900/60 backdrop-blur-xl rounded-2xl border border-white/10 shadow-2xl overflow-hidden p-4 lg:p-5">
-             <div className="absolute inset-0 bg-gradient-to-br from-blue-500/[0.02] to-purple-600/[0.02] pointer-events-none" />
-             <div className="flex items-end justify-between h-full gap-2 pt-4">
-                  {[...Array(12)].map((_, i) => (
-                      <Skeleton key={i} className="w-full bg-gray-700/30 rounded-t-sm" style={{ height: `${Math.random() * 60 + 30}%` }} />
-                  ))}
-             </div>
-        </div>
-    </div>
+  <div className="flex items-end justify-between h-full gap-2 pt-4">
+    {[...Array(12)].map((_, i) => (
+      <Skeleton key={i} className="w-full bg-black/10 dark:bg-white/10 rounded-none" style={{ height: `${Math.random() * 60 + 30}%` }} />
+    ))}
   </div>
 );
 
 export const DashboardSkeleton = () => (
-  <div className="flex flex-col h-[calc(100vh-3rem)] lg:h-[calc(100vh-4rem)] mt-10 lg:mt-0 md:mt-0 pb-4 lg:pb-6">
-    <div className="flex-shrink-0 mb-4 lg:mb-5">
-        <div className="flex items-center gap-3 mb-1">
-             <Skeleton className="w-10 h-10 rounded-xl bg-gray-700/50" />
-             <div className="space-y-2">
-                 <Skeleton className="h-8 w-48 bg-gray-700/50" />
-                 <Skeleton className="h-4 w-32 bg-gray-700/50" />
-             </div>
-        </div>
+  <div className="flex flex-col min-h-[calc(100vh-3rem)] lg:min-h-[calc(100vh-4rem)] mt-10 lg:mt-0 pb-12 lg:pb-16 gap-12 lg:gap-16">
+    <div className="flex-shrink-0">
+      <div className="flex items-center gap-3 mb-8">
+        <div className="w-12 h-[2px] bg-red-500/50"></div>
+        <Skeleton className="h-3 w-20 bg-black/10 dark:bg-white/10 rounded-none" />
+      </div>
+      <Skeleton className="h-12 lg:h-16 w-64 lg:w-96 bg-black/10 dark:bg-white/10 rounded-none mb-6" />
+      <Skeleton className="h-6 w-full max-w-2xl bg-black/10 dark:bg-white/10 rounded-none" />
     </div>
-    
-    <div className="flex-shrink-0 mb-4 lg:mb-5">
-        <SalesMetricsSkeleton />
+
+    <div className="flex-shrink-0 w-full">
+      <SalesMetricsSkeleton />
     </div>
-    
-    <div className="flex-1 min-h-0">
-        <ChartSkeleton />
+
+    <div className="flex-1 min-h-0 w-full relative">
+      <MonthlySalesSkeleton />
     </div>
   </div>
 );
 
 export const ProfileHeaderSkeleton = () => (
-  <div className="flex flex-col md:flex-row items-center md:items-start gap-6 md:gap-8 mb-8">
-    <div className="relative">
-      <Skeleton className="w-32 h-32 md:w-36 md:h-36 rounded-2xl bg-gray-700/50" />
-    </div>
-    <div className="flex-1 text-center md:text-left space-y-4">
-      <div className="space-y-2">
-        <Skeleton className="h-8 w-48 bg-gray-700/50 mx-auto md:mx-0" />
-        <Skeleton className="h-4 w-32 bg-gray-700/50 mx-auto md:mx-0" />
+  <div className="flex flex-col md:flex-row items-center md:items-start mb-12">
+    <div className="mb-6 md:mb-0 md:mr-10 shrink-0">
+      <div className="w-32 h-32 md:w-48 md:h-48 border-2 border-black dark:border-white p-2">
+        <Skeleton className="w-full h-full rounded-none bg-black/10 dark:bg-white/10" />
       </div>
-       <div className="flex flex-wrap justify-center md:justify-start gap-3">
-          <Skeleton className="h-6 w-24 rounded-full bg-gray-700/50" />
-          <Skeleton className="h-6 w-24 rounded-full bg-gray-700/50" />
-       </div>
+    </div>
+    <div className="text-center md:text-left flex-1 max-w-2xl py-2 w-full">
+      <Skeleton className="h-12 w-3/4 max-w-sm bg-black/10 dark:bg-white/10 mx-auto md:mx-0 rounded-none mb-6" />
+      <div className="space-y-4 w-full flex flex-col items-center md:items-start">
+        <div className="flex items-center gap-3">
+          <span className="text-red-500 opacity-50 font-bold font-space">/</span>
+          <Skeleton className="w-4 h-4 rounded-none bg-black/10 dark:bg-white/10" />
+          <Skeleton className="h-3 w-32 rounded-none bg-black/10 dark:bg-white/10" />
+        </div>
+        <div className="flex items-center gap-3">
+          <span className="text-red-500 opacity-50 font-bold font-space">/</span>
+          <Skeleton className="w-4 h-4 rounded-none bg-black/10 dark:bg-white/10" />
+          <Skeleton className="h-3 w-40 rounded-none bg-black/10 dark:bg-white/10" />
+        </div>
+      </div>
     </div>
   </div>
 );
 
 export const FormFieldSkeleton = () => (
-  <div className="space-y-2">
-    <Skeleton className="h-4 w-24 bg-gray-700/50" />
-    <Skeleton className="h-10 w-full rounded-xl bg-gray-700/30" />
+  <div className="space-y-3">
+    <Skeleton className="h-3 w-24 bg-black/10 dark:bg-white/10 rounded-none" />
+    <Skeleton className="h-14 w-full rounded-none bg-black/5 dark:bg-white/5 border-2 border-black/10 dark:border-white/10" />
   </div>
 );
 
 export const ReviewSectionSkeleton = () => (
-  <div className="space-y-6">
-    <div className="space-y-2">
-      <Skeleton className="h-4 w-32 bg-gray-700/50" />
-      <Skeleton className="h-32 w-full rounded-xl bg-gray-700/30" />
-      <div className="flex justify-end">
-          <Skeleton className="h-4 w-16 bg-gray-700/50" />
+  <div className="space-y-8 p-6 lg:p-10 border-2 border-black/10 dark:border-white/10">
+    <div>
+      <div className="flex items-center gap-3 mb-6">
+        <div className="w-12 h-[2px] bg-red-500"></div>
+        <Skeleton className="h-3 w-32 bg-black/10 dark:bg-white/10 rounded-none" />
+      </div>
+      <Skeleton className="h-40 w-full rounded-none bg-transparent border-2 border-black/20 dark:border-white/20" />
+      <div className="flex justify-between items-center mt-3">
+        <Skeleton className="h-3 w-48 bg-black/10 dark:bg-white/10 rounded-none" />
+        <Skeleton className="h-3 w-12 bg-black/10 dark:bg-white/10 rounded-none" />
       </div>
     </div>
-    <div className="space-y-4">
-      <Skeleton className="h-4 w-24 bg-gray-700/50" />
-      <div className="flex items-center space-x-2">
+    <div className="border-t-2 border-black/10 dark:border-white/10 pt-8 mt-2">
+      <Skeleton className="h-3 w-32 bg-black/10 dark:bg-white/10 rounded-none mb-4" />
+      <div className="flex items-center space-x-4">
         {[1, 2, 3, 4, 5].map((star) => (
-          <Skeleton key={star} className="w-8 h-8 rounded-lg bg-gray-700/50" />
+          <Skeleton key={star} className="w-10 h-10 rounded-none bg-black/10 dark:bg-white/10" />
         ))}
       </div>
     </div>
@@ -126,41 +138,37 @@ export const ReviewSectionSkeleton = () => (
 );
 
 export const RepoImportSkeleton = () => (
-  <div className="flex items-center justify-between p-4 rounded-xl bg-white/[0.02] border border-white/5">
-    <div className="flex items-center space-x-3">
-      <Skeleton className="w-8 h-8 rounded-lg bg-gray-700/40" />
-      <div className="space-y-2">
-        <Skeleton className="w-32 h-4 bg-gray-700/40 rounded" />
-        <Skeleton className="w-20 h-3 bg-gray-700/30 rounded" />
+  <div className="flex items-center justify-between p-6 border-2 border-black dark:border-white bg-black/5 dark:bg-white/5">
+    <div className="flex items-center space-x-4">
+      <Skeleton className="w-10 h-10 rounded-none bg-black/10 dark:bg-white/10" />
+      <div className="space-y-3">
+        <Skeleton className="w-40 h-5 bg-black/10 dark:bg-white/10 rounded-none" />
+        <Skeleton className="w-24 h-3 bg-black/10 dark:bg-white/10 rounded-none" />
       </div>
     </div>
-    <Skeleton className="w-16 h-8 bg-gray-700/40 rounded-lg" />
+    <Skeleton className="w-24 h-10 bg-black dark:bg-white rounded-none" />
   </div>
 );
 
 export const ListedProjectSkeleton = () => (
-  <div className="relative">
-    <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-purple-500/5 to-pink-500/5 blur-xl rounded-2xl pointer-events-none" />
-    <div className="relative bg-gray-900/60 backdrop-blur-xl rounded-2xl border border-white/10 p-4 lg:p-5 flex flex-col h-full overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-br from-blue-500/[0.02] to-purple-600/[0.02] pointer-events-none" />
-      <div className="relative z-10 flex flex-col h-full">
-        <div className="relative mb-4">
-          <Skeleton className="w-full h-48 rounded-xl bg-gray-700/50" />
-          <div className="absolute bottom-0 left-0 right-0 p-2">
-            <Skeleton className="h-6 w-3/4 bg-gray-800/80 rounded-md backdrop-blur-sm" />
-          </div>
+  <div className="relative group bg-white dark:bg-[#050505] border-2 border-black dark:border-white p-4 lg:p-6 flex flex-col h-full overflow-hidden transition-colors duration-300">
+    <div className="relative z-10 flex flex-col h-full">
+      <div className="relative mb-6 border border-black/10 dark:border-white/10">
+        <Skeleton className="w-full h-48 rounded-none bg-black/5 dark:bg-white/5" />
+        <div className="absolute bottom-0 left-0 right-0 p-3 bg-white/80 dark:bg-black/80 backdrop-blur-sm border-t border-black/10 dark:border-white/10">
+          <Skeleton className="h-4 w-3/4 bg-black/20 dark:bg-white/20 rounded-none" />
         </div>
-        <div className="flex flex-col flex-grow space-y-4">
-          <div className="space-y-2">
-            <Skeleton className="h-4 w-full bg-gray-700/40" />
-            <Skeleton className="h-4 w-11/12 bg-gray-700/40" />
-            <Skeleton className="h-4 w-2/3 bg-gray-700/40" />
-          </div>
-          <div className="mt-auto flex gap-2">
-            <Skeleton className="h-6 w-16 rounded-full bg-gray-700/40" />
-            <Skeleton className="h-6 w-20 rounded-full bg-gray-700/40" />
-            <Skeleton className="h-6 w-14 rounded-full bg-gray-700/40" />
-          </div>
+      </div>
+      <div className="flex flex-col flex-grow space-y-6">
+        <div className="space-y-3">
+          <Skeleton className="h-6 w-full bg-black/10 dark:bg-white/10 rounded-none" />
+          <Skeleton className="h-4 w-11/12 bg-black/10 dark:bg-white/10 rounded-none" />
+          <Skeleton className="h-4 w-2/3 bg-black/10 dark:bg-white/10 rounded-none" />
+        </div>
+        <div className="mt-auto flex gap-3 pt-4 border-t border-black/10 dark:border-white/10">
+          <Skeleton className="h-6 w-16 rounded-none border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5" />
+          <Skeleton className="h-6 w-20 rounded-none border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5" />
+          <Skeleton className="h-6 w-14 rounded-none border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5" />
         </div>
       </div>
     </div>

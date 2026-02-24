@@ -11,22 +11,22 @@ export const SalesMetrics: React.FC<SalesMetricsProps> = ({
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-      <DashboardCard title="Total Sales" value={`₹${salesInfo.total_sales}`} />
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
+      <DashboardCard title="TOTAL SALES" value={`₹${salesInfo.total_sales}`} />
       <DashboardCard
-        title="Active Projects"
+        title="ACTIVE PROJECTS"
         value={salesInfo.active_projects.toString()}
       />
       <DashboardCard
-        title="Best Seller"
-        value={salesInfo.best_seller || "None"}
+        title="BEST SELLER"
+        value={salesInfo.best_seller || "NONE"}
       />
       <DashboardCard
-        title="Average Customer Rating"
+        title="AVG RATING"
         value={
           salesInfo.customer_rating
             ? `${salesInfo.customer_rating}/5`
-            : "No reviews"
+            : "NONE"
         }
       />
     </div>

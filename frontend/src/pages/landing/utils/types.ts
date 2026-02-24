@@ -15,6 +15,4 @@ export interface HeaderProps {
   handleAuthNavigate: () => void;
   isMenuOpen: boolean;
   setIsMenuOpen: (isOpen: boolean) => void;
-  isDarkMode: boolean;
-  setIsDarkMode: (isDark: boolean) => void;
 }

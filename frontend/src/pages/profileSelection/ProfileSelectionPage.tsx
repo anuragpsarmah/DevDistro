@@ -9,12 +9,6 @@ export default function ProfileSelectionPage() {
 
   useEffect(() => {
     window.scrollTo(0, 0);
-    const isDark = localStorage.getItem("theme") !== "light";
-    if (isDark) {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
   }, []);
 
   return (

@@ -10,7 +10,6 @@ import type { ChartDataObject } from "../utils/types";
 import AnimatedLoadWrapper from "@/components/wrappers/AnimatedLoadWrapper";
 import { SalesMetrics } from "../main-components/SalesMetrics";
 import MonthlySales from "../main-components/MonthlySales";
-import { TrendingUp } from "lucide-react";
 
 interface DashboardOverviewTabProps {
   logout?: () => Promise<void>;
@@ -56,22 +55,23 @@ export default function DashboardOverviewTab({
 
   return (
     <AnimatedLoadWrapper>
-      <div className="flex flex-col h-[calc(100vh-3rem)] lg:h-[calc(100vh-4rem)] mt-10 lg:mt-0 md:mt-0 pb-4 lg:pb-6">
-        <div className="flex-shrink-0 mb-4 lg:mb-5">
-          <div className="flex items-center gap-3 mb-1">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center shadow-lg shadow-purple-500/20">
-              <TrendingUp className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <h1 className="text-2xl lg:text-3xl text-left font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500">
-                Dashboard Overview
-              </h1>
-              <p className="text-xs lg:text-sm text-gray-500">Track your sales performance and metrics</p>
-            </div>
+      <div className="flex flex-col min-h-[calc(100vh-3rem)] lg:h-[calc(100vh-56px)] mt-10 lg:mt-0 pb-6 gap-12 lg:gap-16">
+        <div className="flex-shrink-0">
+          <div className="flex items-center gap-3 mb-8">
+            <div className="w-12 h-[2px] bg-red-500"></div>
+            <span className="font-space font-bold uppercase tracking-[0.2em] text-xs text-red-500">
+              Overview
+            </span>
           </div>
+          <h1 className="font-syne text-4xl lg:text-6xl text-left font-black tracking-widest leading-none text-black dark:text-white uppercase break-words hyphens-auto">
+            Dashboard
+          </h1>
+          <p className="font-space text-lg text-gray-600 dark:text-gray-400 mt-6 leading-relaxed max-w-2xl">
+            Track your sales performance and metrics in real-time.
+          </p>
         </div>
 
-        <div className="flex-shrink-0 mb-4 lg:mb-5">
+        <div className="flex-shrink-0 w-full">
           <SalesMetrics
             salesInfo={
               !commonInfoLoading && !commonInfoError && commonInfoData
@@ -82,20 +82,14 @@ export default function DashboardOverviewTab({
           />
         </div>
 
-        <div className="flex-1 min-h-0 relative">
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-purple-500/5 to-pink-500/5 blur-2xl rounded-3xl pointer-events-none" />
-          <div className="relative h-full bg-gray-900/60 backdrop-blur-xl rounded-2xl border border-white/10 shadow-2xl overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/[0.02] to-purple-600/[0.02] pointer-events-none" />
-            <div className="relative z-10 h-full p-4 lg:p-5 flex flex-col">
-              <MonthlySales
-                selectedYear={selectedYear}
-                years={years}
-                onYearChange={setSelectedYear}
-                isLoading={yearlyLoading}
-                chartData={chartData}
-              />
-            </div>
-          </div>
+        <div className="flex-1 min-h-0 w-full">
+          <MonthlySales
+            selectedYear={selectedYear}
+            years={years}
+            onYearChange={setSelectedYear}
+            isLoading={yearlyLoading}
+            chartData={chartData}
+          />
         </div>
       </div>
     </AnimatedLoadWrapper>

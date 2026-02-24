@@ -1,22 +1,20 @@
 import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sun, Moon } from "lucide-react";
+import { useTheme } from "@/components/providers/ThemeProvider";
 
 interface MobileMenuProps {
   handleAuthNavigate: () => void;
   isMenuOpen: boolean;
   setIsMenuOpen: (isOpen: boolean) => void;
-  isDarkMode: boolean;
-  setIsDarkMode: (isDark: boolean) => void;
 }
 
 export default function MobileMenu({
   handleAuthNavigate,
   isMenuOpen,
   setIsMenuOpen,
-  isDarkMode,
-  setIsDarkMode,
 }: MobileMenuProps) {
+  const { isDarkMode, toggleTheme } = useTheme();
   const location = useLocation();
   const isHome = location.pathname === "/";
 
@@ -73,7 +71,7 @@ export default function MobileMenu({
 
             <div className="md:hidden mt-8 flex justify-center border-t border-black/10 dark:border-white/20 pt-8">
               <button
-                onClick={() => setIsDarkMode(!isDarkMode)}
+                onClick={toggleTheme}
                 className="flex items-center gap-3 text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white transition-colors border border-black/10 dark:border-white/20 rounded-full px-6 py-3"
                 aria-label="Toggle theme"
               >

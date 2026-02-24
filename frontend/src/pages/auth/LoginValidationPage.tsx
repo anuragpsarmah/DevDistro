@@ -15,13 +15,6 @@ export default function LoginValidationPage() {
   const hasValidated = useRef(false);
 
   useEffect(() => {
-    const isDark = localStorage.getItem("theme") !== "light";
-    if (isDark) {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
-
     if (hasValidated.current) return;
     hasValidated.current = true;
 

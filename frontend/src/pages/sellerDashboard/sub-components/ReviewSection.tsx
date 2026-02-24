@@ -10,43 +10,49 @@ export const ReviewSection: React.FC<ReviewSectionProps> = ({
   onReviewChange,
   onRatingChange,
 }) => (
-  <div className="space-y-6">
+  <div className="space-y-8 p-6 lg:p-10 border-2 border-black/10 dark:border-white/10">
     <div>
-      <Label htmlFor="review" className="text-gray-300 mb-2 block">
-        DevExchange Review
-      </Label>
+      <div className="flex items-center gap-3 mb-6">
+        <div className="w-12 h-[2px] bg-red-500"></div>
+        <span className="font-space font-bold uppercase tracking-[0.2em] text-xs text-red-500">
+          DevExchange Review
+        </span>
+      </div>
       <Textarea
         id="review"
-        placeholder="Write your review here..."
+        placeholder="WRITE YOUR REVIEW HERE..."
         value={review}
         onChange={onReviewChange}
-        className="bg-white/5 border-white/10 text-white hover:bg-white/10 hover:border-white/20 transition-colors duration-200 focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus:border-indigo-500/50 h-32 resize-none"
+        className="bg-transparent border-2 border-black/20 dark:border-white/20 text-black dark:text-white hover:border-black dark:hover:border-white focus:border-red-500 focus:ring-0 rounded-none transition-colors duration-300 p-4 font-space h-40 resize-none placeholder:text-black/30 placeholder:dark:text-white/30"
       />
-      <p
-        className={`text-sm mt-1 ${MAX_REVIEW_LENGTH - review.length <= 10 ? "text-red-400" : "text-gray-400"}`}
-      >
-        {review.length}/{MAX_REVIEW_LENGTH} characters
-      </p>
+      <div className="flex justify-between items-center mt-3">
+        <p className="font-space font-bold text-[10px] uppercase tracking-widest text-gray-500">
+          YOUR REVIEW MAY BE FEATURED ON OUR LANDING PAGE.
+        </p>
+        <p
+          className={`font-space font-bold text-[10px] uppercase tracking-widest ${MAX_REVIEW_LENGTH - review.length <= 10 ? "text-red-500" : "text-gray-500"}`}
+        >
+          {review.length}/{MAX_REVIEW_LENGTH}
+        </p>
+      </div>
     </div>
-    <div>
-      <Label className="text-gray-300 mb-2 block">DevExchange Rating</Label>
-      <div className="flex items-center space-x-2">
+    <div className="border-t-2 border-black/10 dark:border-white/10 pt-8 mt-2">
+      <Label className="font-space font-bold uppercase tracking-[0.2em] text-[10px] md:text-xs text-black/50 dark:text-white/50 mb-4 block">
+        DevExchange Rating
+      </Label>
+      <div className="flex items-center space-x-4">
         {[1, 2, 3, 4, 5].map((star) => (
           <Star
             key={star}
-            className={`w-8 h-8 cursor-pointer transition-colors duration-200 ${
-              star <= rating
-                ? "text-yellow-500 fill-yellow-200"
-                : "text-gray-600 hover:text-gray-400"
-            }`}
+            className={`w-10 h-10 cursor-pointer transition-colors duration-300 ${star <= rating
+                ? "text-red-500 fill-red-500"
+                : "text-black/20 dark:text-white/20 hover:text-black/40 hover:dark:text-white/40"
+              }`}
             strokeWidth={1.5}
             onClick={() => onRatingChange(star)}
           />
         ))}
       </div>
     </div>
-    <p className="text-sm text-gray-400 mt-1">
-      <i>Your review may be featured on our landing page!</i>
-    </p>
   </div>
 );

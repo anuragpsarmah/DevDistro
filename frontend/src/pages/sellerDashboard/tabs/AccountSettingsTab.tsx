@@ -93,44 +93,28 @@ export default function AccountSettingsTab({
 
   return (
     <AnimatedLoadWrapper>
-      <div className="flex flex-col h-[calc(100vh-3rem)] lg:h-[calc(100vh-4rem)] mt-10 lg:mt-0 md:mt-0 pb-4 lg:pb-6">
-        <div className="flex-shrink-0 mb-4 lg:mb-5">
-          <div className="flex items-center gap-3 mb-1">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center shadow-lg shadow-purple-500/20">
-              <div className="text-white">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
-                  <circle cx="12" cy="7" r="4" />
-                </svg>
-              </div>
-            </div>
-            <div>
-              <h1 className="text-2xl lg:text-3xl text-left font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500">
-                Account Settings
-              </h1>
-              <p className="text-xs lg:text-sm text-gray-500">
-                Manage your profile and preferences
-              </p>
-            </div>
+      <div className="flex flex-col min-h-[calc(100vh-3rem)] lg:h-[calc(100vh-4rem)] lg:min-h-0 mt-10 lg:mt-0 pb-12 lg:pb-6 w-full">
+        <div className="flex-shrink-0 mb-8 lg:mb-12">
+          <div className="flex items-center gap-3 mb-8">
+            <div className="w-12 h-[2px] bg-red-500"></div>
+            <span className="font-space font-bold uppercase tracking-[0.2em] text-xs text-red-500">
+              Settings
+            </span>
+          </div>
+
+          <div>
+            <h1 className="font-syne text-4xl lg:text-6xl text-left font-black tracking-widest leading-none text-black dark:text-white uppercase break-words hyphens-auto">
+              Account Settings
+            </h1>
+            <p className="font-space text-lg text-gray-600 dark:text-gray-400 mt-6 leading-relaxed max-w-2xl">
+              Manage your profile and system preferences.
+            </p>
           </div>
         </div>
 
-        <div className="flex-1 min-h-0 relative">
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-purple-500/5 to-pink-500/5 blur-2xl rounded-3xl pointer-events-none" />
-          <div className="relative h-full bg-gray-900/60 backdrop-blur-xl rounded-2xl border border-white/10 shadow-2xl overflow-hidden flex flex-col">
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/[0.02] to-purple-600/[0.02] pointer-events-none" />
-
-            <div className="relative z-10 h-full overflow-y-auto p-4 lg:p-6 custom-scrollbar">
+        <div className="flex-1 min-h-0 w-full relative">
+          <div className="relative h-full bg-white dark:bg-[#050505] transition-colors duration-300 flex flex-col">
+            <div className="relative z-10 h-full overflow-y-auto p-4 lg:p-8 xl:p-12 border-2 border-black dark:border-white custom-scrollbar">
               {isInitialLoading ? (
                 <ProfileHeaderSkeleton />
               ) : (
@@ -161,12 +145,12 @@ export default function AccountSettingsTab({
                 setRating={setRating}
               />
 
-              <div className="mt-8 flex justify-end pb-4">
+              <div className="mt-16 flex justify-end">
                 {isInitialLoading ? (
-                  <Skeleton className="w-32 h-10 rounded-xl bg-gray-700/50" />
+                  <Skeleton className="w-40 h-14 rounded-none bg-black/10 dark:bg-white/10" />
                 ) : (
                   <Button
-                    className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 hover:from-blue-500/20 hover:to-purple-500/20 text-blue-100 border border-blue-500/20 hover:border-blue-500/40 font-medium py-2 px-6 rounded-xl transition-all duration-200"
+                    className="px-8 py-4 bg-black text-white dark:bg-white dark:text-black font-space font-bold uppercase tracking-widest text-[10px] md:text-sm rounded-none border-2 border-transparent hover:border-black dark:hover:border-white hover:bg-white dark:hover:bg-black hover:text-black dark:hover:text-white transition-all duration-300"
                     onClick={handleProfileUpdate}
                     disabled={isPending}
                   >

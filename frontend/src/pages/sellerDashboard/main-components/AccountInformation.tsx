@@ -41,9 +41,9 @@ export default function AccountInformation({
 }: AccountInformationProps) {
   return (
     <>
-      <Separator className="my-8 bg-gray-700" />
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
-        <div className="space-y-6">
+      <div className="w-full h-[2px] bg-black/10 dark:bg-white/10 my-12" />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-16">
+        <div className="space-y-8">
           {isInitialLoading ? (
             <>
               <FormFieldSkeleton />
@@ -56,7 +56,7 @@ export default function AccountInformation({
               <div>
                 <Label
                   htmlFor="github-username"
-                  className="text-gray-300 mb-2 block"
+                  className="font-space font-bold uppercase tracking-[0.2em] text-[10px] md:text-xs text-black/50 dark:text-white/50 mb-3 block"
                 >
                   GitHub Username
                 </Label>
@@ -64,12 +64,12 @@ export default function AccountInformation({
                   id="github-username"
                   value={activeUserData.username}
                   readOnly
-                  className="bg-white/5 border-white/10 text-white focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus:border-indigo-500/50 transition-colors duration-200"
+                  className="bg-black/5 dark:bg-white/5 border-2 border-black/20 dark:border-white/20 text-black dark:text-white focus:border-red-500 focus:ring-0 rounded-none transition-colors duration-300 p-4 font-space h-auto cursor-not-allowed"
                 />
               </div>
 
               <div>
-                <Label htmlFor="name" className="text-gray-300 mb-2 block">
+                <Label htmlFor="name" className="font-space font-bold uppercase tracking-[0.2em] text-[10px] md:text-xs text-black/50 dark:text-white/50 mb-3 block">
                   Name
                 </Label>
                 <Input
@@ -79,27 +79,27 @@ export default function AccountInformation({
                     "Name not available. Update your GitHub profile."
                   }
                   readOnly
-                  className="bg-white/5 border-white/10 text-white focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus:border-indigo-500/50 transition-colors duration-200"
+                  className="bg-black/5 dark:bg-white/5 border-2 border-black/20 dark:border-white/20 text-black dark:text-white focus:border-red-500 focus:ring-0 rounded-none transition-colors duration-300 p-4 font-space h-auto cursor-not-allowed"
                 />
               </div>
 
               <div>
-                <Label htmlFor="job-role" className="text-gray-300 mb-2 block">
+                <Label htmlFor="job-role" className="font-space font-bold uppercase tracking-[0.2em] text-[10px] md:text-xs text-black/50 dark:text-white/50 mb-3 block">
                   Job Role
                 </Label>
                 <Select
                   value={selectedJobRole}
                   onValueChange={setSelectedJobRole}
                 >
-                  <SelectTrigger className="w-full bg-white/5 border-white/10 text-white hover:bg-white/10 hover:border-white/20 transition-colors duration-200 focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus:border-indigo-500/50">
+                  <SelectTrigger className="w-full bg-transparent border-2 border-black/20 dark:border-white/20 text-black dark:text-white hover:border-black dark:hover:border-white transition-colors duration-300 focus:ring-0 focus:border-red-500 rounded-none h-auto p-4 font-space">
                     <SelectValue placeholder="Select a job role" />
                   </SelectTrigger>
-                  <SelectContent className="bg-[#14152b]/90 border-white/10 text-white backdrop-blur-xl">
+                  <SelectContent className="bg-white dark:bg-[#050505] border-2 border-black dark:border-white rounded-none">
                     {JOB_ROLES.map((role) => (
-                      <SelectItem 
-                        key={role} 
+                      <SelectItem
+                        key={role}
                         value={role}
-                        className="focus:bg-white/10 hover:bg-white/10 cursor-pointer text-gray-300 focus:text-white"
+                        className="focus:bg-black/5 dark:focus:bg-white/10 cursor-pointer font-space text-sm text-black dark:text-white rounded-none"
                       >
                         {role}
                       </SelectItem>
@@ -132,21 +132,21 @@ export default function AccountInformation({
           />
         )}
       </div>
-      <Separator className="my-8 bg-gray-700" />
+      <div className="w-full h-[2px] bg-black/10 dark:bg-white/10 my-12" />
 
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
+      <div className="space-y-8">
+        <div className="flex items-start justify-between gap-6 p-6 border-2 border-black/10 dark:border-white/10">
           <div>
-            <h3 className="text-lg font-semibold text-gray-200">
+            <h3 className="font-syne text-xl uppercase tracking-widest font-bold text-black dark:text-white mb-2">
               Profile Visibility
             </h3>
-            <p className="text-sm text-gray-400">
-              Allow others to see your profile details and listings
+            <p className="font-space text-sm text-gray-600 dark:text-gray-400">
+              Allow others to see your profile details and listings.
             </p>
           </div>
           {isInitialLoading ? (
-            <div className="w-10 h-6">
-              <Skeleton className="w-full h-full rounded-full bg-gray-700" />
+            <div className="w-12 h-6">
+              <Skeleton className="w-full h-full rounded-none bg-black/10 dark:bg-white/10 border border-black/20 dark:border-white/20" />
             </div>
           ) : (
             <Switch
@@ -157,23 +157,23 @@ export default function AccountInformation({
                   profile_visibility: checked,
                 }));
               }}
-              className="data-[state=checked]:bg-blue-950 data-[state=unchecked]:bg-white/20 border-white/10 hover:border-white/20"
+              className="data-[state=checked]:bg-red-500 data-[state=unchecked]:bg-black/20 dark:data-[state=unchecked]:bg-white/20 border-2 border-transparent hover:border-black dark:hover:border-white rounded-none transition-all duration-300"
             />
           )}
         </div>
 
-        <div className="flex items-center justify-between">
+        <div className="flex items-start justify-between gap-6 p-6 border-2 border-black/10 dark:border-white/10">
           <div>
-            <h3 className="text-lg font-semibold text-gray-200">
+            <h3 className="font-syne text-xl uppercase tracking-widest font-bold text-black dark:text-white mb-2">
               Auto-repackage on code change
             </h3>
-            <p className="text-sm text-gray-400">
-              Automatically repackage your listed projects when you push code changes to GitHub
+            <p className="font-space text-sm text-gray-600 dark:text-gray-400">
+              Automatically repackage your listed projects when you push code changes to GitHub.
             </p>
           </div>
           {isInitialLoading ? (
-            <div className="w-10 h-6">
-              <Skeleton className="w-full h-full rounded-full bg-gray-700" />
+            <div className="w-12 h-6">
+              <Skeleton className="w-full h-full rounded-none bg-black/10 dark:bg-white/10 border border-black/20 dark:border-white/20" />
             </div>
           ) : (
             <Switch
@@ -184,7 +184,7 @@ export default function AccountInformation({
                   auto_repackage_on_push: checked,
                 }));
               }}
-              className="data-[state=checked]:bg-blue-950 data-[state=unchecked]:bg-white/20 border-white/10 hover:border-white/20"
+              className="data-[state=checked]:bg-red-500 data-[state=unchecked]:bg-black/20 dark:data-[state=unchecked]:bg-white/20 border-2 border-transparent hover:border-black dark:hover:border-white rounded-none transition-all duration-300"
             />
           )}
         </div>
