@@ -4,32 +4,27 @@ export const faqs: FAQItem[] = [
   {
     question: "How does DevExchange work?",
     answer:
-      "DevExchange is a marketplace platform where developers can showcase, sell, and collaborate on GitHub projects. You can either explore existing projects to purchase or list your own projects directly from GitHub.",
+      "DevExchange is a marketplace platform where developers can showcase, sell, and collaborate on GitHub repositories. You can either explore existing repositories to purchase or list your own repositories directly from GitHub.",
   },
   {
-    question: "What types of projects can I list?",
+    question: "What types of repositories can I list?",
     answer:
-      "You can list any GitHub project that provides value to other developers, including frameworks, plugins, templates, tools, or complete applications. All projects must be original work and comply with our community guidelines.",
+      "You can list any GitHub repository that provides value to other developers, including frameworks, plugins, templates, tools, or complete applications. All repositories must be original work and comply with our community guidelines.",
   },
   {
-    question: "How do you ensure project quality?",
+    question: "How do you ensure repository quality?",
     answer:
       "As DevExchange is currently a growing passion project, we rely on our community's collective wisdom for quality assurance. While we don't yet have a formal review process, we're committed to implementing comprehensive quality checks and dedicated project reviews as our platform expands. We encourage users to thoroughly evaluate projects and engage with sellers before making purchase decisions.",
   },
   {
     question: "What are the pricing guidelines?",
     answer:
-      "You have full control over your project pricing. We recommend pricing based on project complexity, market demand, and maintenance requirements. You keep 99% of your earnings—a 1% platform fee applies.",
+      "You have full control over your repository pricing. We recommend pricing based on repository complexity, market demand, and maintenance requirements. You keep 99% of your earnings—a 1% platform fee applies.",
   },
   {
     question: "How do payments work?",
     answer:
       "DevExchange uses Solana-based payments. Buyers complete transactions using their Solana wallets, and funds are transferred directly to the seller's wallet. Once the payment is confirmed on-chain, buyers get immediate access to the purchased project.",
-  },
-  {
-    question: "How do you securely store GitHub access tokens?",
-    answer:
-      "GitHub access tokens are encrypted and stored in the database, ensuring your account's safety even in the unlikely event of a data breach. We use AES-256-CBC encryption with a randomly generated encryption key that is securely set at the production launch. This ensures a robust layer of security for sensitive information.",
   },
   {
     question: "What kind of support is available?",

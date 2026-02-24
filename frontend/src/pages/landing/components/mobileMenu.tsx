@@ -1,59 +1,101 @@
-import { AnimatePresence, motion } from "framer-motion";
+import { Link, useLocation } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
+import { Sun, Moon } from "lucide-react";
 
 interface MobileMenuProps {
   handleAuthNavigate: () => void;
   isMenuOpen: boolean;
   setIsMenuOpen: (isOpen: boolean) => void;
+  isDarkMode: boolean;
+  setIsDarkMode: (isDark: boolean) => void;
 }
 
 export default function MobileMenu({
   handleAuthNavigate,
   isMenuOpen,
   setIsMenuOpen,
+  isDarkMode,
+  setIsDarkMode,
 }: MobileMenuProps) {
-  const menuItems = ["Features", "Projects", "Reviews", "FAQs"];
+  const location = useLocation();
+  const isHome = location.pathname === "/";
+
+  const handleScroll = (id: string) => {
+    setIsMenuOpen(false);
+    if (isHome) {
+      setTimeout(() => {
+        const element = document.getElementById(id);
+        if (element) {
+          element.scrollIntoView({ behavior: "smooth" });
+        }
+      }, 300);
+    }
+  };
 
   return (
     <AnimatePresence>
       {isMenuOpen && (
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
           transition={{ duration: 0.3 }}
-          className="fixed inset-0 z-40 md:hidden"
+          className="fixed inset-0 z-40 bg-white dark:bg-[#0a0a0a] pt-24 px-6 md:hidden overflow-y-auto transition-colors duration-300"
         >
-          <div className="absolute inset-0 backdrop-blur-xl bg-gray-900/95" />
+          <div className="flex flex-col gap-8 h-full">
+            <div className="flex flex-col gap-6 font-syne text-3xl font-black uppercase tracking-wider text-gray-400 dark:text-gray-500">
+              {["The Revelation", "The Mechanics", "Validations", "Query Log"].map((item) => {
+                const id = item.toLowerCase().replace(" ", "-");
+                return (
+                  <Link
+                    key={item}
+                    to={isHome ? `#${id}` : `/#${id}`}
+                    onClick={() => handleScroll(id)}
+                    className="hover:text-black dark:hover:text-white hover:translate-x-2 transition-all duration-300"
+                  >
+                    {item}
+                  </Link>
+                );
+              })}
+            </div>
 
-          <div className="relative h-full flex flex-col items-center justify-center">
-            <nav className="flex flex-col items-center space-y-6">
-              {menuItems.map((item, index) => (
-                <motion.a
-                  key={item}
-                  href={`#${item.toLowerCase()}`}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 20 }}
-                  transition={{ duration: 0.3, delay: index * 0.1 }}
-                  className="text-3xl font-semibold text-gray-300 hover:text-white transition-colors"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  {item}
-                </motion.a>
-              ))}
-            </nav>
+            <div className="mt-8 pt-8 border-t border-black/10 dark:border-white/20">
+              <button
+                className="w-full text-center text-xl font-space font-bold uppercase tracking-widest text-white dark:text-black bg-black dark:bg-white hover:bg-red-500 dark:hover:bg-red-500 hover:text-white px-6 py-6 transition-colors duration-200"
+                onClick={() => {
+                  setIsMenuOpen(false);
+                  handleAuthNavigate();
+                }}
+              >
+                Access Now
+              </button>
+            </div>
 
-            <motion.button
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 20 }}
-              transition={{ duration: 0.3, delay: 0.4 }}
-              whileTap={{ scale: 0.95 }}
-              className="mt-10 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 text-white font-semibold py-4 px-10 rounded-full text-xl"
-              onClick={handleAuthNavigate}
-            >
-              Get Started
-            </motion.button>
+            <div className="md:hidden mt-8 flex justify-center border-t border-black/10 dark:border-white/20 pt-8">
+              <button
+                onClick={() => setIsDarkMode(!isDarkMode)}
+                className="flex items-center gap-3 text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white transition-colors border border-black/10 dark:border-white/20 rounded-full px-6 py-3"
+                aria-label="Toggle theme"
+              >
+                {isDarkMode ? (
+                  <>
+                    <Sun size={20} />
+                    <span className="font-space font-bold uppercase tracking-widest text-sm">Light Mode</span>
+                  </>
+                ) : (
+                  <>
+                    <Moon size={20} />
+                    <span className="font-space font-bold uppercase tracking-widest text-sm">Dark Mode</span>
+                  </>
+                )}
+              </button>
+            </div>
+
+            <div className="mt-auto pb-12 opacity-10 dark:opacity-30 pointer-events-none">
+              <h2 className="font-syne text-5xl font-black text-transparent" style={{ WebkitTextStroke: isDarkMode ? "1px white" : "1px black" }}>
+                DEV_EXCHANGE
+              </h2>
+            </div>
           </div>
         </motion.div>
       )}

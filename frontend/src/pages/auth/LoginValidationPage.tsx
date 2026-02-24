@@ -1,11 +1,9 @@
-import { useEffect } from "react";
-import { motion } from "framer-motion";
+import { useEffect, useRef } from "react";
 import axios, { AxiosResponse } from "axios";
 import { tryCatch } from "@/utils/tryCatch.util";
 import { useNavigate } from "react-router-dom";
 import { user } from "@/utils/atom";
 import { useRecoilState } from "recoil";
-import BackgroundDots from "@/components/ui/backgroundDots";
 import { errorToast } from "@/components/ui/customToast";
 
 export default function LoginValidationPage() {
@@ -14,8 +12,19 @@ export default function LoginValidationPage() {
   const url = new URL(window.location.href);
   const githubCode = url.searchParams.get("code");
   const backend_uri = import.meta.env.VITE_BACKEND_URI;
+  const hasValidated = useRef(false);
 
   useEffect(() => {
+    const isDark = localStorage.getItem("theme") !== "light";
+    if (isDark) {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+
+    if (hasValidated.current) return;
+    hasValidated.current = true;
+
     const validateLogin = async () => {
       const [response, error] = await tryCatch<AxiosResponse>(() =>
         axios.get(
@@ -35,51 +44,31 @@ export default function LoginValidationPage() {
     };
 
     validateLogin();
-  }, []);
+  }, [backend_uri, githubCode, navigate, setActiveUser]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center text-white p-4 relative overflow-hidden bg-[#030712]">
-      <div
-        className="fixed inset-0 pointer-events-none"
-        style={{
-          background: `
-            radial-gradient(ellipse 100% 80% at 50% 0%, rgba(88, 28, 135, 0.15) 0%, transparent 60%),
-            radial-gradient(circle at 20% 50%, rgba(59, 130, 246, 0.05) 0%, transparent 40%),
-            radial-gradient(circle at 80% 70%, rgba(139, 92, 246, 0.05) 0%, transparent 40%),
-            #030712
-          `,
-        }}
-      />
+    <div className="min-h-screen overflow-hidden w-full bg-white dark:bg-[#050505] text-black dark:text-white font-space selection:bg-red-500 selection:text-white transition-colors duration-300 relative flex items-center justify-center p-4">
+      <div className="z-10 text-center max-w-4xl mx-auto w-full flex flex-col items-center justify-center border-2 border-black dark:border-white py-12 px-6 md:p-24 relative bg-white dark:bg-[#050505] shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] dark:shadow-[8px_8px_0px_0px_rgba(255,255,255,1)] transition-shadow duration-300">
+        <div className="flex items-center gap-3 mb-8 self-start">
+          <div className="w-12 h-[2px] bg-red-500"></div>
+          <span className="font-space font-bold uppercase tracking-[0.2em] text-xs text-red-500">System Status</span>
+        </div>
+        <div className="mb-12">
+          <div className="w-12 h-12 bg-red-500 animate-[pulse_1s_steps(2,start)_infinite]" />
+        </div>
 
-      <BackgroundDots />
-
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.4 }}
-        className="z-10 text-center"
-      >
-        <motion.div
-          className="mb-6"
-          animate={{ rotate: 360 }}
-          transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
-        >
-          <div className="w-16 h-16 mx-auto rounded-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 p-[3px]">
-            <div className="w-full h-full rounded-full bg-[#030712] flex items-center justify-center">
-              <div className="w-3 h-3 rounded-full bg-gradient-to-r from-blue-400 to-purple-500" />
-            </div>
-          </div>
-        </motion.div>
-
-        <h1 className="text-2xl font-bold mb-2">
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500">
+        <div className="relative flex justify-center w-full mb-6 z-20">
+          <h1 className="text-4xl sm:text-[4rem] md:text-[5rem] lg:text-[6.5rem] font-black uppercase tracking-widest leading-none font-syne w-max max-w-none bg-white dark:bg-[#050505] px-4 sm:px-8 whitespace-nowrap inline-block relative z-20">
             Authenticating
-          </span>
-        </h1>
-        <p className="text-sm text-gray-400">
-          Connecting to GitHub...
+          </h1>
+        </div>
+
+        <p className="text-lg md:text-xl text-gray-600 dark:text-gray-400 leading-relaxed font-space max-w-xl mx-auto border-t-2 border-black/10 dark:border-white/10 pt-6">
+          CONNECTING TO GITHUB. PLEASE STAND BY FOR CREDENTIAL VALIDATION...
         </p>
-      </motion.div>
+        <div className="absolute top-0 left-8 right-8 h-[2px] bg-black dark:bg-white -translate-y-1/2"></div>
+        <div className="absolute bottom-0 left-8 right-8 h-[2px] bg-black dark:bg-white translate-y-1/2"></div>
+      </div>
     </div>
   );
 }

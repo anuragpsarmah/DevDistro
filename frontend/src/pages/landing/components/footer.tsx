@@ -1,75 +1,78 @@
 import { Github } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
+import XIcon from "@/assets/icons/XIcon";
+import LogoIcon from "@/assets/icons/LogoIcon";
 
 export default function Footer() {
-  const socialLinks = [
-    { icon: <Github size={20} />, href: "https://github.com/anuragpsarmah/DevExchange", label: "GitHub" },
-  ];
+  const location = useLocation();
+  const isHome = location.pathname === "/";
 
-  const legalLinks = [
-    { name: "Privacy Policy", href: "/privacy" },
-    { name: "Terms of Service", href: "/terms" },
-  ];
+  const handleScroll = (id: string) => {
+    if (isHome) {
+      const element = document.getElementById(id);
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth" });
+      }
+    }
+  };
 
   return (
-    <footer className="py-12 relative z-10 border-t border-white/5">
-      <div className="container mx-auto px-4 max-w-6xl">
-        <div className="flex flex-col md:flex-row justify-between items-center md:items-start gap-8 mb-8">
-          <div className="flex flex-col items-center md:items-start text-center md:text-left">
-            <Link to="/" className="block text-xl font-bold mb-2 hover:opacity-80 transition-opacity">
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500">
-                DevExchange
-              </span>
-            </Link>
-            <p className="text-gray-400 text-sm leading-relaxed max-w-xs">
-              The open source marketplace for developers to buy and sell source code.
+    <footer className="bg-gray-100 dark:bg-black text-black dark:text-white py-20 px-6 md:px-12 font-space transition-colors duration-300">
+      <div className="max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
+          <div className="md:col-span-2">
+            <h3 className="font-syne text-3xl font-black uppercase tracking-widest mb-6 flex items-center gap-3">
+              <LogoIcon className="w-8 h-8" />
+              DevExchange
+            </h3>
+            <p className="text-gray-600 dark:text-gray-400 max-w-sm mb-8 leading-relaxed transition-colors">
+              Bypassing the gatekeepers. A decentralized protocol for code monetization powered by Solana and GitHub.
             </p>
+            <div className="flex gap-4">
+              <a href="https://github.com/anuragpsarmah/DevExchange" target="_blank" rel="noopener noreferrer" className="p-3 border border-black/20 dark:border-white/20 hover:border-black dark:hover:border-white hover:text-red-500 transition-all flex items-center justify-center">
+                <Github size={20} />
+              </a>
+              <a href="https://x.com/anuragpsarmah" target="_blank" rel="noopener noreferrer" className="p-3 border border-black/20 dark:border-white/20 hover:border-black dark:hover:border-white hover:text-red-500 transition-all flex items-center justify-center">
+                <XIcon />
+              </a>
+            </div>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-6 sm:gap-8 items-center">
-            <div className="flex gap-4">
-              {socialLinks.map((social, index) => (
-                <a
-                  key={index}
-                  href={social.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label={social.label}
-                  className="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition-all duration-300"
-                >
-                  {social.icon}
-                </a>
-              ))}
-            </div>
-            
-            <div className="flex flex-wrap justify-center gap-6">
-              {legalLinks.map((link) => (
-                <Link
-                  key={link.name}
-                  to={link.href}
-                  className="text-sm text-gray-400 hover:text-white transition-colors duration-200"
-                >
-                  {link.name}
-                </Link>
-              ))}
-            </div>
+          <div>
+            <h4 className="font-bold uppercase tracking-widest text-xs mb-6 text-gray-500 dark:text-gray-500 transition-colors">Navigation</h4>
+            <ul className="space-y-4">
+              {["DevExchange", "The Revelation", "The Mechanics", "Validations", "Query Log"].map((item) => {
+                let id = item.toLowerCase().replace(" ", "-");
+                if (id === "devexchange") id = "the-introduction";
+                return (
+                  <li key={item}>
+                    <Link
+                      to={isHome ? `#${id}` : `/#${id}`}
+                      onClick={() => handleScroll(id)}
+                      className="hover:text-red-500 hover:ml-2 transition-all block"
+                    >
+                      {item}
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+
+          <div>
+            <h4 className="font-bold uppercase tracking-widest text-xs mb-6 text-gray-500 dark:text-gray-500 transition-colors">Legal</h4>
+            <ul className="space-y-4">
+              <li><Link to="/privacy" onClick={() => window.scrollTo(0, 0)} className="hover:text-black dark:hover:text-white text-gray-600 dark:text-gray-400 transition-all">Privacy Policy</Link></li>
+              <li><Link to="/terms" onClick={() => window.scrollTo(0, 0)} className="hover:text-black dark:hover:text-white text-gray-600 dark:text-gray-400 transition-all">Terms of Service</Link></li>
+            </ul>
           </div>
         </div>
 
-        <div className="pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4 text-center md:text-left">
-          <p className="text-gray-500 text-sm">
-            © {new Date().getFullYear()} DevExchange. Open source under CC BY-NC-SA 4.0 License.
-          </p>
-          <p className="text-gray-500 text-sm">
-            Developed with ❤️ by{" "}
-            <a
-              target="_blank"
-              href="https://github.com/anuragpsarmah"
-              className="text-blue-400 hover:text-blue-300 transition-colors"
-            >
-              Anurag
-            </a>
-          </p>
+        <div className="pt-8 border-t border-black/10 dark:border-white/10 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-gray-500 dark:text-gray-600 uppercase tracking-widest transition-colors">
+          <p>© {new Date().getFullYear()} DevExchange. All rights reserved.</p>
+          <div className="flex gap-8 border border-black/10 dark:border-white/10 px-4 py-2 transition-colors">
+            <span>Status: <span className="text-green-600 dark:text-green-500">Operational</span></span>
+          </div>
         </div>
       </div>
     </footer>

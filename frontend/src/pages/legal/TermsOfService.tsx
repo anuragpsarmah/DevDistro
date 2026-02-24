@@ -1,12 +1,23 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import BackgroundDots from "@/components/ui/backgroundDots";
 import Header from "@/pages/landing/components/header";
 import MobileMenu from "@/pages/landing/components/mobileMenu";
 import Footer from "@/pages/landing/components/footer";
 
 export default function TermsOfService() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    const savedTheme = localStorage.getItem("theme");
+    if (savedTheme) {
+      return savedTheme === "dark";
+    }
+    return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  });
+
+  useEffect(() => {
+    localStorage.setItem("theme", isDarkMode ? "dark" : "light");
+  }, [isDarkMode]);
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -18,103 +29,120 @@ export default function TermsOfService() {
   };
 
   return (
-    <div className="min-h-screen text-white relative overflow-hidden bg-[#030712]">
-      <div
-        className="fixed inset-0 pointer-events-none"
-        style={{
-          background: `
-            radial-gradient(ellipse 100% 80% at 50% 0%, rgba(88, 28, 135, 0.15) 0%, transparent 60%),
-            radial-gradient(circle at 20% 50%, rgba(59, 130, 246, 0.05) 0%, transparent 40%),
-            radial-gradient(circle at 80% 70%, rgba(139, 92, 246, 0.05) 0%, transparent 40%),
-            #030712
-          `,
-        }}
-      />
-      
-      <BackgroundDots />
+    <div className={isDarkMode ? "dark" : ""}>
+      <div className="min-h-screen text-gray-900 bg-white dark:text-white dark:bg-[#050505] font-space selection:bg-red-500 selection:text-white transition-colors duration-300 relative">
+        <Header
+          handleAuthNavigate={handleAuthNavigate}
+          isMenuOpen={isMenuOpen}
+          setIsMenuOpen={setIsMenuOpen}
+          isDarkMode={isDarkMode}
+          setIsDarkMode={setIsDarkMode}
+        />
 
-      <Header
-        handleAuthNavigate={handleAuthNavigate}
-        isMenuOpen={isMenuOpen}
-        setIsMenuOpen={setIsMenuOpen}
-      />
+        <MobileMenu
+          handleAuthNavigate={handleAuthNavigate}
+          isMenuOpen={isMenuOpen}
+          setIsMenuOpen={setIsMenuOpen}
+          isDarkMode={isDarkMode}
+          setIsDarkMode={setIsDarkMode}
+        />
 
-      <MobileMenu
-        handleAuthNavigate={handleAuthNavigate}
-        isMenuOpen={isMenuOpen}
-        setIsMenuOpen={setIsMenuOpen}
-      />
+        <main className="relative z-10 w-full pt-32 pb-24 px-6 md:px-12 max-w-4xl mx-auto">
+          <div className="flex items-center gap-3 mb-8">
+            <div className="w-12 h-[2px] bg-red-500"></div>
+            <span className="font-space font-bold uppercase tracking-[0.2em] text-xs text-red-500">
+              Legal Documentation
+            </span>
+          </div>
 
-      <main className="relative z-10 container mx-auto px-4 pt-32 pb-12 max-w-4xl text-gray-300">
-        <h1 className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 mb-8">
-          Terms of Service
-        </h1>
-        
-        <div className="space-y-8">
-          <section>
-            <h2 className="text-xl font-semibold text-white mb-4">1. Acceptance of Terms</h2>
-            <p>
-              By accessing or using DevExchange ("Platform"), you agree to be bound by these Terms of Service. 
-              The Platform provides a marketplace for developers to buy and sell source code.
-            </p>
-          </section>
+          <h1 className="font-syne text-5xl md:text-7xl font-black leading-none text-black dark:text-white uppercase tracking-widest mb-16 break-words hyphens-auto">
+            Terms of Service
+          </h1>
 
-          <section>
-            <h2 className="text-xl font-semibold text-white mb-4">2. Account Security & GitHub Access</h2>
-            <p className="mb-4">
-              To use the Platform, you are required to connect your GitHub account and provide a GitHub Access Key. This is a mandatory requirement for all users to verify identity and repository ownership.
-              While we employ industry-standard encryption to secure your credentials, you acknowledge the inherent risks associated with sharing access credentials.
-            </p>
-            <div className="bg-red-500/10 border border-red-500/20 p-4 rounded-lg">
-              <p className="text-red-200 text-sm">
-                <strong>Important Recommendation:</strong> We strongly advise users to create a dedicated, separate GitHub account 
-                for use with DevExchange. Do not connect your primary personal or organizational GitHub account containing sensitive 
-                private repositories that are not intended for sale.
+          <div className="space-y-16 border-l-2 border-black/10 dark:border-white/10 pl-6 md:pl-10">
+            <section>
+              <h2 className="font-syne text-2xl md:text-3xl font-bold text-black dark:text-white mb-6 uppercase tracking-wider">01. Acceptance of Terms</h2>
+              <p className="text-gray-600 dark:text-gray-400 leading-relaxed text-lg">
+                By accessing or using DevExchange ("Platform"), you agree to be bound by these Terms of Service.
+                The Platform provides a decentralized marketplace for developers to buy and sell source code securely and efficiently.
               </p>
-            </div>
-          </section>
+            </section>
 
-          <section>
-            <h2 className="text-xl font-semibold text-white mb-4">3. User Obligations</h2>
-            <ul className="list-disc pl-5 space-y-2">
-              <li>You must have the legal right to sell any code you list on the Platform.</li>
-              <li>You agree not to list malicious code, malware, or code that violates third-party intellectual property rights.</li>
-              <li>You remain solely responsible for maintaining the security of your account credentials.</li>
-            </ul>
-          </section>
+            <section>
+              <h2 className="font-syne text-2xl md:text-3xl font-bold text-black dark:text-white mb-6 uppercase tracking-wider">02. Account Security & GitHub Access</h2>
+              <p className="text-gray-600 dark:text-gray-400 leading-relaxed text-lg mb-8">
+                To use the Platform, you are required to authenticate via GitHub OAuth and authorize the official DevExchange GitHub App.
+                This is a mandatory requirement to verify your identity and confirm cryptographic ownership of the repositories you intend to list.
+                The GitHub App requests scoped permissions exclusively for the repositories you select, ensuring we only interact with the code you choose to monetize.
+              </p>
+            </section>
 
-          <section>
-            <h2 className="text-xl font-semibold text-white mb-4">4. Intellectual Property</h2>
-            <p>
-              <strong>Platform Content:</strong> The DevExchange interface, logo, and branding are the property of DevExchange.
-            </p>
-            <p className="mt-2">
-              <strong>User Content:</strong> You retain ownership of the source code you list. By listing code, you grant DevExchange 
-              a limited license to display snippets or descriptions for marketing purposes on the Platform. 
-              When a sale occurs, the license transfers to the buyer according to the terms agreed upon at sale.
-            </p>
-          </section>
+            <section>
+              <h2 className="font-syne text-2xl md:text-3xl font-bold text-black dark:text-white mb-6 uppercase tracking-wider">03. User Obligations & Property Rights</h2>
+              <ul className="space-y-6 text-gray-600 dark:text-gray-400 text-lg">
+                <li className="flex flex-col md:flex-row gap-2 md:gap-6 items-start">
+                  <div className="flex gap-4 md:w-56 lg:w-64 shrink-0">
+                    <span className="text-red-500 font-bold opacity-50">/</span>
+                    <strong className="text-black dark:text-white">Ownership Assertion:</strong>
+                  </div>
+                  <div className="flex-1">
+                    You must exclusively own, or have explicit, verifiable legal rights to sell, the intellectual property of any code you list on the Platform. Copied, stolen, or improperly licensed open-source code is strictly prohibited.
+                  </div>
+                </li>
+                <li className="flex flex-col md:flex-row gap-2 md:gap-6 items-start">
+                  <div className="flex gap-4 md:w-56 lg:w-64 shrink-0">
+                    <span className="text-red-500 font-bold opacity-50">/</span>
+                    <strong className="text-black dark:text-white">Prohibited Content:</strong>
+                  </div>
+                  <div className="flex-1">
+                    You agree not to list malicious code, malware, exploits, or code that violates third-party intellectual property rights.
+                  </div>
+                </li>
+                <li className="flex flex-col md:flex-row gap-2 md:gap-6 items-start">
+                  <div className="flex gap-4 md:w-56 lg:w-64 shrink-0">
+                    <span className="text-red-500 font-bold opacity-50">/</span>
+                    <strong className="text-black dark:text-white">Accountability:</strong>
+                  </div>
+                  <div className="flex-1">
+                    You remain solely responsible for maintaining the security of your GitHub account and connected Web3 wallet.
+                  </div>
+                </li>
+              </ul>
+            </section>
 
-          <section>
-            <h2 className="text-xl font-semibold text-white mb-4">5. Limitation of Liability</h2>
-            <p>
-              The Platform is provided "AS IS" without warranty of any kind. 
-              We are not liable for any direct, indirect, incidental, or consequential damages arising from your use of the Platform, 
-              including but not limited to loss of data, unauthorized access to your GitHub account (due to user negligence or unforeseen breaches), 
-              or financial loss.
-            </p>
-          </section>
+            <section>
+              <h2 className="font-syne text-2xl md:text-3xl font-bold text-black dark:text-white mb-6 uppercase tracking-wider">04. Transactions & Delivery</h2>
+              <p className="text-gray-600 dark:text-gray-400 leading-relaxed text-lg mb-6">
+                <strong className="text-black dark:text-white uppercase text-sm tracking-widest font-syne mr-2">Solana Settlement /</strong>
+                You define the valuation of your codebase in USD fiat. At the time of execution, DevExchange automatically converts this amount and processes the transaction exclusively in native SOL on the Solana blockchain through a connected Web3 wallet (e.g., Phantom, Solflare).
+              </p>
+              <p className="text-gray-600 dark:text-gray-400 leading-relaxed text-lg">
+                <strong className="text-black dark:text-white uppercase text-sm tracking-widest font-syne mr-2">Automated Delivery /</strong>
+                When you list a repository, we immediately pull the latest commit and compile it into a secure ZIP file stored in our AWS S3 infrastructure. Upon on-chain confirmation of payment, this pre-packaged archive is served directly to the buyer for immediate download. DevExchange facilitates the pipeline but relies on the immutability of the blockchain for settlement.
+              </p>
+            </section>
 
-          <section>
-            <h2 className="text-xl font-semibold text-white mb-4">6. Changes to Terms</h2>
-            <p>
-              We reserve the right to modify these terms at any time. Continued use of the Platform following changes constitutes acceptance of the new terms.
-            </p>
-          </section>
-        </div>
-      </main>
+            <section>
+              <h2 className="font-syne text-2xl md:text-3xl font-bold text-black dark:text-white mb-6 uppercase tracking-wider">05. Limitation of Liability</h2>
+              <p className="text-gray-600 dark:text-gray-400 leading-relaxed text-lg">
+                The Platform is provided "AS IS" without warranty of any kind.
+                We are not liable for any direct, indirect, incidental, or consequential damages arising from your use of the Platform,
+                including but not limited to loss of data, unauthorized access to your GitHub account or Web3 wallet,
+                smart contract vulnerabilities, market volatility of SOL, or any other financial loss.
+              </p>
+            </section>
 
-      <Footer />
+            <section>
+              <h2 className="font-syne text-2xl md:text-3xl font-bold text-black dark:text-white mb-6 uppercase tracking-wider">06. Changes to Terms</h2>
+              <p className="text-gray-600 dark:text-gray-400 leading-relaxed text-lg pb-12">
+                We reserve the right to modify these terms at any time. Continued use of the Platform following changes constitutes acceptance of the newly deployed terms.
+              </p>
+            </section>
+          </div>
+        </main>
+
+        <Footer />
+      </div>
     </div>
   );
 }

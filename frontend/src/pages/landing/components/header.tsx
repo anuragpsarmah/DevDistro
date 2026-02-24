@@ -1,17 +1,15 @@
 import { Link, useLocation } from "react-router-dom";
-import { MenuIcon, XIcon } from "lucide-react";
+import { Menu, X, Sun, Moon } from "lucide-react";
 import { motion } from "framer-motion";
-
-interface HeaderProps {
-  handleAuthNavigate: () => void;
-  isMenuOpen: boolean;
-  setIsMenuOpen: (isOpen: boolean) => void;
-}
+import LogoIcon from "@/assets/icons/LogoIcon";
+import { HeaderProps } from "../utils/types";
 
 export default function Header({
   handleAuthNavigate,
   isMenuOpen,
   setIsMenuOpen,
+  isDarkMode,
+  setIsDarkMode,
 }: HeaderProps) {
   const location = useLocation();
   const isHome = location.pathname === "/";
@@ -30,41 +28,62 @@ export default function Header({
       initial={{ y: -20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.5, ease: "easeOut" }}
-      className="fixed top-0 left-0 right-0 z-50 px-4 py-3"
+      className="fixed top-0 left-0 right-0 z-50 bg-white/90 dark:bg-[#0a0a0a]/90 backdrop-blur-md border-b-2 border-black/10 dark:border-white/10 transition-colors duration-300"
     >
-      <nav className="max-w-5xl mx-auto flex justify-between items-center px-5 py-2.5 rounded-full bg-white/[0.03] backdrop-blur-md border border-white/[0.08]">
-        <Link to="/" className="text-lg font-semibold tracking-tight hover:opacity-80 transition-opacity">
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500">DevExchange</span>
+      <nav className="w-full flex justify-between items-center px-6 py-4">
+        <Link to="/" className="flex items-center gap-3 text-xl font-syne font-black tracking-widest text-black dark:text-white uppercase transition-colors group">
+          <LogoIcon className="w-8 h-8 group-hover:scale-110 transition-transform duration-300" />
+          <span className="group-hover:text-red-500 dark:group-hover:text-red-500 transition-colors">DevExchange</span>
         </Link>
 
-        <div className="hidden md:flex items-center gap-8">
-          {["Features", "Projects", "Reviews", "FAQs"].map((item) => (
-            <Link
-              key={item}
-              to={isHome ? `#${item.toLowerCase()}` : `/#${item.toLowerCase()}`}
-              onClick={() => handleScroll(item.toLowerCase())}
-              className="text-sm text-gray-400 hover:text-white transition-colors duration-200"
-            >
-              {item}
-            </Link>
-          ))}
+        <div className="hidden md:flex items-center gap-8 lg:gap-12 font-space text-sm font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+          {["The Revelation", "The Mechanics", "Validations", "Query Log"].map((item) => {
+            const id = item.toLowerCase().replace(" ", "-");
+            return (
+              <Link
+                key={item}
+                to={isHome ? `#${id}` : `/#${id}`}
+                onClick={() => handleScroll(id)}
+                className="hover:text-black dark:hover:text-white transition-colors duration-200 relative group text-xs md:text-sm"
+              >
+                <span>{item}</span>
+                <span className="absolute -bottom-2 left-0 w-0 h-[2px] bg-red-500 transition-all duration-300 group-hover:w-full"></span>
+              </Link>
+            );
+          })}
         </div>
 
-        <div className="hidden md:block">
+        <div className="hidden md:flex items-center gap-6">
           <button
-            className="text-sm font-medium text-white bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 hover:opacity-90 px-5 py-2 rounded-full transition-opacity duration-200"
+            onClick={() => setIsDarkMode(!isDarkMode)}
+            className="text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white transition-colors"
+            aria-label="Toggle theme"
+          >
+            {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
+          </button>
+          <button
+            className="text-sm font-space font-bold uppercase tracking-widest text-white dark:text-black bg-black dark:bg-white hover:bg-red-500 dark:hover:bg-red-500 hover:text-white px-6 py-3 transition-colors duration-200 border-2 border-transparent hover:border-black dark:hover:border-white"
             onClick={handleAuthNavigate}
           >
-            Get Started
+            Access Now
           </button>
         </div>
 
-        <button
-          className="md:hidden text-gray-400 hover:text-white p-1.5 transition-colors"
-          onClick={() => setIsMenuOpen(!isMenuOpen)}
-        >
-          {isMenuOpen ? <XIcon size={20} /> : <MenuIcon size={20} />}
-        </button>
+        <div className="md:hidden flex items-center gap-4">
+          <button
+            onClick={() => setIsDarkMode(!isDarkMode)}
+            className="text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white transition-colors"
+            aria-label="Toggle theme"
+          >
+            {isDarkMode ? <Sun size={24} /> : <Moon size={24} />}
+          </button>
+          <button
+            className="text-black dark:text-white hover:text-red-500 transition-colors"
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+          >
+            {isMenuOpen ? <X size={28} /> : <Menu size={28} />}
+          </button>
+        </div>
       </nav>
     </motion.header>
   );

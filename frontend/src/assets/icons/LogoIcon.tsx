@@ -1,0 +1,19 @@
+export default function LogoIcon({ className }: { className?: string }) {
+    return (
+        <svg className={className} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+            <defs>
+                <path id="d-shape" d="M 20 15 H 60 L 80 35 V 65 L 60 85 H 20 Z M 42 37 H 58 V 63 H 42 Z" fillRule="evenodd"></path>
+                <mask id="topMask">
+                    <rect x="-50" y="-50" width="200" height="97" fill="white" transform="rotate(-45 50 50)"></rect>
+                </mask>
+                <mask id="bottomMask">
+                    <rect x="-50" y="53" width="200" height="100" fill="white" transform="rotate(-45 50 50)"></rect>
+                </mask>
+            </defs>
+            <use href="#d-shape" fill="currentColor" mask="url(#topMask)"></use>
+            <g transform="translate(-6, 6)">
+                <use href="#d-shape" fill="#FF3333" mask="url(#bottomMask)"></use>
+            </g>
+        </svg>
+    );
+}

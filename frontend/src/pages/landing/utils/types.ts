@@ -10,3 +10,11 @@ export interface featuredReviewType {
   review_description: string;
   review_stars: number;
 }
+
+export interface HeaderProps {
+  handleAuthNavigate: () => void;
+  isMenuOpen: boolean;
+  setIsMenuOpen: (isOpen: boolean) => void;
+  isDarkMode: boolean;
+  setIsDarkMode: (isDark: boolean) => void;
+}

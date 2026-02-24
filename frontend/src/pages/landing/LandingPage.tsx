@@ -1,25 +1,47 @@
 import { useState, useEffect } from "react";
-import BackgroundDots from "@/components/ui/backgroundDots";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import Header from "./components/header";
 import MobileMenu from "./components/mobileMenu";
-import HeroSection from "./components/heroSection";
-import FeatureSection from "./components/featureSection";
-import ShowcaseSection from "./components/showcaseSection";
-import ReviewSection from "./components/reviewSection";
-import FAQSection from "./components/faqSection";
-import CallForAction from "./components/callForAction";
+import TheIntroduction from "./components/theIntroduction";
+import TheRevelation from "./components/theRevelation";
+import TheMechanics from "./components/theMechanics";
+import TheClimax from "./components/theClimax";
+import FAQ from "./components/faq";
+import Reviews from "./components/reviews";
 import Footer from "./components/footer";
 import { useAuthValidationQuery } from "@/hooks/apiQueries";
 
 export default function LandingPage() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    const savedTheme = localStorage.getItem("theme");
+    if (savedTheme) {
+      return savedTheme === "dark";
+    }
+    return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  });
+
+  useEffect(() => {
+    localStorage.setItem("theme", isDarkMode ? "dark" : "light");
+  }, [isDarkMode]);
+
   const navigate = useNavigate();
+  const location = useLocation();
   const { data, isLoading, isError } = useAuthValidationQuery();
 
   useEffect(() => {
-    window.scrollTo(0, 0);
-  }, []);
+    if (location.hash) {
+      const id = location.hash.replace("#", "");
+      setTimeout(() => {
+        const element = document.getElementById(id);
+        if (element) {
+          element.scrollIntoView({ behavior: "smooth" });
+        }
+      }, 100);
+    } else {
+      window.scrollTo(0, 0);
+    }
+  }, [location.hash]);
 
   useEffect(() => {
     const handleAuthValidation = async () => {
@@ -42,43 +64,35 @@ export default function LandingPage() {
   }, []);
 
   return (
-    <div className="min-h-screen text-white relative overflow-hidden bg-[#030712]">
-      <div
-        className="fixed inset-0 pointer-events-none"
-        style={{
-          background: `
-            radial-gradient(ellipse 100% 80% at 50% 0%, rgba(88, 28, 135, 0.15) 0%, transparent 60%),
-            radial-gradient(circle at 20% 50%, rgba(59, 130, 246, 0.05) 0%, transparent 40%),
-            radial-gradient(circle at 80% 70%, rgba(139, 92, 246, 0.05) 0%, transparent 40%),
-            #030712
-          `,
-        }}
-      />
-      
-      <BackgroundDots />
+    <div className={isDarkMode ? "dark" : ""}>
+      <div className="min-h-screen text-gray-900 bg-gray-50 dark:text-white relative dark:bg-[#050505] font-space selection:bg-red-500 selection:text-white transition-colors duration-300">
+        <Header
+          handleAuthNavigate={handleAuthNavigate}
+          isMenuOpen={isMenuOpen}
+          setIsMenuOpen={setIsMenuOpen}
+          isDarkMode={isDarkMode}
+          setIsDarkMode={setIsDarkMode}
+        />
 
-      <Header
-        handleAuthNavigate={handleAuthNavigate}
-        isMenuOpen={isMenuOpen}
-        setIsMenuOpen={setIsMenuOpen}
-      />
+        <MobileMenu
+          handleAuthNavigate={handleAuthNavigate}
+          isMenuOpen={isMenuOpen}
+          setIsMenuOpen={setIsMenuOpen}
+          isDarkMode={isDarkMode}
+          setIsDarkMode={setIsDarkMode}
+        />
 
-      <MobileMenu
-        handleAuthNavigate={handleAuthNavigate}
-        isMenuOpen={isMenuOpen}
-        setIsMenuOpen={setIsMenuOpen}
-      />
+        <main className="relative z-10 w-full pt-16">
+          <TheIntroduction handleAuthNavigate={handleAuthNavigate} />
+          <TheRevelation />
+          <TheMechanics />
+          <Reviews />
+          <FAQ />
+          <TheClimax handleAuthNavigate={handleAuthNavigate} />
+        </main>
 
-      <main className="relative z-10">
-        <HeroSection handleAuthNavigate={handleAuthNavigate} />
-        <FeatureSection />
-        <ShowcaseSection />
-        <ReviewSection />
-        <FAQSection />
-        <CallForAction handleAuthNavigate={handleAuthNavigate} />
-      </main>
-
-      <Footer />
+        <Footer />
+      </div>
     </div>
   );
 }

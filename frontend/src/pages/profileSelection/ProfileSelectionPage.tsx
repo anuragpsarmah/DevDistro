@@ -1,7 +1,5 @@
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import { ShoppingBag, Store, Code2 } from "lucide-react";
-import BackgroundDots from "@/components/ui/backgroundDots";
+import { ShoppingBag, Store } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { ProfileCard } from "./main-components/ProfileCard";
 
@@ -11,80 +9,76 @@ export default function ProfileSelectionPage() {
 
   useEffect(() => {
     window.scrollTo(0, 0);
+    const isDark = localStorage.getItem("theme") !== "light";
+    if (isDark) {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
   }, []);
 
   return (
-    <div className="min-h-screen text-white relative overflow-hidden bg-[#030712] flex items-center justify-center">
+    <div className="min-h-screen bg-white dark:bg-[#050505] text-gray-900 dark:text-white font-space selection:bg-red-500 selection:text-white transition-colors duration-300 relative">
       <div
-        className="fixed inset-0 pointer-events-none"
+        className="absolute inset-0 pointer-events-none z-0 opacity-[0.10] dark:hidden"
         style={{
-          background: `
-            radial-gradient(ellipse 100% 80% at 50% 0%, rgba(88, 28, 135, 0.15) 0%, transparent 60%),
-            radial-gradient(circle at 20% 50%, rgba(59, 130, 246, 0.05) 0%, transparent 40%),
-            radial-gradient(circle at 80% 70%, rgba(139, 92, 246, 0.05) 0%, transparent 40%),
-            #030712
+          backgroundImage: `
+            linear-gradient(to right, rgba(0,0,0,1) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(0,0,0,1) 1px, transparent 1px)
           `,
+          backgroundSize: '4rem 4rem',
+          maskImage: 'radial-gradient(ellipse at 50% 50%, black 0%, transparent 80%)',
+          WebkitMaskImage: 'radial-gradient(ellipse at 50% 50%, black 0%, transparent 80%)'
         }}
-      />
+      ></div>
+      <div
+        className="absolute inset-0 pointer-events-none hidden dark:block z-0 opacity-[0.20]"
+        style={{
+          backgroundImage: `
+            linear-gradient(to right, rgba(255,255,255,1) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(255,255,255,1) 1px, transparent 1px)
+          `,
+          backgroundSize: '4rem 4rem',
+          maskImage: 'radial-gradient(ellipse at 50% 50%, black 0%, transparent 80%)',
+          WebkitMaskImage: 'radial-gradient(ellipse at 50% 50%, black 0%, transparent 80%)'
+        }}
+      ></div>
 
-      <BackgroundDots />
+      <main className="relative z-10 w-full max-w-7xl mx-auto px-4 py-32 flex flex-col items-center">
+        <div className="flex items-center justify-center mb-12 w-full text-center">
+          <span className="font-space font-bold uppercase tracking-[0.2em] text-xs text-red-500">- Profile Init -</span>
+        </div>
 
-      <div className="absolute top-1/4 left-1/4 w-[500px] h-[400px] bg-blue-600/10 rounded-full blur-[150px] pointer-events-none" />
-      <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[300px] bg-purple-600/10 rounded-full blur-[150px] pointer-events-none" />
-
-      <main className="relative z-10 w-full max-w-4xl px-4 py-12">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="text-center mb-12"
-        >
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.4 }}
-            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-purple-500/10 border border-purple-500/20 mb-6"
-          >
-            <Code2 size={12} className="text-purple-400" />
-            <span className="text-xs font-medium text-purple-300">Welcome to DevExchange</span>
-          </motion.div>
-
-          <h1 className="text-4xl sm:text-5xl font-bold mb-4 leading-tight">
-            <span className="text-white">Choose Your</span>
-            <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500">
-              Profile
-            </span>
+        <div className="text-left md:text-center w-full max-w-4xl mb-24">
+          <h1 className="text-5xl sm:text-6xl md:text-8xl font-black uppercase tracking-widest leading-none font-syne mb-8 break-words hyphens-auto">
+            SELECT <br className="hidden md:block" />
+            <span className="text-black dark:text-white" style={{ WebkitTextStroke: "1px rgba(128,128,128,0.2)" }}>YOUR</span> PROFILE
           </h1>
-          <p className="text-base sm:text-lg text-gray-400 max-w-lg mx-auto leading-relaxed">
-            Select how you want to use DevExchange today. You can switch between profiles anytime.
+          <p className="text-lg md:text-xl text-gray-600 dark:text-gray-400 leading-relaxed font-space max-w-2xl md:mx-auto border-l-2 md:border-l-0 md:border-t-2 border-black/10 dark:border-white/10 pl-6 md:pl-0 pt-0 md:pt-8 md:text-center">
+            SPECIFY HOW YOU WANT TO OPERATE. YOU CAN SWITCH BETWEEN PROFILES ANYTIME DURING YOUR SESSION.
           </p>
-        </motion.div>
+        </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-16 w-full">
           <ProfileCard
             title="Buyer"
-            description="Browse and purchase innovative projects from developers worldwide"
-            icon={<ShoppingBag className="w-7 h-7" />}
-            features={["Discover battle-tested code", "Instant access on purchase", "Secure transactions"]}
+            description="BROWSE AND ACQUIRE BATTLE-TESTED REPOSITORIES FROM TOP DEVELOPERS."
+            icon={<ShoppingBag className="w-8 h-8" strokeWidth={1.5} />}
+            features={["SECURE TRANSACTIONS", "INSTANT ACCESS ON PURCHASE", "VERIFIED REPOSITORIES"]}
             onClick={() => navigate("/buyer-marketplace")}
             isHovered={hoveredProfile === "buyer"}
             setHovered={() => setHoveredProfile("buyer")}
             setNotHovered={() => setHoveredProfile(null)}
-            gradient="from-blue-500 to-cyan-500"
-            delay={0.1}
           />
           <ProfileCard
             title="Seller"
-            description="List your GitHub repositories and start earning from your code"
-            icon={<Store className="w-7 h-7" />}
-            features={["Keep 99% of earnings", "Easy repo integration", "Solana payments"]}
+            description="MONETIZE YOUR EXISTING GITHUB REPOSITORIES. KEEP 99% OF YOUR EARNINGS."
+            icon={<Store className="w-8 h-8" strokeWidth={1.5} />}
+            features={["EASY REPO INTEGRATION", "SOLANA PAYMENTS", "GLOBAL DISTRIBUTION"]}
             onClick={() => navigate("/seller-dashboard")}
             isHovered={hoveredProfile === "seller"}
             setHovered={() => setHoveredProfile("seller")}
             setNotHovered={() => setHoveredProfile(null)}
-            gradient="from-purple-500 to-pink-500"
-            delay={0.2}
           />
         </div>
       </main>

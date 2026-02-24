@@ -7,5 +7,6 @@
 */tsconfig.app.tsbuildinfo
 
 .claude
+.agents
 
 dump

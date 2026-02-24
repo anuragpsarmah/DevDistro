@@ -1,6 +1,4 @@
 import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
-import BackgroundDots from "@/components/ui/backgroundDots";
 import { GithubIcon, Code2, ArrowRight } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuthValidationQuery } from "@/hooks/apiQueries";
@@ -13,6 +11,17 @@ export default function AuthPage() {
   const navigate = useNavigate();
   const { data, isLoading, isError } = useAuthValidationQuery();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    const savedTheme = localStorage.getItem("theme");
+    if (savedTheme) {
+      return savedTheme === "dark";
+    }
+    return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  });
+
+  useEffect(() => {
+    localStorage.setItem("theme", isDarkMode ? "dark" : "light");
+  }, [isDarkMode]);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -43,127 +52,92 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="min-h-screen text-white relative overflow-hidden bg-[#030712]">
-      <div
-        className="fixed inset-0 pointer-events-none"
-        style={{
-          background: `
-            radial-gradient(ellipse 100% 80% at 50% 0%, rgba(88, 28, 135, 0.15) 0%, transparent 60%),
-            radial-gradient(circle at 20% 50%, rgba(59, 130, 246, 0.05) 0%, transparent 40%),
-            radial-gradient(circle at 80% 70%, rgba(139, 92, 246, 0.05) 0%, transparent 40%),
-            #030712
-          `,
-        }}
-      />
+    <div className={isDarkMode ? "dark" : ""}>
+      <div className="min-h-screen text-gray-900 bg-white dark:text-white dark:bg-[#050505] font-space selection:bg-red-500 selection:text-white transition-colors duration-300 relative flex flex-col">
+        <Header
+          handleAuthNavigate={handleAuthNavigate}
+          isMenuOpen={isMenuOpen}
+          setIsMenuOpen={setIsMenuOpen}
+          isDarkMode={isDarkMode}
+          setIsDarkMode={setIsDarkMode}
+        />
 
-      <BackgroundDots />
+        <MobileMenu
+          handleAuthNavigate={handleAuthNavigate}
+          isMenuOpen={isMenuOpen}
+          setIsMenuOpen={setIsMenuOpen}
+          isDarkMode={isDarkMode}
+          setIsDarkMode={setIsDarkMode}
+        />
 
-      <Header
-        handleAuthNavigate={handleAuthNavigate}
-        isMenuOpen={isMenuOpen}
-        setIsMenuOpen={setIsMenuOpen}
-      />
+        <main className="flex-grow pt-[calc(6rem+70px)] pb-24 px-4 mx-auto w-full max-w-5xl flex items-center justify-center">
+          <div className="w-full border-2 border-black dark:border-white p-8 md:p-16 relative flex flex-col lg:flex-row gap-16 items-stretch">
+            <div className="flex-1 flex flex-col justify-center">
+              <div className="flex items-center gap-3 mb-8">
+                <div className="w-12 h-[2px] bg-red-500"></div>
+                <span className="font-space font-bold uppercase tracking-[0.2em] text-xs text-red-500">Authentication Potocol</span>
+              </div>
 
-      <MobileMenu
-        handleAuthNavigate={handleAuthNavigate}
-        isMenuOpen={isMenuOpen}
-        setIsMenuOpen={setIsMenuOpen}
-      />
+              <h1 className="font-syne font-black uppercase tracking-widest leading-none text-5xl md:text-6xl lg:text-7xl mb-6 break-words hyphens-auto">
+                Initiate<br />Session
+              </h1>
 
-      <main className="relative z-10 min-h-screen flex items-center justify-center pt-20 pb-12 px-4">
-        <div className="absolute top-1/4 left-1/4 w-[500px] h-[400px] bg-blue-600/10 rounded-full blur-[150px] pointer-events-none" />
-        <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[300px] bg-purple-600/10 rounded-full blur-[150px] pointer-events-none" />
+              <p className="text-gray-600 dark:text-gray-400 text-lg md:text-xl leading-relaxed mb-10">
+                Authenticate securely using <span className="text-black dark:text-white font-bold">GITHUB OAUTH</span>. Access the market. Monetize your code. Be discovered.
+              </p>
 
-        <div className="w-full max-w-lg">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="text-center mb-10"
-          >
-            <h1 className="text-4xl sm:text-5xl font-bold mb-4 leading-tight">
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500">
-                Welcome to
-              </span>
-              <br />
-              <span className="text-white">DevExchange</span>
-            </h1>
-            <p className="text-base sm:text-lg text-gray-400 max-w-md mx-auto leading-relaxed">
-              Connect your GitHub account to start buying and selling source code from developers worldwide.
-            </p>
-          </motion.div>
+              <ul className="flex flex-col gap-5">
+                <li className="flex gap-4 items-start">
+                  <span className="text-red-500 font-bold opacity-50">/</span>
+                  <span className="text-gray-600 dark:text-gray-400 font-space text-sm md:text-base">Seamless repository synchronization.</span>
+                </li>
+                <li className="flex gap-4 items-start">
+                  <span className="text-red-500 font-bold opacity-50">/</span>
+                  <span className="text-gray-600 dark:text-gray-400 font-space text-sm md:text-base">Direct liquidity through Solana integration.</span>
+                </li>
+                <li className="flex gap-4 items-start">
+                  <span className="text-red-500 font-bold opacity-50">/</span>
+                  <span className="text-gray-600 dark:text-gray-400 font-space text-sm md:text-base">99% payment retention per transacted asset.</span>
+                </li>
+              </ul>
+            </div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="relative"
-          >
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 via-purple-500/20 to-pink-500/20 blur-xl rounded-2xl" />
-            
-            <div className="relative bg-gray-900/60 backdrop-blur-xl rounded-2xl p-8 border border-white/10 shadow-2xl">
-              <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-purple-600/5 rounded-2xl pointer-events-none" />
-              
-              <div className="relative z-10">
-                <div className="flex items-center justify-center gap-3 mb-6">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center">
-                    <Code2 size={20} className="text-white" />
-                  </div>
-                  <h2 className="text-2xl font-bold text-white">Get Started</h2>
-                </div>
+            <div className="flex-1 w-full lg:w-3/5 border-t-2 lg:border-t-0 lg:border-l-2 border-black/10 dark:border-white/10 pt-12 lg:pt-0 lg:pl-16 flex flex-col items-center justify-center">
+              <Code2 size={64} className="text-black dark:text-white mb-10 opacity-30" strokeWidth={1} />
 
-                <p className="text-gray-400 text-center mb-8 text-sm">
-                  Join fellow developers monetizing their code or discovering battle-tested solutions.
-                </p>
+              <button
+                className="w-full group relative px-8 py-5 bg-black text-white dark:bg-white dark:text-black font-space font-bold uppercase tracking-widest text-xs md:text-sm overflow-hidden transition-colors duration-300 flex items-center justify-center gap-4"
+                onClick={handleLoginClick}
+              >
+                <div className="absolute inset-0 bg-red-500 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-in-out"></div>
+                <span className="relative z-10 flex items-center justify-center gap-3 group-hover:text-white transition-colors duration-300">
+                  <GithubIcon className="w-6 h-6" />
+                  <span>Execute Auth</span>
+                  <ArrowRight className="w-5 h-5" />
+                </span>
+              </button>
 
-                <button
-                  className="group w-full flex items-center justify-center gap-3 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 hover:opacity-90 text-white font-semibold py-4 px-6 rounded-xl transition-all duration-300 shadow-lg shadow-purple-500/20 hover:shadow-purple-500/30 hover:scale-[1.02]"
-                  onClick={handleLoginClick}
-                >
-                  <GithubIcon className="w-5 h-5" />
-                  <span>Continue with GitHub</span>
-                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                </button>
-
-                <div className="mt-6 pt-6 border-t border-white/5 text-center">
-                  <p className="text-xs text-gray-500">
-                    By continuing, you agree to our{" "}
-                    <Link to="/terms" className="text-blue-400 hover:text-blue-300 transition-colors">
-                      Terms of Service
-                    </Link>
-                    {" "}and{" "}
-                    <Link to="/privacy" className="text-blue-400 hover:text-blue-300 transition-colors">
-                      Privacy Policy
-                    </Link>
-                  </p>
+              <div className="mt-12 text-center w-full">
+                <p className="text-[10px] text-gray-400 dark:text-gray-500 font-bold uppercase tracking-[0.2em] mb-4">Legal Directives</p>
+                <div className="flex flex-col gap-3 items-center">
+                  <Link to="/terms" className="group flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white transition-colors uppercase tracking-widest">
+                    <span className="text-red-500 opacity-0 group-hover:opacity-100 transition-opacity">/</span>
+                    <span>Terms of Service</span>
+                    <span className="text-red-500 opacity-0 group-hover:opacity-100 transition-opacity">/</span>
+                  </Link>
+                  <Link to="/privacy" className="group flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white transition-colors uppercase tracking-widest">
+                    <span className="text-red-500 opacity-0 group-hover:opacity-100 transition-opacity">/</span>
+                    <span>Privacy Policy</span>
+                    <span className="text-red-500 opacity-0 group-hover:opacity-100 transition-opacity">/</span>
+                  </Link>
                 </div>
               </div>
             </div>
-          </motion.div>
+          </div>
+        </main>
 
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.6, delay: 0.5 }}
-            className="mt-10 grid grid-cols-3 gap-4 text-center"
-          >
-            <div>
-              <div className="text-white font-semibold mb-1">99%</div>
-              <div className="text-xs text-gray-500">Earnings Kept</div>
-            </div>
-            <div>
-              <div className="text-white font-semibold mb-1">Solana</div>
-              <div className="text-xs text-gray-500">Fast Payments</div>
-            </div>
-            <div>
-              <div className="text-white font-semibold mb-1">GitHub</div>
-              <div className="text-xs text-gray-500">Integration</div>
-            </div>
-          </motion.div>
-        </div>
-      </main>
-
-      <Footer />
+        <Footer />
+      </div>
     </div>
   );
 }

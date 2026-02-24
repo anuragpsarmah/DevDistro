@@ -7,6 +7,4 @@ export interface ProfileCardProps {
     isHovered: boolean;
     setHovered: () => void;
     setNotHovered: () => void;
-    gradient: string;
-    delay: number;
 }
