@@ -67,56 +67,58 @@ export default function ProjectGeneralInfo({
   };
 
   return (
-    <>
+    <div className="space-y-10">
       <div>
-        <Label htmlFor="title" className="text-gray-300 mb-2 block">
-          Project Title<span className="text-red-400 ml-1">*</span>
+        <Label htmlFor="title" className="font-space text-[10px] uppercase font-bold tracking-[0.2em] text-gray-600 dark:text-gray-400 mb-3 block">
+          Project Title<span className="text-red-500 ml-1">*</span>
         </Label>
         <Input
           id="title"
           ref={title}
           defaultValue={defaultTitle || ""}
-          className="bg-white/5 border-white/10 text-gray-300 focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus:border-indigo-500/50 transition-colors duration-200"
+          className="bg-transparent border-2 border-black/20 dark:border-white/20 text-black dark:text-white rounded-none font-space py-6 focus:ring-0 focus:border-red-500 transition-colors duration-300"
           placeholder="e.g., E-commerce Dashboard, AI Content Generator"
           required
         />
       </div>
 
       <div>
-        <Label htmlFor="description" className="text-gray-300 mb-2 block">
-          Project Description<span className="text-red-400 ml-1">*</span>
+        <Label htmlFor="description" className="font-space text-[10px] uppercase font-bold tracking-[0.2em] text-gray-600 dark:text-gray-400 mb-3 block">
+          Project Description<span className="text-red-500 ml-1">*</span>
         </Label>
         <Textarea
           id="description"
           placeholder="Provide a clear overview of your project. Include key features, technologies used, and what problems it solves. Be specific about your role and contributions."
           value={description}
           onChange={handleDescriptionChange}
-          className="bg-white/5 text-gray-300 border-white/10 focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus:border-indigo-500/50 transition-colors duration-200 h-32 resize-none"
+          className="bg-transparent text-black dark:text-white border-2 border-black/20 dark:border-white/20 rounded-none font-space focus:ring-0 focus:border-red-500 transition-colors duration-300 h-40 resize-none p-4"
         />
-        <p
-          className={`text-sm mt-1 ${MAX_DESCRIPTION_LENGTH - description.length <= 50 ? "text-red-400" : "text-gray-400"}`}
-        >
-          {description.length}/{MAX_DESCRIPTION_LENGTH} characters
-        </p>
+        <div className="flex justify-end mt-2">
+          <p
+            className={`font-space text-xs font-bold tracking-widest uppercase ${MAX_DESCRIPTION_LENGTH - description.length <= 50 ? "text-red-500" : "text-gray-500"}`}
+          >
+            {description.length} / {MAX_DESCRIPTION_LENGTH}
+          </p>
+        </div>
       </div>
 
       <div>
-        <Label htmlFor="projectType" className="text-gray-300 mb-2 block">
-          Project Type<span className="text-red-400 ml-1">*</span>
+        <Label htmlFor="projectType" className="font-space text-[10px] uppercase font-bold tracking-[0.2em] text-gray-600 dark:text-gray-400 mb-3 block">
+          Project Type<span className="text-red-500 ml-1">*</span>
         </Label>
         <Select
           value={projectType}
           onValueChange={(value: ProjectType) => setProjectType(value)}
         >
-          <SelectTrigger className="bg-white/5 border-white/10 text-gray-300 hover:bg-white/10 hover:border-white/20 transition-colors duration-200 focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus:border-indigo-500/50">
+          <SelectTrigger className="bg-transparent border-2 border-black/20 dark:border-white/20 text-black dark:text-white rounded-none font-space py-6 focus:ring-0 focus:border-red-500 transition-colors duration-300">
             <SelectValue placeholder="Choose the category that best fits your project" />
           </SelectTrigger>
-          <SelectContent className="bg-[#14152b]/90 border-white/10 text-white backdrop-blur-xl">
+          <SelectContent className="bg-white dark:bg-[#050505] border-2 border-black dark:border-white text-black dark:text-white rounded-none font-space transition-colors duration-300">
             {PROJECT_TYPES.map((type) => (
-              <SelectItem 
-                key={type} 
+              <SelectItem
+                key={type}
                 value={type}
-                className="focus:bg-white/10 hover:bg-white/10 cursor-pointer text-gray-300 focus:text-white"
+                className="focus:bg-black/5 dark:focus:bg-white/5 cursor-pointer text-black dark:text-white uppercase text-xs font-bold tracking-widest rounded-none"
               >
                 {type}
               </SelectItem>
@@ -126,31 +128,31 @@ export default function ProjectGeneralInfo({
       </div>
 
       <div>
-        <Label htmlFor="techStack" className="text-gray-300 mb-2 block">
-          Tech Stack<span className="text-red-400 ml-1">*</span>
+        <Label htmlFor="techStack" className="font-space text-[10px] uppercase font-bold tracking-[0.2em] text-gray-600 dark:text-gray-400 mb-3 block">
+          Tech Stack<span className="text-red-500 ml-1">*</span>
         </Label>
         <Input
           id="techStack"
           value={techInput}
           onChange={handleTechInputChange}
           onKeyDown={handleTechInputKeyDown}
-          className="bg-white/5 border-white/10 text-gray-300 focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus:border-indigo-500/50 transition-colors duration-200"
+          className="bg-transparent border-2 border-black/20 dark:border-white/20 text-black dark:text-white rounded-none font-space py-6 focus:ring-0 focus:border-red-500 transition-colors duration-300"
           placeholder="e.g., React, Node.js, MongoDB (Press Enter to add)"
         />
-        <p className="text-sm text-gray-400 mt-1">
-          Add all major technologies and frameworks used in your project
+        <p className="font-space text-xs text-gray-500 mt-2 uppercase tracking-wider font-bold">
+          Add all major technologies and frameworks used
         </p>
-        <div className="flex flex-wrap gap-2 mt-2">
+        <div className="flex flex-wrap gap-3 mt-4">
           {techStack.map((tech, index) => (
             <div
               key={index}
-              className="flex items-center bg-white/5 border border-white/10 text-gray-300 px-4 pt-1 pb-2 text-sm rounded-full"
+              className="flex items-center bg-transparent border-2 border-black dark:border-white text-black dark:text-white px-4 py-2 font-space text-xs uppercase font-bold tracking-widest rounded-none transition-colors duration-300"
             >
               <span>{tech}</span>
               <button
                 type="button"
                 onClick={() => removeTech(tech)}
-                className="ml-2 text-gray-400 hover:text-gray-200 pt-1"
+                className="ml-3 text-red-500 hover:text-red-700 transition-colors duration-200"
                 aria-label={`Remove ${tech}`}
               >
                 <X className="w-4 h-4" />
@@ -163,23 +165,23 @@ export default function ProjectGeneralInfo({
       <div>
         <Label
           htmlFor="liveLink"
-          className="text-gray-300 mb-2 block flex items-center"
+          className="font-space text-[10px] uppercase font-bold tracking-[0.2em] text-gray-600 dark:text-gray-400 mb-3 block flex items-center"
         >
           Live Link
-          <span className="text-sm text-gray-400 ml-2">(Optional)</span>
+          <span className="text-[10px] text-gray-400 ml-2 tracking-widest">(OPTIONAL)</span>
         </Label>
         <Input
           id="liveLink"
           type="url"
           value={liveLink}
           onChange={(e) => setLiveLink(e.target.value)}
-          className="bg-white/5 border-white/10 text-gray-300 focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus:border-indigo-500/50 transition-colors duration-200"
+          className="bg-transparent border-2 border-black/20 dark:border-white/20 text-black dark:text-white rounded-none font-space py-6 focus:ring-0 focus:border-red-500 transition-colors duration-300"
           placeholder="https://project-demo.com or https://username.github.io/project"
         />
-        <p className="text-sm text-gray-400 mt-1">
+        <p className="font-space text-xs text-gray-500 mt-2 uppercase tracking-wider font-bold">
           Add a link to your live project
         </p>
       </div>
-    </>
+    </div>
   );
 }

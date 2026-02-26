@@ -6,6 +6,7 @@ import { GitHubAppInstallation } from "../models/githubAppInstallation.model";
 import { encrypt, decrypt } from "../utils/encryption.util";
 import { tryCatch } from "../utils/tryCatch.util";
 import logger from "../logger/logger";
+import { Project } from "../models/project.model";
 
 const {
   GITHUB_APP_ID,
@@ -213,14 +214,39 @@ class GitHubAppService {
   async getAllInstallationRepos(installationId: number): Promise<Repository[]> {
     const allRepos: Repository[] = [];
     let page = 1;
-
+    const token = await this.getInstallationToken(installationId);
     while (true) {
-      const { repos } = await this.getInstallationRepos(installationId, page);
-      allRepos.push(...repos);
-      if (repos.length < 10) break;
+      const [response, error] = await tryCatch(
+        axios.get<{ repositories: Repository[]; total_count: number }>(
+          "https://api.github.com/installation/repositories",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              Accept: "application/vnd.github+json",
+              "X-GitHub-Api-Version": "2022-11-28",
+            },
+            params: {
+              per_page: 100,
+              page,
+            },
+          }
+        )
+      );
+      if (error || !response) {
+        logger.error("Failed to fetch all installation repos chunk", {
+          installationId,
+          page,
+          error: error instanceof Error ? error.message : "Unknown error",
+        });
+        break;
+      }
+      const { repositories } = response.data;
+      allRepos.push(...repositories);
+
+      if (repositories.length < 100) break;
+
       page++;
     }
-
     return allRepos;
   }
 
@@ -330,6 +356,65 @@ class GitHubAppService {
 
     const state = `${payload}.${signature}`;
     return `https://github.com/apps/devexchange-local/installations/new?state=${encodeURIComponent(state)}`;
+  }
+
+  async reactivateProjectsWithRestoredAccess(
+    userId: string,
+    installationId: number
+  ): Promise<number> {
+    const [revokedProjects, findError] = await tryCatch(
+      Project.find({
+        userid: userId,
+        github_access_revoked: true,
+      }).select("github_repo_id title")
+    );
+
+    if (findError || !revokedProjects || revokedProjects.length === 0) {
+      return 0;
+    }
+
+    const [accessibleRepos, repoError] = await tryCatch(
+      this.getAllInstallationRepos(installationId)
+    );
+
+    if (repoError || !accessibleRepos || accessibleRepos.length === 0) {
+      return 0;
+    }
+
+    const accessibleRepoIds = new Set(
+      accessibleRepos.map((repo) => repo.id.toString())
+    );
+
+    const projectsToReactivate = revokedProjects
+      .filter((project) => accessibleRepoIds.has(project.github_repo_id))
+      .map((project) => project._id);
+
+    if (projectsToReactivate.length === 0) {
+      return 0;
+    }
+
+    const [updateResult] = await tryCatch(
+      Project.updateMany(
+        { _id: { $in: projectsToReactivate } },
+        {
+          isActive: false,
+          github_access_revoked: false,
+          github_installation_id: installationId,
+        }
+      )
+    );
+
+    const reactivatedCount = updateResult?.modifiedCount || 0;
+
+    if (reactivatedCount > 0) {
+      logger.info("Projects reactivated after access restored", {
+        userId,
+        installationId,
+        reactivatedCount,
+      });
+    }
+
+    return reactivatedCount;
   }
 }
 

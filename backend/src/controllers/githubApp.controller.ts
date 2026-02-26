@@ -10,66 +10,6 @@ import { enrichContext } from "../utils/asyncContext";
 import { githubAppService } from "../services/githubApp.service";
 import logger from "../logger/logger";
 
-async function reactivateProjectsWithRestoredAccess(
-  userId: string,
-  installationId: number
-): Promise<number> {
-  const [revokedProjects, findError] = await tryCatch(
-    Project.find({
-      userid: userId,
-      github_access_revoked: true,
-    }).select("github_repo_id title")
-  );
-
-  if (findError || !revokedProjects || revokedProjects.length === 0) {
-    return 0;
-  }
-
-  const [accessibleRepos, repoError] = await tryCatch(
-    githubAppService.getAllInstallationRepos(installationId)
-  );
-
-  if (repoError || !accessibleRepos || accessibleRepos.length === 0) {
-    return 0;
-  }
-
-  const accessibleRepoIds = new Set(
-    accessibleRepos.map((repo) => repo.id.toString())
-  );
-
-  const projectsToReactivate = revokedProjects
-    .filter((project) => accessibleRepoIds.has(project.github_repo_id))
-    .map((project) => project._id);
-
-  if (projectsToReactivate.length === 0) {
-    return 0;
-  }
-
-  const [updateResult] = await tryCatch(
-    Project.updateMany(
-      { _id: { $in: projectsToReactivate } },
-      {
-        isActive: false,
-        github_access_revoked: false,
-        github_installation_id: installationId,
-      }
-    )
-  );
-
-  const reactivatedCount = updateResult?.modifiedCount || 0;
-
-  if (reactivatedCount > 0) {
-    logger.info("Projects reactivated after access restored", {
-      userId,
-      installationId,
-      reactivatedCount,
-    });
-  }
-
-  return reactivatedCount;
-}
-
-
 const checkInstallationStatus = asyncHandler(
   async (req: Request, res: Response) => {
     enrichContext({ action: "check_installation_status" });
@@ -219,7 +159,7 @@ const handleAppInstallCallback = asyncHandler(
       throw new ApiError("Internal Server Error", 500);
     }
 
-    const reactivatedCount = await reactivateProjectsWithRestoredAccess(
+    const reactivatedCount = await githubAppService.reactivateProjectsWithRestoredAccess(
       req.user._id.toString(),
       installationId
     );

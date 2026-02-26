@@ -118,16 +118,16 @@ export default function ProjectPriceSelection({
   }, [price, currency]);
 
   return (
-    <div className="border-t border-white/10 pt-6">
-      <Label htmlFor="price" className="text-gray-300 mb-3 block">
+    <div className="border-t-2 border-black/10 dark:border-white/10 pt-10 mt-10">
+      <Label htmlFor="price" className="font-space text-[10px] uppercase font-bold tracking-[0.2em] text-gray-600 dark:text-gray-400 mb-6 block text-center">
         Project Price (SOL)
       </Label>
       <div className="relative flex justify-center">
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
-              <div className="lg:w-1/3 md:w-1/3 w-1/2 relative">
-                <span className="absolute top-1/2 left-3 transform -translate-y-1/2 text-3xl font-bold text-blue-400">
+              <div className="lg:w-1/3 md:w-1/3 w-1/2 relative bg-transparent border-2 border-black/20 dark:border-white/20 transition-colors duration-300">
+                <span className="absolute top-1/2 left-4 transform -translate-y-1/2 flex items-center">
                   <SolanaLogo className="w-6 h-6" />
                 </span>
                 <Input
@@ -139,30 +139,36 @@ export default function ProjectPriceSelection({
                   onChange={handleInputChange}
                   onBlur={handleBlur}
                   onKeyDown={handleKeyDown}
-                  className="bg-white/5 border-white/10 text-white focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus:border-indigo-500/50 transition-colors duration-200 text-2xl font-bold text-center appearance-none pl-10 pr-12"
-                  placeholder="e.g., 10000"
+                  className="bg-transparent border-0 text-black dark:text-white focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 rounded-none transition-colors duration-300 font-space text-3xl md:text-4xl font-black text-center appearance-none py-8 pl-12 pr-12 h-auto"
+                  placeholder="0.00"
                   required
                 />
-                <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex flex-col space-y-1">
+                <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex flex-col space-y-2">
                   <button
                     type="button"
                     onClick={incrementPrice}
-                    className="text-gray-300 hover:text-blue-400 transition-colors text-[0.6rem] leading-tight"
+                    className="text-black dark:text-white hover:text-red-500 dark:hover:text-red-500 transition-colors duration-200"
                   >
-                    ▲
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="square" strokeLinejoin="miter">
+                      <path d="M18 15l-6-6-6 6" />
+                    </svg>
                   </button>
                   <button
                     type="button"
                     onClick={decrementPrice}
-                    className="text-gray-300 hover:text-blue-400 transition-colors text-[0.6rem] leading-tight"
+                    className="text-black dark:text-white hover:text-red-500 dark:hover:text-red-500 transition-colors duration-200"
                   >
-                    ▼
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="square" strokeLinejoin="miter">
+                      <path d="M6 9l6 6 6-6" />
+                    </svg>
                   </button>
                 </div>
               </div>
             </TooltipTrigger>
             {convertedValue && (
-              <TooltipContent side="top">≈ {convertedValue}</TooltipContent>
+              <TooltipContent side="top" className="bg-black text-white dark:bg-white dark:text-black font-space font-bold uppercase tracking-widest text-[10px] rounded-none border-2 border-black dark:border-white">
+                ≈ {convertedValue}
+              </TooltipContent>
             )}
           </Tooltip>
         </TooltipProvider>

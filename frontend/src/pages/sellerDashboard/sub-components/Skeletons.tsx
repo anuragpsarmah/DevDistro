@@ -138,7 +138,7 @@ export const ReviewSectionSkeleton = () => (
 );
 
 export const RepoImportSkeleton = () => (
-  <div className="flex items-center justify-between p-6 border-2 border-black dark:border-white bg-black/5 dark:bg-white/5">
+  <div className="flex items-center justify-between p-6 border-b-2 border-black/10 dark:border-white/10 bg-transparent transition-colors duration-300">
     <div className="flex items-center space-x-4">
       <Skeleton className="w-10 h-10 rounded-none bg-black/10 dark:bg-white/10" />
       <div className="space-y-3">
@@ -146,7 +146,7 @@ export const RepoImportSkeleton = () => (
         <Skeleton className="w-24 h-3 bg-black/10 dark:bg-white/10 rounded-none" />
       </div>
     </div>
-    <Skeleton className="w-24 h-10 bg-black dark:bg-white rounded-none" />
+    <Skeleton className="w-24 h-12 bg-black dark:bg-white rounded-none border-2 border-transparent" />
   </div>
 );
 

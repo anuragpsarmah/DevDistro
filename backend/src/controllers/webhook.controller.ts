@@ -143,24 +143,24 @@ async function handleInstallationEvent(payload: WebhookPayload) {
       if (deletedInstallation) {
         const [updateResult] = await tryCatch(
           Project.updateMany(
-            { github_installation_id: installationId },
+            { userid: deletedInstallation.user_id },
             { isActive: false, github_access_revoked: true }
           )
         );
 
-        if (deletedInstallation.user_id) {
-          const [, cacheError] = await tryCatch(
-            redisClient.del(
-              privateRepoPrefix(deletedInstallation.user_id.toString())
-            )
+
+        const [, cacheError] = await tryCatch(
+          redisClient.del(
+            privateRepoPrefix(deletedInstallation.user_id.toString())
+          )
+        );
+        if (cacheError) {
+          logger.error(
+            "Failed to clear private repos cache after installation deletion",
+            { installationId, cacheError }
           );
-          if (cacheError) {
-            logger.error(
-              "Failed to clear private repos cache after installation deletion",
-              { installationId, cacheError }
-            );
-          }
         }
+
 
         logger.info("Installation deleted, projects marked as access revoked", {
           installationId,
@@ -182,19 +182,22 @@ async function handleInstallationEvent(payload: WebhookPayload) {
         )
       );
 
-      const [suspendResult] = await tryCatch(
-        Project.updateMany(
-          { github_installation_id: installationId },
-          { isActive: false, github_access_revoked: true }
-        )
-      );
-
       const [suspendedInstallation] = await tryCatch(
         GitHubAppInstallation.findOne({
           installation_id: installationId,
         }).select("user_id")
       );
-      if (suspendedInstallation?.user_id) {
+
+      if (suspendedInstallation) {
+        const [suspendResult] = await tryCatch(
+          Project.updateMany(
+            { userid: suspendedInstallation.user_id },
+            { isActive: false, github_access_revoked: true }
+          )
+        );
+
+
+
         const [, suspendCacheError] = await tryCatch(
           redisClient.del(
             privateRepoPrefix(suspendedInstallation.user_id.toString())
@@ -206,55 +209,53 @@ async function handleInstallationEvent(payload: WebhookPayload) {
             suspendCacheError,
           });
         }
-      }
 
-      logger.info("Installation suspended, projects deactivated", {
-        installationId,
-        affectedProjects: suspendResult?.modifiedCount || 0,
-      });
+
+        logger.info("Installation suspended, projects deactivated", {
+          installationId,
+          affectedProjects: suspendResult?.modifiedCount || 0,
+        });
+      }
       break;
 
     case "unsuspend":
-      await tryCatch(
-        GitHubAppInstallation.updateOne(
+      const [unsuspendedInstallation] = await tryCatch(
+        GitHubAppInstallation.findOneAndUpdate(
           { installation_id: installationId },
           { suspended_at: null }
-        )
+        ).select("user_id")
       );
 
-      const [unsuspendResult] = await tryCatch(
-        Project.updateMany(
-          {
-            github_installation_id: installationId,
-            github_access_revoked: true,
-          },
-          { isActive: true, github_access_revoked: false }
-        )
-      );
-
-      const [unsuspendedInstallation] = await tryCatch(
-        GitHubAppInstallation.findOne({
-          installation_id: installationId,
-        }).select("user_id")
-      );
-      if (unsuspendedInstallation?.user_id) {
-        const [, unsuspendCacheError] = await tryCatch(
-          redisClient.del(
-            privateRepoPrefix(unsuspendedInstallation.user_id.toString())
-          )
+      if (unsuspendedInstallation) {
+        const reactivatedCount = await githubAppService.reactivateProjectsWithRestoredAccess(
+          unsuspendedInstallation.user_id.toString(),
+          installationId
         );
-        if (unsuspendCacheError) {
-          logger.error("Failed to clear private repos cache after unsuspend", {
-            installationId,
-            unsuspendCacheError,
-          });
-        }
-      }
 
-      logger.info("Installation unsuspended, projects reactivated", {
-        installationId,
-        affectedProjects: unsuspendResult?.modifiedCount || 0,
-      });
+        enrichContext({
+          outcome: "success",
+          reactivated_suspended_projects: reactivatedCount,
+        });
+
+        if (unsuspendedInstallation) {
+          const [, unsuspendCacheError] = await tryCatch(
+            redisClient.del(
+              privateRepoPrefix(unsuspendedInstallation.user_id.toString())
+            )
+          );
+          if (unsuspendCacheError) {
+            logger.error("Failed to clear private repos cache after unsuspend", {
+              installationId,
+              unsuspendCacheError,
+            });
+          }
+        }
+
+        logger.info("Installation unsuspended, projects reactivated", {
+          installationId,
+          affectedProjects: reactivatedCount || 0,
+        });
+      }
       break;
 
     default:
@@ -276,13 +277,15 @@ async function handleInstallationRepositoriesEvent(payload: WebhookPayload) {
   if (action === "added" && repositories_added) {
     const [installationDoc] = await tryCatch(
       GitHubAppInstallation.findOne({ installation_id: installationId }).select(
-        "user_id"
+        "user_id suspended_at"
       )
     );
 
-    if (installationDoc && installationDoc.user_id) {
+    if (installationDoc && installationDoc.suspended_at !== null) return;
+
+    if (installationDoc) {
       const addedRepoIdStrings = repositories_added.map((r) => r.id.toString());
-      const [reactivateResult] = await tryCatch(
+      const [reactivateResult, reactivationError] = await tryCatch(
         Project.updateMany(
           {
             userid: installationDoc.user_id,
@@ -290,12 +293,19 @@ async function handleInstallationRepositoriesEvent(payload: WebhookPayload) {
             github_access_revoked: true,
           },
           {
-            isActive: true,
+            isActive: false,
             github_access_revoked: false,
             github_installation_id: installationId,
           }
         )
       );
+
+      if (reactivationError) {
+        logger.error("Failed to reactivate projects", {
+          installationId,
+          reactivationError,
+        });
+      }
 
       if (
         reactivateResult?.modifiedCount &&
@@ -336,15 +346,18 @@ async function handleInstallationRepositoriesEvent(payload: WebhookPayload) {
           github_installation_id: installationId,
           github_repo_id: { $in: removedRepoIdStrings },
         },
-        { isActive: false, github_access_revoked: true }
+        { isActive: false, github_access_revoked: true, github_installation_id: installationId }
       )
     );
 
     const [removedInstallationDoc] = await tryCatch(
       GitHubAppInstallation.findOne({ installation_id: installationId }).select(
-        "user_id"
+        "user_id suspended_at"
       )
     );
+
+    if (removedInstallationDoc && removedInstallationDoc.suspended_at !== null) return;
+
     if (removedInstallationDoc?.user_id) {
       const [, cacheError] = await tryCatch(
         redisClient.del(
@@ -389,24 +402,20 @@ async function handleRepositoryEvent(payload: WebhookPayload) {
         )
       );
 
-      const [affectedProjects] = await tryCatch(
-        Project.find({ github_repo_id: repoId }).select("userid").lean()
+      const [affectedProject] = await tryCatch(
+        Project.findOne({ github_repo_id: repoId }).select("userid").lean()
       );
-      if (affectedProjects && affectedProjects.length > 0) {
-        const uniqueUserIds = [
-          ...new Set(affectedProjects.map((p) => p.userid.toString())),
-        ];
-        for (const userId of uniqueUserIds) {
-          const [, cacheError] = await tryCatch(
-            redisClient.del(privateRepoPrefix(userId))
+      if (affectedProject) {
+        const [, cacheError] = await tryCatch(
+          redisClient.del(privateRepoPrefix(affectedProject.userid.toString()))
+        );
+        if (cacheError) {
+          logger.error(
+            "Failed to clear private repos cache after repo deletion",
+            { repoId, userId: affectedProject.userid.toString(), cacheError }
           );
-          if (cacheError) {
-            logger.error(
-              "Failed to clear private repos cache after repo deletion",
-              { repoId, userId, cacheError }
-            );
-          }
         }
+
       }
 
       logger.info(

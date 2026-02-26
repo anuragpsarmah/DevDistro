@@ -107,27 +107,27 @@ const ProjectMediaUploader = memo(function ProjectMediaUploader({
   return (
     <>
       <div>
-        <Label className="text-gray-300 mb-2 block flex items-center">
+        <Label className="font-space text-[10px] uppercase font-bold tracking-[0.2em] text-gray-600 dark:text-gray-400 mt-10 mb-3 block flex items-center">
           Project Images
-          <span className="text-sm text-gray-400 ml-2">
-            (Up to {MAX_IMAGES} images)
+          <span className="text-[10px] text-gray-400 ml-2 tracking-widest">
+            (UP TO {MAX_IMAGES} IMAGES)
           </span>
         </Label>
-        <p className="text-sm text-gray-400 mb-2">
+        <p className="font-space text-xs text-gray-500 mb-4 uppercase tracking-wider font-bold">
           Add screenshots or mockups showcasing key features
         </p>
         <div className="flex flex-wrap gap-4 mt-2">
           {existingImages?.map((url, index) => (
-            <div key={`existing-${url}`} className="relative">
+            <div key={`existing-${url}`} className="relative group">
               <img
                 src={url}
                 alt={`Existing project image ${index + 1}`}
-                className="w-20 h-20 object-cover rounded-md"
+                className="w-24 h-24 object-cover border-2 border-black/20 dark:border-white/20 transition-colors duration-300"
               />
               <button
                 type="button"
                 onClick={() => removeExistingImage(index)}
-                className="absolute -bottom-2 -right-2 bg-red-500 rounded-full p-1"
+                className="absolute -top-2 -right-2 bg-red-500 w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200"
                 aria-label={`Remove existing image ${index + 1}`}
               >
                 <X className="w-4 h-4 text-white" />
@@ -136,16 +136,16 @@ const ProjectMediaUploader = memo(function ProjectMediaUploader({
           ))}
 
           {newImageUrls.map((url, index) => (
-            <div key={images[index].name + index} className="relative">
+            <div key={images[index].name + index} className="relative group">
               <img
                 src={url}
                 alt={`New project image ${index + 1}`}
-                className="w-20 h-20 object-cover rounded-md"
+                className="w-24 h-24 object-cover border-2 border-black/20 dark:border-white/20 transition-colors duration-300"
               />
               <button
                 type="button"
                 onClick={() => removeNewImage(index)}
-                className="absolute -bottom-2 -right-2 bg-red-500 rounded-full p-1"
+                className="absolute -top-2 -right-2 bg-red-500 w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200"
                 aria-label={`Remove new image ${index + 1}`}
               >
                 <X className="w-4 h-4 text-white" />
@@ -154,7 +154,7 @@ const ProjectMediaUploader = memo(function ProjectMediaUploader({
           ))}
 
           {totalImagesCount < MAX_IMAGES && (
-            <label className="w-20 h-20 flex items-center justify-center bg-white/5 border-2 border-dashed border-white/10 rounded-lg cursor-pointer hover:bg-white/10 hover:border-white/20 transition-all duration-200">
+            <label className="w-24 h-24 flex items-center justify-center bg-transparent border-2 border-dashed border-black/20 dark:border-white/20 cursor-pointer hover:border-black dark:hover:border-white hover:bg-black/5 dark:hover:bg-white/5 transition-colors duration-300">
               <input
                 type="file"
                 accept="image/*"
@@ -162,45 +162,45 @@ const ProjectMediaUploader = memo(function ProjectMediaUploader({
                 className="sr-only"
                 multiple
               />
-              <Plus className="w-6 h-6 text-gray-400" />
+              <Plus className="w-6 h-6 text-black dark:text-white" />
             </label>
           )}
         </div>
       </div>
-      <div>
-        <Label className="text-gray-300 mb-2 block flex items-center">
+      <div className="mt-10">
+        <Label className="font-space text-[10px] uppercase font-bold tracking-[0.2em] text-gray-600 dark:text-gray-400 mb-3 block flex items-center">
           Project Demo Video
-          <span className="text-sm text-gray-400 ml-2">(Optional)</span>
+          <span className="text-[10px] text-gray-400 ml-2 tracking-widest">(OPTIONAL)</span>
         </Label>
-        <p className="text-sm text-gray-400 mb-2">
+        <p className="font-space text-xs text-gray-500 mb-4 uppercase tracking-wider font-bold">
           Add a short demo video showcasing your project in action
         </p>
         {existingVideo ? (
-          <div className="relative mt-2">
-            <video src={existingVideo} className="w-full rounded-md" controls />
+          <div className="relative mt-2 border-2 border-black/20 dark:border-white/20 p-2 group bg-black/5 dark:bg-white/5 transition-colors duration-300">
+            <video src={existingVideo} className="w-full" controls />
             <button
               type="button"
               onClick={removeExistingVideo}
-              className="absolute top-2 right-2 bg-red-500 rounded-full p-1"
+              className="absolute -top-2 -right-2 bg-red-500 w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200"
               aria-label="Remove existing video"
             >
               <X className="w-4 h-4 text-white" />
             </button>
           </div>
         ) : newVideoUrl ? (
-          <div className="relative mt-2">
-            <video src={newVideoUrl} className="w-full rounded-md" controls />
+          <div className="relative mt-2 border-2 border-black/20 dark:border-white/20 p-2 group bg-black/5 dark:bg-white/5 transition-colors duration-300">
+            <video src={newVideoUrl} className="w-full" controls />
             <button
               type="button"
               onClick={removeNewVideo}
-              className="absolute top-2 right-2 bg-red-500 rounded-full p-1"
+              className="absolute -top-2 -right-2 bg-red-500 w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200"
               aria-label="Remove new video"
             >
               <X className="w-4 h-4 text-white" />
             </button>
           </div>
         ) : (
-          <label className="flex items-center justify-center w-full h-32 mt-2 border-2 border-dashed border-white/10 rounded-lg cursor-pointer hover:bg-white/5 hover:border-white/20 transition-all duration-200">
+          <label className="flex items-center justify-center w-full h-40 mt-2 border-2 border-dashed border-black/20 dark:border-white/20 cursor-pointer hover:border-black dark:hover:border-white hover:bg-black/5 dark:hover:bg-white/5 transition-colors duration-300">
             <input
               type="file"
               accept="video/*"
@@ -208,9 +208,9 @@ const ProjectMediaUploader = memo(function ProjectMediaUploader({
               className="sr-only"
             />
             <div className="flex flex-col items-center">
-              <Upload className="w-8 h-8 text-gray-400" />
-              <span className="mt-2 text-sm text-gray-400">
-                Upload demo video (max 50MB)
+              <Upload className="w-8 h-8 text-black dark:text-white mb-2 transition-colors duration-300" />
+              <span className="font-space text-xs text-black dark:text-white uppercase font-bold tracking-widest transition-colors duration-300">
+                UPLOAD DEMO VIDEO (MAX 50MB)
               </span>
             </div>
           </label>

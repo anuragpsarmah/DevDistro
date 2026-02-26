@@ -9,7 +9,6 @@ import {
 } from "@/components/ui/select";
 import { JOB_ROLES } from "../utils/constants";
 import { AccountInformationProps } from "../utils/types";
-import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -69,7 +68,10 @@ export default function AccountInformation({
               </div>
 
               <div>
-                <Label htmlFor="name" className="font-space font-bold uppercase tracking-[0.2em] text-[10px] md:text-xs text-black/50 dark:text-white/50 mb-3 block">
+                <Label
+                  htmlFor="name"
+                  className="font-space font-bold uppercase tracking-[0.2em] text-[10px] md:text-xs text-black/50 dark:text-white/50 mb-3 block"
+                >
                   Name
                 </Label>
                 <Input
@@ -84,7 +86,10 @@ export default function AccountInformation({
               </div>
 
               <div>
-                <Label htmlFor="job-role" className="font-space font-bold uppercase tracking-[0.2em] text-[10px] md:text-xs text-black/50 dark:text-white/50 mb-3 block">
+                <Label
+                  htmlFor="job-role"
+                  className="font-space font-bold uppercase tracking-[0.2em] text-[10px] md:text-xs text-black/50 dark:text-white/50 mb-3 block"
+                >
                   Job Role
                 </Label>
                 <Select
@@ -168,7 +173,8 @@ export default function AccountInformation({
               Auto-repackage on code change
             </h3>
             <p className="font-space text-sm text-gray-600 dark:text-gray-400">
-              Automatically repackage your listed projects when you push code changes to GitHub.
+              Automatically repackage your listed projects when you push code
+              changes to GitHub.
             </p>
           </div>
           {isInitialLoading ? (
