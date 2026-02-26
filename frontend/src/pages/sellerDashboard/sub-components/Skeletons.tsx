@@ -153,10 +153,10 @@ export const RepoImportSkeleton = () => (
 export const ListedProjectSkeleton = () => (
   <div className="relative group bg-white dark:bg-[#050505] border-2 border-black dark:border-white p-4 lg:p-6 flex flex-col h-full overflow-hidden transition-colors duration-300">
     <div className="relative z-10 flex flex-col h-full">
-      <div className="relative mb-6 border border-black/10 dark:border-white/10">
+      <div className="relative mb-6 border-2 border-black dark:border-white">
         <Skeleton className="w-full h-48 rounded-none bg-black/5 dark:bg-white/5" />
-        <div className="absolute bottom-0 left-0 right-0 p-3 bg-white/80 dark:bg-black/80 backdrop-blur-sm border-t border-black/10 dark:border-white/10">
-          <Skeleton className="h-4 w-3/4 bg-black/20 dark:bg-white/20 rounded-none" />
+        <div className="absolute bottom-0 left-0 right-0 p-3 bg-white/90 dark:bg-black/90 backdrop-blur-md border-t-2 border-black dark:border-white">
+          <Skeleton className="h-4 w-3/4 bg-black/10 dark:bg-white/10 rounded-none" />
         </div>
       </div>
       <div className="flex flex-col flex-grow space-y-6">
@@ -165,7 +165,7 @@ export const ListedProjectSkeleton = () => (
           <Skeleton className="h-4 w-11/12 bg-black/10 dark:bg-white/10 rounded-none" />
           <Skeleton className="h-4 w-2/3 bg-black/10 dark:bg-white/10 rounded-none" />
         </div>
-        <div className="mt-auto flex gap-3 pt-4 border-t border-black/10 dark:border-white/10">
+        <div className="mt-auto flex gap-3 pt-4 border-t-2 border-black/10 dark:border-white/10">
           <Skeleton className="h-6 w-16 rounded-none border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5" />
           <Skeleton className="h-6 w-20 rounded-none border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5" />
           <Skeleton className="h-6 w-14 rounded-none border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5" />

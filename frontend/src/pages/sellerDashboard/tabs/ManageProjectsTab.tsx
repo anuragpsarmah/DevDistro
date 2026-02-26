@@ -23,7 +23,6 @@ import {
   projectListingValidatedFormData,
   ProjectMediaMetadata,
 } from "../utils/types";
-import { Layers } from "lucide-react";
 
 interface ManageProjectsTabProps {
   logout?: () => Promise<void>;
@@ -163,23 +162,24 @@ export default function ManageProjectsTab({ logout }: ManageProjectsTabProps) {
   return (
     <AnimatedLoadWrapper>
       <div className="flex flex-col h-[calc(100vh-3rem)] lg:h-[calc(100vh-4rem)] mt-10 lg:mt-0 md:mt-0 pb-4 lg:pb-6">
-        <div className="flex-shrink-0 mb-4 lg:mb-5">
-          <div className="flex items-center gap-3 mb-1">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center shadow-lg shadow-purple-500/20">
-              <Layers className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <h1 className="text-2xl lg:text-3xl text-left font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500">
-                Manage Projects
-              </h1>
-              <p className="text-xs lg:text-sm text-gray-500">
-                View and modify your listed projects
-              </p>
-            </div>
+        <div className="flex-shrink-0 mb-8 lg:mb-10 w-full">
+          <div className="flex items-center gap-3 mb-6 w-full">
+            <div className="w-12 h-[2px] bg-red-500"></div>
+            <span className="font-space font-bold uppercase tracking-[0.2em] text-xs text-red-500">
+              My Projects
+            </span>
+          </div>
+          <div className="text-left w-full max-w-4xl">
+            <h1 className="font-syne uppercase tracking-widest text-4xl lg:text-5xl font-black text-black dark:text-white leading-none break-words hyphens-auto transition-colors duration-300">
+              Manage Projects
+            </h1>
+            <p className="font-space text-lg text-gray-600 dark:text-gray-400 mt-4 leading-relaxed transition-colors duration-300 max-w-2xl">
+              View and modify your listed projects.
+            </p>
           </div>
         </div>
 
-        <div className="flex-1 min-h-0 relative overflow-hidden">
+        <div className="flex-1 min-h-0 relative overflow-hidden transition-colors duration-300">
           <TransitionWrapper
             isTransitioning={isTransitioning}
             identifier={componentIdentifier ? "projects" : "form"}
@@ -201,21 +201,17 @@ export default function ManageProjectsTab({ logout }: ManageProjectsTabProps) {
                 />
               </div>
             ) : (
-              <div className="h-full relative">
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-purple-500/5 to-pink-500/5 blur-2xl rounded-3xl pointer-events-none" />
-                <div className="relative h-full bg-gray-900/60 backdrop-blur-xl rounded-2xl border border-white/10 shadow-2xl overflow-hidden flex flex-col">
-                  <div className="absolute inset-0 bg-gradient-to-br from-blue-500/[0.02] to-purple-600/[0.02] pointer-events-none" />
-                  <div className="relative z-10 h-full overflow-y-auto p-4 lg:p-6 custom-scrollbar">
-                    <ProjectModificationForm
-                      formProps={formProps}
-                      setFormProps={setFormProps}
-                      handleUIStateChange={handleUIStateChange}
-                      handleGetPreSignedUrls={handleGetPreSignedUrls}
-                      handleValidateUploadAndStoreProject={
-                        handleValidateUploadAndStoreProject
-                      }
-                    />
-                  </div>
+              <div className="relative h-full bg-white dark:bg-[#050505] border-2 border-black dark:border-white overflow-hidden flex flex-col transition-colors duration-300">
+                <div className="relative z-10 h-full overflow-y-auto custom-scrollbar p-6 lg:p-10">
+                  <ProjectModificationForm
+                    formProps={formProps}
+                    setFormProps={setFormProps}
+                    handleUIStateChange={handleUIStateChange}
+                    handleGetPreSignedUrls={handleGetPreSignedUrls}
+                    handleValidateUploadAndStoreProject={
+                      handleValidateUploadAndStoreProject
+                    }
+                  />
                 </div>
               </div>
             )}

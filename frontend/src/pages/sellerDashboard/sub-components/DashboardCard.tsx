@@ -11,7 +11,7 @@ export const DashboardCard: React.FC<DashboardCardProps> = ({
   }
 
   return (
-    <div className="relative h-full bg-white dark:bg-[#050505] border border-black/20 dark:border-white/20 p-6 lg:p-8 flex flex-col justify-between overflow-hidden transition-colors duration-300 group hover:border-red-500 dark:hover:border-red-500">
+    <div className="relative h-full bg-white dark:bg-[#050505] border-2 border-black dark:border-white p-6 lg:p-8 flex flex-col justify-between overflow-hidden transition-colors duration-300 group hover:border-red-500 dark:hover:border-red-500">
       <div className="relative z-10 flex flex-col gap-6">
         <h3 className="font-space font-bold uppercase tracking-[0.2em] text-[10px] text-gray-500 group-hover:text-red-500 transition-colors duration-300">
           {title}

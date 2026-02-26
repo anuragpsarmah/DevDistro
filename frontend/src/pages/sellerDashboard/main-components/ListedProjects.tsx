@@ -175,219 +175,218 @@ const ListedProjects = ({
   if (initialProjectData.length === 0) return <NoProjectsScreen />;
 
   return (
-    <TooltipProvider>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 2xl:grid-cols-3 gap-4 lg:gap-6 p-4 lg:p-6">
+    <TooltipProvider delayDuration={0}>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 2xl:grid-cols-3 gap-6 lg:gap-8 pb-10">
         {initialProjectData.map((project, idx) => (
-          <div key={idx} className="relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-purple-500/5 to-pink-500/5 blur-xl rounded-2xl pointer-events-none" />
-            <div className="relative h-full bg-gray-900/60 backdrop-blur-xl rounded-2xl border border-white/10 p-4 lg:p-5 transition-all duration-300 ease-in-out flex flex-col hover:border-white/20 hover:shadow-lg hover:shadow-purple-500/10 overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-br from-blue-500/[0.02] to-purple-600/[0.02] pointer-events-none" />
-              <div className="relative z-10 flex flex-col h-full">
-                <div className="relative mb-4">
-              <div className="absolute top-2 right-2 z-10 flex items-center space-x-2">
-                {!project.github_access_revoked && (
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Toggle
-                        aria-label="Toggle project active status"
-                        pressed={projectStatuses[idx]}
-                        onPressedChange={() => handleProjectToggle(idx)}
-                        className="bg-white/10 hover:bg-white/20 rounded-lg border border-white/5 hover:border-white/10 transition-all duration-200 p-1.5"
+          <div key={idx} className="relative group bg-white dark:bg-[#050505] border-2 border-black dark:border-white p-4 lg:p-6 flex flex-col h-full overflow-hidden transition-all duration-300 hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:hover:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]">
+            <div className="relative z-10 flex flex-col h-full">
+              <div className="relative mb-6 border-2 border-black dark:border-white">
+                <div className="absolute top-2 right-2 z-20 flex items-center space-x-2">
+                  {!project.github_access_revoked && (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Toggle
+                          aria-label="Toggle project active status"
+                          pressed={projectStatuses[idx]}
+                          onPressedChange={() => handleProjectToggle(idx)}
+                          className="bg-white dark:bg-[#050505] border-black dark:border-white text-black dark:text-white shadow-[2px_2px_0_0_rgba(0,0,0,1)] dark:shadow-[2px_2px_0_0_rgba(255,255,255,1)] hover:bg-black dark:hover:bg-white hover:text-white dark:hover:text-black rounded-none border-2 transition-all duration-200 p-2 data-[state=on]:bg-black dark:data-[state=on]:bg-white data-[state=on]:text-white dark:data-[state=on]:text-black"
+                        >
+                          {projectStatuses[idx] ? (
+                            <Eye className="h-4 w-4" />
+                          ) : (
+                            <EyeOff className="h-4 w-4" />
+                          )}
+                        </Toggle>
+                      </TooltipTrigger>
+                      <TooltipContent
+                        side="bottom"
+                        className="bg-black dark:bg-white text-white dark:text-black border-2 border-black dark:border-white rounded-none font-space font-bold uppercase tracking-widest text-[10px]"
                       >
-                        {projectStatuses[idx] ? (
-                          <Eye className="h-4 w-4 text-gray-300" />
-                        ) : (
-                          <EyeOff className="h-4 w-4 text-gray-500" />
-                        )}
-                      </Toggle>
-                    </TooltipTrigger>
-                    <TooltipContent
-                      side="bottom"
-                      className="bg-gray-900/95 backdrop-blur-xl text-gray-200 border-white/10"
-                    >
-                      {projectStatuses[idx] ? "Unlist Project" : "List Project"}
-                    </TooltipContent>
-                  </Tooltip>
-                )}
+                        {projectStatuses[idx] ? "Unlist Project" : "List Project"}
+                      </TooltipContent>
+                    </Tooltip>
+                  )}
 
-                {!project.github_access_revoked && (
+                  {!project.github_access_revoked && (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleEditProject(idx)}
+                          className="bg-white dark:bg-[#050505] border-black dark:border-white text-black dark:text-white shadow-[2px_2px_0_0_rgba(0,0,0,1)] dark:shadow-[2px_2px_0_0_rgba(255,255,255,1)] hover:bg-black dark:hover:bg-white hover:text-white dark:hover:text-black rounded-none border-2 transition-all duration-200 p-2"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent
+                        side="bottom"
+                        className="bg-black dark:bg-white text-white dark:text-black border-2 border-black dark:border-white rounded-none font-space font-bold uppercase tracking-widest text-[10px]"
+                      >
+                        Modify Project
+                      </TooltipContent>
+                    </Tooltip>
+                  )}
+
+                  {!project.github_access_revoked && getEffectiveZipStatus(idx) === "SUCCESS" && (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleRefreshZip(idx)}
+                          disabled={refreshZipIndices.has(idx)}
+                          className="bg-white dark:bg-[#050505] border-black dark:border-white text-green-600 dark:text-green-400 shadow-[2px_2px_0_0_rgba(0,0,0,1)] dark:shadow-[2px_2px_0_0_rgba(255,255,255,1)] hover:bg-green-500 dark:hover:bg-green-500 hover:text-white dark:hover:text-white rounded-none border-2 transition-all duration-200 p-2 disabled:opacity-50"
+                        >
+                          <PackageCheck className={`h-4 w-4 ${refreshZipIndices.has(idx) ? "animate-spin" : ""}`} />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent
+                        side="bottom"
+                        className="bg-black dark:bg-white text-white dark:text-black border-2 border-black dark:border-white rounded-none font-space font-bold uppercase tracking-widest text-[10px]"
+                      >
+                        Re-upload repository ZIP
+                      </TooltipContent>
+                    </Tooltip>
+                  )}
+
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => handleEditProject(idx)}
-                        className="bg-white/10 hover:bg-white/20 rounded-lg border border-white/5 hover:border-white/10 transition-all duration-200 p-1.5"
+                        onClick={() => handleDeleteClick(idx)}
+                        className="bg-white dark:bg-[#050505] border-black dark:border-white text-red-600 dark:text-red-400 shadow-[2px_2px_0_0_rgba(0,0,0,1)] dark:shadow-[2px_2px_0_0_rgba(255,255,255,1)] hover:bg-red-500 dark:hover:bg-red-500 hover:text-white dark:hover:text-white rounded-none border-2 transition-all duration-200 p-2"
                       >
-                        <Edit className="h-4 w-4 text-gray-300" />
+                        <Trash2 className="h-4 w-4" />
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent
                       side="bottom"
-                      className="bg-gray-900/95 backdrop-blur-xl text-gray-200 border-white/10"
+                      className="bg-black dark:bg-white text-white dark:text-black border-2 border-black dark:border-white rounded-none font-space font-bold uppercase tracking-widest text-[10px]"
                     >
-                      Modify Project
+                      Delete Project
                     </TooltipContent>
                   </Tooltip>
-                )}
+                </div>
+                <div className="w-full h-48 overflow-hidden bg-black/5 dark:bg-white/5 relative">
+                  <img
+                    src={project.project_images}
+                    alt={project.title}
+                    className={`w-full h-full object-cover transition-opacity duration-300 ${(!projectStatuses[idx] || project.github_access_revoked) ? "opacity-30 grayscale" : ""}`}
+                  />
+                  {(!projectStatuses[idx] || project.github_access_revoked) && (
+                    <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/40 dark:bg-white/10 backdrop-blur-[2px] overflow-hidden">
+                      <div className="bg-red-500 text-white font-syne font-black uppercase text-xl md:text-2xl tracking-[0.3em] py-2 px-0 border-y-4 border-black dark:border-white w-[120%] text-center transform -rotate-6 shadow-2xl">
+                        {project.github_access_revoked ? "REVOKED" : "INACTIVE"}
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <div className="absolute bottom-0 left-0 right-0 bg-white/90 dark:bg-black/90 backdrop-blur-md border-t-2 border-black dark:border-white p-3">
+                  <h2 className="text-sm font-space font-bold uppercase tracking-widest truncate text-black dark:text-white">
+                    {truncateText(project.title, 35)}
+                  </h2>
+                </div>
+              </div>
 
-                {!project.github_access_revoked && getEffectiveZipStatus(idx) === "SUCCESS" && (
+              {project.github_access_revoked && (
+                <div className="flex items-start gap-3 p-4 border-2 border-red-500 bg-red-500/5 mt-4 mb-2">
+                  <AlertTriangle className="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" />
+                  <p className="text-[10px] uppercase font-bold tracking-wider font-space text-red-600 dark:text-red-400 leading-tight">
+                    GITHUB ACCESS REVOKED. REINSTALL APP TO RESTORE.
+                  </p>
+                </div>
+              )}
+
+              {getEffectiveZipStatus(idx) === "PROCESSING" && (
+                <div className="flex items-center gap-3 p-4 border-2 border-blue-500 bg-blue-500/5 mt-4 mb-2">
+                  <Loader2 className="h-4 w-4 text-blue-500 animate-spin flex-shrink-0" />
+                  <span className="text-[10px] uppercase font-bold tracking-wider font-space text-blue-600 dark:text-blue-400 flex-grow">
+                    PACKAGING REPOSITORY...
+                  </span>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleRefreshZip(idx)}
-                        disabled={refreshZipIndices.has(idx)}
-                        className="bg-white/10 hover:bg-green-500/20 rounded-lg border border-white/5 hover:border-green-500/30 transition-all duration-200 p-1.5 disabled:opacity-50"
+                      <button
+                        onClick={() => handleRefreshStatus(idx)}
+                        disabled={refreshingIndices.has(idx)}
+                        className="p-1.5 hover:bg-blue-500/10 border-2 border-transparent transition-colors disabled:opacity-50 text-blue-500"
                       >
-                        <PackageCheck className={`h-4 w-4 text-green-400 ${refreshZipIndices.has(idx) ? "animate-spin" : ""}`} />
-                      </Button>
+                        <RefreshCw
+                          className={`h-4 w-4 ${refreshingIndices.has(idx) ? "animate-spin" : ""}`}
+                        />
+                      </button>
                     </TooltipTrigger>
                     <TooltipContent
                       side="bottom"
-                      className="bg-gray-900/95 backdrop-blur-xl text-gray-200 border-white/10"
+                      className="bg-black dark:bg-white text-white dark:text-black border-2 border-black dark:border-white rounded-none font-space font-bold uppercase tracking-widest text-[10px]"
                     >
-                      Re-upload repository ZIP
+                      Refresh status
                     </TooltipContent>
                   </Tooltip>
-                )}
+                </div>
+              )}
 
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleDeleteClick(idx)}
-                      className="bg-white/10 hover:bg-red-500/20 rounded-lg border border-white/5 hover:border-red-500/30 transition-all duration-200 p-1.5"
+              {getEffectiveZipStatus(idx) === "FAILED" && (
+                <div className="flex items-center gap-3 p-4 border-2 border-red-500 bg-red-500/5 mt-4 mb-2">
+                  <XCircle className="h-4 w-4 text-red-500 flex-shrink-0" />
+                  <span className="text-[10px] uppercase font-bold tracking-wider font-space text-red-600 dark:text-red-400 flex-grow">
+                    UPLOAD FAILED
+                  </span>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        onClick={() => handleRetry(idx)}
+                        disabled={retryingIndices.has(idx)}
+                        className="p-1.5 hover:bg-red-500/10 border-2 border-transparent transition-colors disabled:opacity-50 text-red-500"
+                      >
+                        <RotateCcw
+                          className={`h-4 w-4 ${retryingIndices.has(idx) ? "animate-spin" : ""}`}
+                        />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent
+                      side="bottom"
+                      className="bg-black dark:bg-white text-white dark:text-black border-2 border-black dark:border-white rounded-none font-space font-bold uppercase tracking-widest text-[10px]"
                     >
-                      <Trash2 className="h-4 w-4 text-red-400" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent
-                    side="bottom"
-                    className="bg-gray-900/95 backdrop-blur-xl text-gray-200 border-white/10"
-                  >
-                    Delete Project
-                  </TooltipContent>
-                </Tooltip>
-              </div>
-              <div className="w-full h-48 overflow-hidden rounded-xl border border-white/5">
-                <img
-                  src={project.project_images}
-                  alt={project.title}
-                  className="w-full h-full object-cover"
-                  style={{
-                    opacity: projectStatuses[idx] && !project.github_access_revoked ? 1 : 0.5,
-                    filter: projectStatuses[idx] && !project.github_access_revoked ? "none" : "grayscale(80%)",
-                  }}
-                />
-              </div>
-              <div className="absolute bottom-0 left-0 right-0 bg-black/60 backdrop-blur-sm text-white p-2 rounded-b-xl">
-                <h2 className="text-xl font-bold truncate">
-                  {truncateText(project.title, 25)}
-                </h2>
-              </div>
-            </div>
-
-            {project.github_access_revoked && (
-              <div className="flex items-start gap-2 px-3 py-3 rounded-lg bg-amber-500/10 border border-amber-500/20 mt-2 mb-2">
-                <AlertTriangle className="h-4 w-4 text-amber-400 flex-shrink-0 mt-0.5" />
-                <p className="text-xs text-amber-300/90">
-                  GitHub access revoked. Reinstall the GitHub App with access to this repository to restore.
-                </p>
-              </div>
-            )}
-
-            {getEffectiveZipStatus(idx) === "PROCESSING" && (
-              <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg bg-blue-500/10 border border-blue-500/20 mt-2 mb-2">
-                <Loader2 className="h-4 w-4 text-blue-400 animate-spin flex-shrink-0" />
-                <span className="text-xs text-blue-300 flex-grow">
-                  Packaging repository...
-                </span>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button
-                      onClick={() => handleRefreshStatus(idx)}
-                      disabled={refreshingIndices.has(idx)}
-                      className="p-1 rounded hover:bg-blue-500/20 transition-colors disabled:opacity-50"
+                      Retry upload
+                    </TooltipContent>
+                  </Tooltip>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        onClick={() => handleRefreshStatus(idx)}
+                        disabled={refreshingIndices.has(idx)}
+                        className="p-1.5 hover:bg-red-500/10 border-2 border-transparent transition-colors disabled:opacity-50 text-red-500"
+                      >
+                        <RefreshCw
+                          className={`h-4 w-4 ${refreshingIndices.has(idx) ? "animate-spin" : ""}`}
+                        />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent
+                      side="bottom"
+                      className="bg-black dark:bg-white text-white dark:text-black border-2 border-black dark:border-white rounded-none font-space font-bold uppercase tracking-widest text-[10px]"
                     >
-                      <RefreshCw
-                        className={`h-3.5 w-3.5 text-blue-400 ${refreshingIndices.has(idx) ? "animate-spin" : ""}`}
-                      />
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent
-                    side="bottom"
-                    className="bg-gray-900/95 backdrop-blur-xl text-gray-200 border-white/10"
-                  >
-                    Refresh status
-                  </TooltipContent>
-                </Tooltip>
-              </div>
-            )}
+                      Refresh status
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+              )}
 
-            {getEffectiveZipStatus(idx) === "FAILED" && (
-              <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg bg-red-500/10 border border-red-500/20 mt-2 mb-2">
-                <XCircle className="h-4 w-4 text-red-400 flex-shrink-0" />
-                <span className="text-xs text-red-300 flex-grow">
-                  Upload failed
-                </span>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button
-                      onClick={() => handleRetry(idx)}
-                      disabled={retryingIndices.has(idx)}
-                      className="p-1 rounded hover:bg-red-500/20 transition-colors disabled:opacity-50"
-                    >
-                      <RotateCcw
-                        className={`h-3.5 w-3.5 text-red-400 ${retryingIndices.has(idx) ? "animate-spin" : ""}`}
-                      />
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent
-                    side="bottom"
-                    className="bg-gray-900/95 backdrop-blur-xl text-gray-200 border-white/10"
-                  >
-                    Retry upload
-                  </TooltipContent>
-                </Tooltip>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button
-                      onClick={() => handleRefreshStatus(idx)}
-                      disabled={refreshingIndices.has(idx)}
-                      className="p-1 rounded hover:bg-red-500/20 transition-colors disabled:opacity-50"
-                    >
-                      <RefreshCw
-                        className={`h-3.5 w-3.5 text-red-400 ${refreshingIndices.has(idx) ? "animate-spin" : ""}`}
-                      />
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent
-                    side="bottom"
-                    className="bg-gray-900/95 backdrop-blur-xl text-gray-200 border-white/10"
-                  >
-                    Refresh status
-                  </TooltipContent>
-                </Tooltip>
-              </div>
-            )}
-
-            <div className="flex flex-col flex-grow space-y-4">
-              <p
-                className={`
-                  text-gray-300
+              <div className="flex flex-col flex-grow mt-4 space-y-4">
+                <p
+                  className={`
+                  text-sm font-space text-gray-700 dark:text-gray-300
                   line-clamp-3
                   ${!projectStatuses[idx] || project.github_access_revoked ? "opacity-50" : ""}
                 `}
-              >
-                {truncateText(project.description, 120)}
-              </p>
-              <div className="mt-auto">
-                {RenderTechStack(project.tech_stack)}
-              </div>
-            </div>
+                >
+                  {truncateText(project.description, 120)}
+                </p>
+                <div className="mt-auto pt-4 border-t-2 border-black/10 dark:border-white/10">
+                  {RenderTechStack(project.tech_stack)}
+                </div>
               </div>
             </div>
           </div>

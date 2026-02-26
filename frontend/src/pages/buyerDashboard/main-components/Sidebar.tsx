@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { SidebarContentProps, SidebarProps } from "../utils/types";
 import { useTheme } from "@/components/providers/ThemeProvider";
 import { sidebarItems } from "../utils/constants";
+import LogoIcon from "@/assets/icons/LogoIcon";
 
 export default function Sidebar({
   activeTab,
@@ -87,9 +88,12 @@ function SidebarContent({
   return (
     <div className="flex flex-col h-full bg-white dark:bg-[#050505] transition-colors duration-300">
       <div className="p-6 2xl:p-8">
-        <h2 className="font-syne text-2xl 2xl:text-3xl font-black uppercase tracking-widest leading-none text-black dark:text-white whitespace-nowrap mb-6">
-          DevExchange
-        </h2>
+        <div className="flex items-center gap-3 mb-6">
+          <LogoIcon className="w-7 h-7 2xl:w-8 2xl:h-8 text-black dark:text-white flex-shrink-0" />
+          <h2 className="font-syne text-xl 2xl:text-2xl font-black uppercase tracking-widest leading-none text-black dark:text-white whitespace-nowrap">
+            DevExchange
+          </h2>
+        </div>
         <div className="flex items-center gap-3">
           <div className="w-8 h-[2px] bg-red-500"></div>
           <span className="font-space font-bold uppercase tracking-[0.2em] text-[10px] text-red-500">Buyer Marketplace</span>

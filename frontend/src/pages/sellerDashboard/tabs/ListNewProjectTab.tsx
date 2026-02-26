@@ -172,7 +172,7 @@ export default function ListNewProjectTab({
               List New Project
             </h1>
             <p className="font-space text-lg text-gray-600 dark:text-gray-400 mt-4 leading-relaxed transition-colors duration-300 max-w-2xl">
-              Import and list your project for sale
+              Import and list your project for sale.
             </p>
           </div>
         </div>

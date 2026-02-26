@@ -26,7 +26,7 @@ export const projectMediaUploadLimiter = rateLimit({
 
 export const refreshRepoZipLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
-  limit: 3,
+  limit: 10,
   message: "Too many refresh requests. Please try again later.",
   standardHeaders: true,
   legacyHeaders: false,

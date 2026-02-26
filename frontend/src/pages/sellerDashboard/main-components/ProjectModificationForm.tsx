@@ -86,13 +86,13 @@ export default function ProjectModificationForm({
       {isSubmitting && <UploadOverlay uploadProgress={uploadProgress} />}
 
       <div className="space-y-6">
-        <div className="rounded-xl">
+        <div>
           <div className="space-y-6">
-            <div className="flex lg:justify-end md:justify-end justify-center mb-4">
+            <div className="flex justify-end mb-8">
               <Button
                 type="button"
                 variant="outline"
-                className="flex items-center gap-2 bg-white/5 border-white/10 text-gray-300 hover:bg-white/10 hover:text-white hover:border-white/20 transition-all duration-200"
+                className="flex items-center gap-3 px-6 py-4 bg-transparent border-2 border-black dark:border-white text-black dark:text-white font-space font-bold uppercase tracking-widest text-[10px] md:text-sm rounded-none hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black transition-colors duration-300"
                 onClick={handleReturnToAllListings}
               >
                 <Undo2 className="w-4 h-4" />
@@ -130,10 +130,10 @@ export default function ProjectModificationForm({
 
             <Button
               type="button"
-              className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-semibold py-2.5 px-6 rounded-xl shadow-lg shadow-purple-500/20 transition-all duration-300"
+              className="w-full px-8 py-4 bg-black text-white dark:bg-white dark:text-black font-space font-bold uppercase tracking-widest text-[10px] md:text-sm rounded-none border-2 border-transparent hover:bg-red-500 hover:text-white dark:hover:bg-red-500 dark:hover:text-white hover:border-black dark:hover:border-white transition-colors duration-300 mt-12"
               onClick={onSubmit}
             >
-              Submit Project
+              Submit Modifications
             </Button>
           </div>
         </div>

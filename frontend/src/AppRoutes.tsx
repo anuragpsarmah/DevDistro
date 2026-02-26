@@ -10,20 +10,34 @@ import SellerDashboardPage from "@/pages/sellerDashboard/SellerDashboardPage";
 import BuyerDashboardPage from "./pages/buyerDashboard/BuyerDashboardPage";
 import TermsOfService from "@/pages/legal/TermsOfService";
 import PrivacyPolicy from "@/pages/legal/PrivacyPolicy";
+import PreAuthWrapper from "@/components/wrappers/PreAuthWrapper";
 
 export const router = createBrowserRouter([
   {
-    path: "/",
-    element: <LandingPage />,
+    element: <PreAuthWrapper />,
     errorElement: <ErrorPage />,
-  },
-  {
-    path: "/authentication",
-    element: <AuthPage />,
-  },
-  {
-    path: "/loginValidation",
-    element: <LoginValidationPage />,
+    children: [
+      {
+        path: "/",
+        element: <LandingPage />,
+      },
+      {
+        path: "/authentication",
+        element: <AuthPage />,
+      },
+      {
+        path: "/loginValidation",
+        element: <LoginValidationPage />,
+      },
+      {
+        path: "/terms",
+        element: <TermsOfService />,
+      },
+      {
+        path: "/privacy",
+        element: <PrivacyPolicy />,
+      },
+    ],
   },
   {
     path: "/app-install-callback",
@@ -56,13 +70,5 @@ export const router = createBrowserRouter([
         <BuyerDashboardPage />
       </ProtectedRouteWrapper>
     ),
-  },
-  {
-    path: "/terms",
-    element: <TermsOfService />,
-  },
-  {
-    path: "/privacy",
-    element: <PrivacyPolicy />,
   },
 ]);

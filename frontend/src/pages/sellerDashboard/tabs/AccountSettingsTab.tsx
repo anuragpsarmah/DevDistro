@@ -94,19 +94,18 @@ export default function AccountSettingsTab({
   return (
     <AnimatedLoadWrapper>
       <div className="flex flex-col min-h-[calc(100vh-3rem)] lg:h-[calc(100vh-4rem)] lg:min-h-0 mt-10 lg:mt-0 pb-12 lg:pb-6 w-full">
-        <div className="flex-shrink-0 mb-8 lg:mb-12">
-          <div className="flex items-center gap-3 mb-8">
+        <div className="flex-shrink-0 mb-8 lg:mb-10 w-full">
+          <div className="flex items-center gap-3 mb-6 w-full">
             <div className="w-12 h-[2px] bg-red-500"></div>
             <span className="font-space font-bold uppercase tracking-[0.2em] text-xs text-red-500">
               Settings
             </span>
           </div>
-
-          <div>
-            <h1 className="font-syne text-4xl lg:text-6xl text-left font-black tracking-widest leading-none text-black dark:text-white uppercase break-words hyphens-auto">
+          <div className="text-left w-full max-w-4xl">
+            <h1 className="font-syne uppercase tracking-widest text-4xl lg:text-5xl font-black text-black dark:text-white leading-none break-words hyphens-auto transition-colors duration-300">
               Account Settings
             </h1>
-            <p className="font-space text-lg text-gray-600 dark:text-gray-400 mt-6 leading-relaxed max-w-2xl">
+            <p className="font-space text-lg text-gray-600 dark:text-gray-400 mt-4 leading-relaxed transition-colors duration-300 max-w-2xl">
               Manage your profile and system preferences.
             </p>
           </div>
