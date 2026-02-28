@@ -17,7 +17,7 @@ export const TransitionWrapper = ({
   if (isTransitioning) {
     return (
       <div className="flex justify-center items-center h-full w-full min-h-[50vh]">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+        <Loader2 className="w-8 h-8 animate-spin text-red-500" />
       </div>
     );
   }

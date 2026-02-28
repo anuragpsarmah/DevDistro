@@ -86,16 +86,25 @@ export default function MarketplaceTab({ logout }: MarketplaceTabProps) {
   return (
     <AnimatedLoadWrapper>
       <div className="space-y-6 mt-6 lg:mt-0 md:mt-0">
-        <div className="flex items-center justify-between">
-          <h1 className="text-4xl text-center md:text-left lg:text-left font-bold pb-2 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 animate-gradient-x">
-            Marketplace
-          </h1>
-          {!isInitialLoading && totalCount > 0 && (
-            <span className="hidden md:block text-sm text-gray-400">
-              {totalCount.toLocaleString()} project
-              {totalCount !== 1 ? "s" : ""} found
-            </span>
-          )}
+        <div className="flex-shrink-0 mb-8 lg:mb-10">
+          <div className="flex items-start lg:items-center justify-between flex-col lg:flex-row gap-4">
+            <div>
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-12 h-[2px] bg-red-500"></div>
+                <span className="font-space font-bold uppercase tracking-[0.2em] text-xs text-red-500">
+                  Marketplace
+                </span>
+              </div>
+              <h1 className="font-syne uppercase tracking-widest text-4xl lg:text-5xl font-black text-black dark:text-white leading-none break-words hyphens-auto transition-colors duration-300">
+                Explore Projects
+              </h1>
+            </div>
+            {!isInitialLoading && totalCount > 0 && (
+              <span className="hidden md:block text-sm font-space text-black dark:text-white font-bold uppercase tracking-widest border-2 border-black dark:border-white px-4 py-2 bg-white dark:bg-[#050505] shadow-[4px_4px_0_0_rgba(0,0,0,1)] dark:shadow-[4px_4px_0_0_rgba(255,255,255,1)]">
+                {totalCount.toLocaleString()} project{totalCount !== 1 ? "s" : ""} found
+              </span>
+            )}
+          </div>
         </div>
 
         <SearchBar
@@ -116,33 +125,32 @@ export default function MarketplaceTab({ logout }: MarketplaceTabProps) {
         )}
 
         {isError && !isInitialLoading && (
-          <div className="flex flex-col items-center justify-center py-20 space-y-4">
-            <div className="w-16 h-16 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center">
-              <SearchX className="w-8 h-8 text-red-400" />
+          <div className="flex flex-col items-center justify-center py-20 space-y-6 border-2 border-black dark:border-white bg-white dark:bg-[#050505] shadow-[8px_8px_0_0_rgba(0,0,0,1)] dark:shadow-[8px_8px_0_0_rgba(255,255,255,1)] p-8 my-8">
+            <div className="w-16 h-16 border-2 border-black dark:border-white flex items-center justify-center bg-red-500">
+              <SearchX className="w-8 h-8 text-white" />
             </div>
-            <p className="text-gray-400 text-center max-w-md">
-              Something went wrong while fetching projects. Please try again
-              later.
+            <p className="font-space font-bold uppercase tracking-widest text-black dark:text-white text-center max-w-md">
+              Something went wrong while fetching projects. Please try again later.
             </p>
           </div>
         )}
 
         {!isInitialLoading && !isError && !hasResults && (
-          <div className="flex flex-col items-center justify-center py-20 space-y-4">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500/10 to-purple-500/10 border border-white/10 flex items-center justify-center">
+          <div className="flex flex-col items-center justify-center py-20 space-y-6 border-2 border-black dark:border-white bg-white dark:bg-[#050505] shadow-[8px_8px_0_0_rgba(0,0,0,1)] dark:shadow-[8px_8px_0_0_rgba(255,255,255,1)] p-8 my-8">
+            <div className="w-16 h-16 border-2 border-black dark:border-white flex items-center justify-center bg-white dark:bg-[#050505]">
               {hasActiveFilters ? (
-                <SearchX className="w-8 h-8 text-gray-400" />
+                <SearchX className="w-8 h-8 text-black dark:text-white" />
               ) : (
-                <Store className="w-8 h-8 text-gray-400" />
+                <Store className="w-8 h-8 text-black dark:text-white" />
               )}
             </div>
-            <div className="text-center space-y-2">
-              <p className="text-gray-300 font-medium">
+            <div className="text-center space-y-4">
+              <p className="font-syne font-bold uppercase text-2xl tracking-widest text-black dark:text-white">
                 {hasActiveFilters
                   ? "No projects match your search"
                   : "No projects available yet"}
               </p>
-              <p className="text-gray-500 text-sm max-w-md">
+              <p className="font-space text-gray-600 dark:text-gray-400 text-sm max-w-md uppercase tracking-wider">
                 {hasActiveFilters
                   ? "Try adjusting your filters or search terms to find what you're looking for."
                   : "Projects will appear here once sellers start listing them."}
@@ -167,7 +175,7 @@ export default function MarketplaceTab({ logout }: MarketplaceTabProps) {
 
         {isFetchingNextPage && (
           <div className="flex justify-center py-4">
-            <Loader2 className="w-6 h-6 text-purple-400 animate-spin" />
+            <Loader2 className="w-6 h-6 text-red-500 animate-spin" />
           </div>
         )}
 
@@ -175,8 +183,8 @@ export default function MarketplaceTab({ logout }: MarketplaceTabProps) {
           hasResults &&
           !hasNextPage &&
           !isFetchingNextPage && (
-            <p className="text-center text-gray-600 text-sm pb-4">
-              You've reached the end
+            <p className="text-center font-space font-bold uppercase tracking-widest text-black dark:text-white text-sm pb-4 border-t-2 border-black/10 dark:border-white/10 pt-8 mt-8">
+              System Update: End of Catalog Reached
             </p>
           )}
       </div>

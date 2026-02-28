@@ -175,7 +175,7 @@ class GitHubAppService {
   async getInstallationRepos(
     installationId: number,
     page: number = 1
-  ): Promise<{ repos: Repository[]; totalCount: number }> {
+  ): Promise<{ repos: Repository[]; totalCount: number; perPage: number }> {
     const token = await this.getInstallationToken(installationId);
     const perPage = 10;
 
@@ -202,12 +202,13 @@ class GitHubAppService {
         page,
         error: error instanceof Error ? error.message : "Unknown error",
       });
-      return { repos: [], totalCount: 0 };
+      return { repos: [], totalCount: 0, perPage };
     }
 
     return {
       repos: response.data.repositories,
       totalCount: response.data.total_count,
+      perPage,
     };
   }
 

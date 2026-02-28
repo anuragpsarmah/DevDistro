@@ -60,6 +60,19 @@ export default function PrivateRepoImport({
     return () => viewport.removeEventListener("scroll", handleScroll);
   }, [handleScroll]);
 
+  useEffect(() => {
+    if (repoDataLoading || !hasNextPage || isFetchingNextPage || searchQuery) return;
+
+    const viewport = scrollContainerRef.current?.querySelector(
+      "[data-radix-scroll-area-viewport]"
+    ) as HTMLElement | null;
+    if (!viewport) return;
+
+    if (viewport.scrollHeight <= viewport.clientHeight) {
+      fetchNextPage();
+    }
+  }, [privateRepoData, hasNextPage, isFetchingNextPage, searchQuery, fetchNextPage, repoDataLoading]);
+
   return (
     <div className="h-full flex flex-col">
       <div className="rounded-xl h-full flex flex-col">

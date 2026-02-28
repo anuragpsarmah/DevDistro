@@ -14,78 +14,75 @@ export default function MarketplaceProjectCard({
   project,
 }: MarketplaceProjectCardProps) {
   return (
-    <div className="relative group">
-      <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-purple-500/5 to-pink-500/5 blur-xl rounded-2xl pointer-events-none" />
-      <div className="relative h-full bg-gray-900/60 backdrop-blur-xl rounded-2xl border border-white/10 transition-all duration-300 ease-in-out flex flex-col hover:border-white/20 hover:shadow-lg hover:shadow-purple-500/10 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-500/[0.02] to-purple-600/[0.02] pointer-events-none" />
-
-        <div className="relative z-10">
-          <div className="w-full h-48 overflow-hidden">
+    <div className="relative group h-full">
+      <div className="relative h-full bg-white dark:bg-[#050505] border-2 border-black dark:border-white transition-all duration-300 ease-in-out flex flex-col shadow-[4px_4px_0_0_rgba(0,0,0,1)] dark:shadow-[4px_4px_0_0_rgba(255,255,255,1)] hover:translate-x-[-4px] hover:translate-y-[-4px] hover:shadow-[8px_8px_0_0_rgba(0,0,0,1)] dark:hover:shadow-[8px_8px_0_0_rgba(255,255,255,1)]">
+        <div className="relative z-10 border-b-2 border-black dark:border-white">
+          <div className="w-full h-48 overflow-hidden bg-gray-100 dark:bg-gray-900">
             {project.project_images ? (
               <img
                 src={project.project_images}
                 alt={project.title}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover grayscale transition-all duration-300 group-hover:grayscale-0"
               />
             ) : (
-              <div className="w-full h-full bg-gray-800/50 flex items-center justify-center">
-                <span className="text-gray-500 text-sm">No preview</span>
+              <div className="w-full h-full flex items-center justify-center">
+                <span className="font-space font-bold uppercase tracking-wider text-gray-500 text-sm">No preview</span>
               </div>
             )}
           </div>
 
           <div className="absolute top-3 right-3">
-            <span className="px-3 py-1.5 bg-gray-900/80 backdrop-blur-sm text-white text-sm font-bold rounded-lg border border-white/10 shadow-lg">
+            <span className="px-3 py-1.5 bg-white dark:bg-black text-black dark:text-white font-space font-bold uppercase tracking-wider text-sm border-2 border-black dark:border-white shadow-[2px_2px_0_0_rgba(0,0,0,1)] dark:shadow-[2px_2px_0_0_rgba(255,255,255,1)]">
               {project.price === 0 ? "Free" : `${project.price} SOL`}
             </span>
           </div>
 
           <div className="absolute top-3 left-3">
-            <span className="px-2.5 py-1 bg-purple-500/20 backdrop-blur-sm text-purple-300 text-xs font-medium rounded-lg border border-purple-500/20">
+            <span className="px-2.5 py-1 bg-red-500 text-white font-space font-bold uppercase tracking-wider text-xs border-2 border-black dark:border-white shadow-[2px_2px_0_0_rgba(0,0,0,1)] dark:shadow-[2px_2px_0_0_rgba(255,255,255,1)]">
               {project.project_type}
             </span>
           </div>
         </div>
 
-        <div className="relative z-10 p-4 lg:p-5 flex flex-col flex-grow">
-          <h3 className="text-lg font-bold text-white mb-2 line-clamp-1">
+        <div className="relative z-10 p-4 lg:p-5 flex flex-col flex-grow bg-white dark:bg-[#050505]">
+          <h3 className="font-syne text-xl font-bold text-black dark:text-white mb-2 line-clamp-1 uppercase tracking-widest">
             {project.title}
           </h3>
 
-          <p className="text-gray-400 text-sm leading-relaxed mb-4 line-clamp-3">
+          <p className="font-space text-black dark:text-white text-sm leading-relaxed mb-4 line-clamp-3 font-medium">
             {truncateText(project.description, 150)}
           </p>
 
-          <div className="flex flex-wrap gap-1.5 mb-4">
+          <div className="flex flex-wrap gap-2 mb-4">
             {project.tech_stack.slice(0, 3).map((tech) => (
               <span
                 key={tech}
-                className="px-2 py-0.5 bg-gray-700/60 text-gray-300 text-xs rounded-full truncate max-w-[100px]"
+                className="px-2 py-0.5 bg-black dark:bg-white text-white dark:text-black font-space font-bold uppercase tracking-wider text-[10px] border-2 border-transparent truncate max-w-[100px]"
               >
                 {tech}
               </span>
             ))}
             {project.tech_stack.length > 3 && (
-              <span className="px-2 py-0.5 bg-gray-600/60 text-gray-400 text-xs rounded-full">
+              <span className="px-2 py-0.5 bg-gray-200 dark:bg-gray-800 text-black dark:text-white font-space font-bold uppercase tracking-wider text-[10px] border-2 border-black dark:border-white">
                 +{project.tech_stack.length - 3}
               </span>
             )}
           </div>
 
-          <div className="mt-auto flex items-center justify-between pt-3 border-t border-white/5">
+          <div className="mt-auto flex items-center justify-between pt-4 border-t-2 border-black dark:border-white">
             <div className="flex items-center gap-2 min-w-0">
               {project.userid?.profile_image_url ? (
                 <img
                   src={project.userid.profile_image_url}
                   alt={project.userid.username}
-                  className="w-6 h-6 rounded-full border border-white/10 flex-shrink-0"
+                  className="w-8 h-8 rounded-none border-2 border-black dark:border-white flex-shrink-0 object-cover grayscale"
                 />
               ) : (
-                <div className="w-6 h-6 rounded-full bg-gray-700 flex items-center justify-center flex-shrink-0">
-                  <User className="w-3.5 h-3.5 text-gray-400" />
+                <div className="w-8 h-8 rounded-none border-2 border-black dark:border-white bg-white dark:bg-[#050505] flex items-center justify-center flex-shrink-0">
+                  <User className="w-4 h-4 text-black dark:text-white" />
                 </div>
               )}
-              <span className="text-gray-400 text-xs truncate">
+              <span className="font-space font-bold uppercase tracking-wider text-black dark:text-white text-xs truncate">
                 {project.userid?.name || project.userid?.username || "Unknown"}
               </span>
             </div>
@@ -97,18 +94,18 @@ export default function MarketplaceProjectCard({
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={(e) => e.stopPropagation()}
-                  className="text-gray-500 hover:text-blue-400 transition-colors"
+                  className="w-8 h-8 flex items-center justify-center border-2 border-black dark:border-white hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black transition-colors"
                 >
-                  <ExternalLink className="w-3.5 h-3.5" />
+                  <ExternalLink className="w-4 h-4" />
                 </a>
               )}
-              <div className="flex items-center gap-1">
-                <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
-                <span className="text-gray-300 text-xs font-medium">
+              <div className="flex items-center justify-center gap-1.5 px-2 py-1 border-2 border-black dark:border-white bg-white dark:bg-[#050505] shadow-[2px_2px_0_0_rgba(0,0,0,1)] dark:shadow-[2px_2px_0_0_rgba(255,255,255,1)]">
+                <Star className="w-3.5 h-3.5 text-black dark:text-white" />
+                <span className="font-space font-bold text-black dark:text-white text-xs">
                   {project.avgRating > 0 ? project.avgRating.toFixed(1) : "New"}
                 </span>
                 {project.totalReviews > 0 && (
-                  <span className="text-gray-500 text-xs">
+                  <span className="font-space font-bold text-red-500 text-[10px]">
                     ({project.totalReviews})
                   </span>
                 )}

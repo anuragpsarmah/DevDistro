@@ -202,7 +202,7 @@ const getPrivateRepos = asyncHandler(async (req: Request, res: Response) => {
     throw new ApiError("Failed to fetch repositories", 500);
   }
 
-  const { repos, totalCount } = result;
+  const { repos, totalCount, perPage } = result;
   const privateRepos = repos.filter((repo) => repo.private);
 
   const formattedRepos = privateRepos.map((repo) => ({
@@ -214,7 +214,7 @@ const getPrivateRepos = asyncHandler(async (req: Request, res: Response) => {
     installation_id: installation.installation_id,
   }));
 
-  const totalPages = Math.ceil(totalCount / 100);
+  const totalPages = Math.ceil(totalCount / perPage);
   const hasMore = page < totalPages;
 
   const responseData = {
