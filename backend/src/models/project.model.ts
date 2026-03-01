@@ -47,6 +47,10 @@ const projectSchema = new Schema(
       type: [String],
       required: [true, "An array of atleast one url is required"],
     },
+    project_images_detail: {
+      type: [String],
+      default: [],
+    },
     project_video: {
       type: String,
     },

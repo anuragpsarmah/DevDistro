@@ -3,7 +3,7 @@ import { SolanaLogo } from "@/components/ui/solanaLogo";
 
 export const sidebarItems = [
   { icon: Store, label: "Marketplace" },
-  { icon: ShoppingCart, label: "Cart" },
+  { icon: ShoppingCart, label: "Wishlist" },
   { icon: User, label: "Settings" },
   { icon: History, label: "Orders" },
   { icon: SolanaLogo, label: "Wallet" },

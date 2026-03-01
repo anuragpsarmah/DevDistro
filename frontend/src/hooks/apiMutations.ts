@@ -62,11 +62,13 @@ const usePreSignedUrlForProjectMediaUploadMutation = ({
       existingImageCount,
       existingVideoCount,
       modificationType,
+      detailMetadata,
     }: {
       metadata: Array<ProjectMediaMetadata>;
       existingImageCount: number;
       existingVideoCount: number;
       modificationType: string;
+      detailMetadata?: Array<ProjectMediaMetadata>;
     }) => {
       if (operationInProgress) {
         throw new Error("Operation already in progress");
@@ -80,6 +82,7 @@ const usePreSignedUrlForProjectMediaUploadMutation = ({
           existingImageCount,
           existingVideoCount,
           modificationType,
+          ...(detailMetadata && detailMetadata.length > 0 ? { detailMetadata } : {}),
         })
       );
 
@@ -300,6 +303,32 @@ const useRefreshRepoZipMutation = ({ logout }: mutationParameter) => {
   });
 };
 
+const useToggleWishlistMutation = ({ logout }: mutationParameter) => {
+  const { handleError } = useHandleError({ logout });
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (project_id: string) => {
+      const [response, error] = await tryCatch(
+        apiClient.post<{ data: { isWishlisted: boolean } }>("/wishlist/toggle", {
+          project_id,
+        })
+      );
+
+      if (error) {
+        handleError(error);
+        throw error;
+      }
+
+      return response.data.data;
+    },
+    onSuccess: (data) => {
+      successToast(data.isWishlisted ? "Added to wishlist" : "Removed from wishlist");
+      queryClient.invalidateQueries({ queryKey: ["wishlistQuery"] });
+    },
+  });
+};
+
 export {
   useProfileUpdateMutation,
   usePreSignedUrlForProjectMediaUploadMutation,
@@ -309,4 +338,5 @@ export {
   useUpdateWalletAddressMutation,
   useRetryRepoZipUploadMutation,
   useRefreshRepoZipMutation,
+  useToggleWishlistMutation,
 };

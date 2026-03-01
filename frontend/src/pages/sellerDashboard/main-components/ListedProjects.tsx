@@ -269,7 +269,7 @@ const ListedProjects = ({
                     </TooltipContent>
                   </Tooltip>
                 </div>
-                <div className="w-full h-48 overflow-hidden bg-black/5 dark:bg-white/5 relative">
+                <div className="w-full aspect-video overflow-hidden bg-black/5 dark:bg-white/5 relative">
                   <img
                     src={project.project_images}
                     alt={project.title}
@@ -378,7 +378,7 @@ const ListedProjects = ({
                 <p
                   className={`
                   text-sm font-space text-gray-700 dark:text-gray-300
-                  line-clamp-3
+                  line-clamp-3 min-h-[4.5rem]
                   ${!projectStatuses[idx] || project.github_access_revoked ? "opacity-50" : ""}
                 `}
                 >

@@ -1,3 +1,5 @@
+import { ReactNode } from "react";
+
 export interface SidebarContentProps {
   activeTab: string;
   setActiveTab: (tabName: BuyerDashboardTabTypes) => void;
@@ -18,7 +20,14 @@ export interface SidebarProps {
 
 export type BuyerDashboardTabTypes =
   | "Marketplace"
-  | "Cart"
+  | "Wishlist"
   | "Settings"
   | "Orders"
   | "Wallet";
+
+export interface TransitionWrapperProps {
+  isTransitioning: boolean;
+  children: ReactNode;
+  identifier: string | number;
+  className?: string;
+}

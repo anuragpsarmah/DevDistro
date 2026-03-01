@@ -2,6 +2,17 @@ import { ReactNode } from "react";
 import { PROJECT_TYPES } from "./constants";
 import { PublicKey } from "@solana/web3.js";
 
+export type ImageItem =
+  | { type: "existing"; url: string }
+  | { type: "new"; file: File; id: number; objectUrl: string };
+
+
+export type ImageCropResult =
+  | { type: "existing_complete"; cardUrl: string; detailUrl: string }
+  | { type: "existing_recrop"; cardUrl: string; detailBlob: Blob }
+  | { type: "existing_card_recrop"; cardBlob: Blob; detailUrl: string }
+  | { type: "new"; cardBlob: Blob; detailBlob: Blob };
+
 export type SellerDashboardTabTypes =
   | "Overview"
   | "Settings"
@@ -141,7 +152,8 @@ export interface ProjectListingFormProps {
     metadata: Array<ProjectMediaMetadata>,
     existingImageCount: number,
     existingVideoCount: number,
-    modificationType: string
+    modificationType: string,
+    detailMetadata?: Array<ProjectMediaMetadata>
   ) => Promise<unknown>;
   handleValidateUploadAndStoreProject: (
     data: projectListingValidatedFormData,
@@ -158,7 +170,8 @@ export interface ProjectModificationFormProps {
     metadata: Array<ProjectMediaMetadata>,
     existingImageCount: number,
     existingVideoCount: number,
-    modificationType: string
+    modificationType: string,
+    detailMetadata?: Array<ProjectMediaMetadata>
   ) => Promise<unknown>;
   handleValidateUploadAndStoreProject: (
     data: projectListingValidatedFormData,
@@ -227,11 +240,12 @@ export interface projectListingFormData {
   techStack: string[];
   liveLink: string;
   price: number;
-  images: File[];
+  imageItems: ImageItem[];
   video: File | null;
-  existingImages?: string[];
   existingVideo?: string | null;
 }
+
+export type ProjectSubmitFormData = Omit<projectListingFormData, "imageItems">;
 
 export interface ProjectMediaMetadata {
   originalName: string;
@@ -248,8 +262,10 @@ export interface projectListingValidatedFormData {
   tech_stack: string[];
   live_link: string;
   price: number;
-  project_images: string[];
+  imageOrder: string[];
+  imageOrder_detail: string[];
   project_video: string;
+  existingVideo?: string;
 }
 
 export interface UploadOverlayProps {
@@ -257,12 +273,10 @@ export interface UploadOverlayProps {
 }
 
 export interface ProjectMediaUploaderProps {
-  images: File[];
-  setImages: React.Dispatch<React.SetStateAction<File[]>>;
+  imageItems: ImageItem[];
+  setImageItems: React.Dispatch<React.SetStateAction<ImageItem[]>>;
   video: File | null;
   setVideo: React.Dispatch<React.SetStateAction<File | null>>;
-  existingImages?: string[];
-  setExistingImages?: React.Dispatch<React.SetStateAction<string[]>>;
   existingVideo?: string | null;
   setExistingVideo?: React.Dispatch<React.SetStateAction<string | null>>;
 }
@@ -300,6 +314,7 @@ export interface formPropsType {
   live_link: string;
   price: number;
   project_images: Array<string>;
+  project_images_detail?: Array<string>;
   project_type: string;
   project_video: string;
   github_installation_id?: number;
@@ -310,7 +325,8 @@ export interface UseProjectSubmissionProps {
     metadata: Array<ProjectMediaMetadata>,
     existingImageCount: number,
     existingVideoCount: number,
-    modificationType: string
+    modificationType: string,
+    detailMetadata?: Array<ProjectMediaMetadata>
   ) => Promise<unknown>;
   handleValidateUploadAndStoreProject: (
     data: projectListingValidatedFormData,

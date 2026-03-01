@@ -14,6 +14,7 @@ import {
   retryRepoZipUpload,
   refreshRepoZip,
   searchProject,
+  getMarketplaceProjectDetail,
 } from "../controllers/projects.controller";
 import { getPrivateReposFromCache } from "../cache/projects.cache";
 import {
@@ -71,3 +72,6 @@ projectRouter
   .route("/refreshRepoZip")
   .post(refreshRepoZipLimiter, sessionValidation, refreshRepoZip);
 projectRouter.route("/search").post(sessionValidation, searchProject);
+projectRouter
+  .route("/getMarketplaceProjectDetail")
+  .get(sessionValidation, getMarketplaceProjectDetail);

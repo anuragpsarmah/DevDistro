@@ -69,6 +69,10 @@ const userSchema = new Schema(
       type: Boolean,
       default: false,
     },
+    wishlist: {
+      type: [{ type: Schema.Types.ObjectId, ref: "Project" }],
+      default: [],
+    },
     refresh_tokens: {
       type: [
         {

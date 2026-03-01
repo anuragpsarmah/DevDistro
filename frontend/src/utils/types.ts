@@ -39,8 +39,10 @@ export interface projectListingValidatedFormData {
   tech_stack: string[];
   live_link: string;
   price: number;
-  project_images: string[];
+  imageOrder: string[];
+  imageOrder_detail: string[];
   project_video: string;
+  existingVideo?: string;
 }
 
 export interface MarketplaceSearchParams {
@@ -69,6 +71,40 @@ export interface MarketplaceProject {
     username: string;
     name: string;
     profile_image_url: string;
+  };
+}
+
+export interface TreeNode {
+  name: string;
+  type: "directory" | "file";
+  children?: TreeNode[];
+}
+
+export interface ProjectDetail {
+  _id: string;
+  title: string;
+  description: string;
+  project_type: string;
+  tech_stack: string[];
+  price: number;
+  avgRating: number;
+  totalReviews: number;
+  live_link?: string;
+  createdAt: string;
+  project_images: string[];
+  project_images_detail?: string[];
+  project_video?: string;
+  repo_tree?: TreeNode;
+  repo_tree_status?: string;
+  userid: {
+    username: string;
+    name: string;
+    profile_image_url: string;
+    short_bio?: string;
+    job_role?: string;
+    location?: string;
+    website_url?: string;
+    x_username?: string;
   };
 }
 

@@ -3,9 +3,10 @@ import { Loader2, SearchX, Store } from "lucide-react";
 import SearchBar from "../main-components/Searchbar";
 import MarketplaceProjectCard from "../sub-components/MarketplaceProjectCard";
 import MarketplaceCardSkeleton from "../sub-components/MarketplaceCardSkeleton";
-import AnimatedLoadWrapper from "@/components/wrappers/AnimatedLoadWrapper";
+import { TransitionWrapper } from "../sub-components/TransitionWrapper";
 import { useMarketplaceSearchQuery } from "@/hooks/apiQueries";
 import { type MarketplaceSearchParams } from "@/utils/types";
+import ProjectDetailPage from "./ProjectDetailPage";
 
 interface MarketplaceTabProps {
   logout?: () => Promise<void>;
@@ -18,6 +19,7 @@ export default function MarketplaceTab({ logout }: MarketplaceTabProps) {
   const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
   const [selectedSort, setSelectedSort] = useState("newest");
   const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
@@ -83,8 +85,20 @@ export default function MarketplaceTab({ logout }: MarketplaceTabProps) {
   const hasActiveFilters =
     debouncedSearch.length > 0 || selectedFilters.length > 0;
 
+  if (selectedProjectId) {
+    return (
+      <TransitionWrapper identifier={selectedProjectId} isTransitioning={false}>
+        <ProjectDetailPage
+          projectId={selectedProjectId}
+          onBack={() => setSelectedProjectId(null)}
+          logout={logout}
+        />
+      </TransitionWrapper>
+    );
+  }
+
   return (
-    <AnimatedLoadWrapper>
+    <TransitionWrapper identifier="marketplace-list" isTransitioning={false}>
       <div className="space-y-6 mt-6 lg:mt-0 md:mt-0">
         <div className="flex-shrink-0 mb-8 lg:mb-10">
           <div className="flex items-start lg:items-center justify-between flex-col lg:flex-row gap-4">
@@ -136,25 +150,36 @@ export default function MarketplaceTab({ logout }: MarketplaceTabProps) {
         )}
 
         {!isInitialLoading && !isError && !hasResults && (
-          <div className="flex flex-col items-center justify-center py-20 space-y-6 border-2 border-black dark:border-white bg-white dark:bg-[#050505] shadow-[8px_8px_0_0_rgba(0,0,0,1)] dark:shadow-[8px_8px_0_0_rgba(255,255,255,1)] p-8 my-8">
-            <div className="w-16 h-16 border-2 border-black dark:border-white flex items-center justify-center bg-white dark:bg-[#050505]">
-              {hasActiveFilters ? (
-                <SearchX className="w-8 h-8 text-black dark:text-white" />
-              ) : (
-                <Store className="w-8 h-8 text-black dark:text-white" />
-              )}
-            </div>
-            <div className="text-center space-y-4">
-              <p className="font-syne font-bold uppercase text-2xl tracking-widest text-black dark:text-white">
+          <div className="flex-1 p-4 lg:p-6 flex flex-col items-center justify-center">
+            <div className="w-full max-w-2xl border-2 border-black dark:border-white bg-white dark:bg-[#050505] p-8 lg:p-12 relative overflow-hidden flex flex-col items-center justify-center text-center transition-colors duration-300 mx-auto mt-12 mb-12">
+              <div className="mb-8">
+                <div className="w-16 h-16 bg-black/5 dark:bg-white/5 flex items-center justify-center border-2 border-black dark:border-white">
+                  {hasActiveFilters ? (
+                    <SearchX className="h-8 w-8 text-black dark:text-white" strokeWidth={2} />
+                  ) : (
+                    <Store className="h-8 w-8 text-black dark:text-white" strokeWidth={2} />
+                  )}
+                </div>
+              </div>
+
+              <h2 className="text-2xl lg:text-3xl font-syne uppercase tracking-widest font-black text-black dark:text-white mb-6 transition-colors duration-300">
                 {hasActiveFilters
                   ? "No projects match your search"
                   : "No projects available yet"}
-              </p>
-              <p className="font-space text-gray-600 dark:text-gray-400 text-sm max-w-md uppercase tracking-wider">
-                {hasActiveFilters
-                  ? "Try adjusting your filters or search terms to find what you're looking for."
-                  : "Projects will appear here once sellers start listing them."}
-              </p>
+              </h2>
+
+              <div className="font-space max-w-md mx-auto space-y-4">
+                <p className="text-black/40 dark:text-white/40 uppercase tracking-wider text-sm font-bold">
+                  {hasActiveFilters
+                    ? "[Status: Zero Results]"
+                    : "[Status: Marketplace Empty]"}
+                </p>
+                <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed transition-colors duration-300 uppercase tracking-wider">
+                  {hasActiveFilters
+                    ? "Try adjusting your filters or search terms to find what you're looking for."
+                    : "Projects will appear here once sellers start listing them."}
+                </p>
+              </div>
             </div>
           </div>
         )}
@@ -162,7 +187,11 @@ export default function MarketplaceTab({ logout }: MarketplaceTabProps) {
         {!isInitialLoading && hasResults && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 2xl:grid-cols-3 gap-4 lg:gap-6 pt-2">
             {allProjects.map((project) => (
-              <MarketplaceProjectCard key={project._id} project={project} />
+              <MarketplaceProjectCard
+                key={project._id}
+                project={project}
+                onProjectClick={(id) => setSelectedProjectId(id)}
+              />
             ))}
             {isFetchingNextPage &&
               [...Array(3)].map((_, i) => (
@@ -188,6 +217,6 @@ export default function MarketplaceTab({ logout }: MarketplaceTabProps) {
             </p>
           )}
       </div>
-    </AnimatedLoadWrapper>
+    </TransitionWrapper>
   );
 }

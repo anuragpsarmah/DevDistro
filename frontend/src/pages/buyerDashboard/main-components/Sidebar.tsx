@@ -3,6 +3,7 @@ import { ChevronRight, Repeat, Menu, X, Sun, Moon } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { SidebarContentProps, SidebarProps } from "../utils/types";
 import { useTheme } from "@/components/providers/ThemeProvider";
+import { useGetWishlistQuery } from "@/hooks/apiQueries";
 import { sidebarItems } from "../utils/constants";
 import LogoIcon from "@/assets/icons/LogoIcon";
 
@@ -84,6 +85,8 @@ function SidebarContent({
   onSwitchToSeller,
 }: SidebarContentProps) {
   const { isDarkMode, toggleTheme } = useTheme();
+  const { data: wishlistProjects } = useGetWishlistQuery({ logout });
+  const wishlistCount = wishlistProjects?.length || 0;
 
   return (
     <div className="flex flex-col h-full bg-white dark:bg-[#050505] transition-colors duration-300">
@@ -106,6 +109,7 @@ function SidebarContent({
               key={index}
               {...item}
               isActive={activeTab === item.label}
+              count={item.label === "Wishlist" ? wishlistCount : undefined}
               onClick={() => {
                 setActiveTab(item.label);
                 if (isSidebarOpen && setIsSidebarOpen) setIsSidebarOpen(false);
@@ -145,11 +149,13 @@ function SidebarItem({
   label,
   isActive,
   onClick,
+  count,
 }: {
   icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
   label: string;
   isActive: boolean;
   onClick: () => void;
+  count?: number;
 }) {
   return (
     <li>
@@ -165,6 +171,18 @@ function SidebarItem({
         <span className="relative z-10 flex items-center gap-3 flex-1">
           <Icon className="h-4 w-4 flex-shrink-0" />
           <span className="truncate">{label}</span>
+          {count !== undefined && count > 0 && (
+            <span
+              className={cn(
+                "ml-auto px-2 py-0.5 text-[10px] leading-none flex items-center justify-center font-bold",
+                isActive
+                  ? "bg-white text-black dark:bg-[#050505] dark:text-white"
+                  : "bg-red-500 text-white"
+              )}
+            >
+              {count}
+            </span>
+          )}
         </span>
         <ChevronRight
           className={cn(

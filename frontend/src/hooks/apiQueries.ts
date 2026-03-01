@@ -9,6 +9,8 @@ import {
   walletAddressData,
   MarketplaceSearchParams,
   MarketplaceSearchResponse,
+  ProjectDetail,
+  MarketplaceProject,
 } from "@/utils/types";
 import { tryCatch } from "@/utils/tryCatch.util";
 
@@ -339,6 +341,56 @@ const useMarketplaceSearchQuery = (
   });
 };
 
+const useProjectDetailQuery = (
+  projectId: string,
+  { logout }: queryParameter
+) => {
+  const { handleError } = useHandleError({ logout });
+
+  return useQuery({
+    queryKey: ["projectDetail", projectId],
+    queryFn: async () => {
+      const [response, error] = await tryCatch(
+        apiClient.get<{ data: ProjectDetail }>(
+          `/projects/getMarketplaceProjectDetail?project_id=${projectId}`
+        )
+      );
+
+      if (error) {
+        await handleError(error);
+        throw error;
+      }
+
+      return response.data.data;
+    },
+    enabled: !!projectId,
+    refetchOnWindowFocus: false,
+  });
+};
+
+const useGetWishlistQuery = ({ logout }: queryParameter) => {
+  const { handleError } = useHandleError({ logout });
+
+  return useQuery({
+    queryKey: ["wishlistQuery"],
+    queryFn: async () => {
+      const [response, error] = await tryCatch(
+        apiClient.get<{ data: { projects: MarketplaceProject[] } }>(
+          "/wishlist/getWishlist"
+        )
+      );
+
+      if (error) {
+        await handleError(error);
+        throw error;
+      }
+
+      return response.data.data.projects;
+    },
+    refetchOnWindowFocus: false,
+  });
+};
+
 export {
   useAuthValidationQuery,
   useLogoutQuery,
@@ -355,4 +407,6 @@ export {
   useGetWalletAddress,
   useRepoZipStatusQuery,
   useMarketplaceSearchQuery,
+  useProjectDetailQuery,
+  useGetWishlistQuery,
 };

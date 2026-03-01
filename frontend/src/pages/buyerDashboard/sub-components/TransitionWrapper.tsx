@@ -1,0 +1,40 @@
+import { motion, AnimatePresence } from "framer-motion";
+import { Loader2 } from "lucide-react";
+import { TransitionWrapperProps } from "../utils/types";
+
+const fadeVariants = {
+  initial: { opacity: 0, y: 10 },
+  animate: { opacity: 1, y: 0 },
+  exit: { opacity: 0, y: -10 },
+};
+
+export const TransitionWrapper = ({
+  isTransitioning,
+  children,
+  identifier,
+  className,
+}: TransitionWrapperProps) => {
+  if (isTransitioning) {
+    return (
+      <div className="flex justify-center items-center h-full w-full min-h-[50vh]">
+        <Loader2 className="w-8 h-8 animate-spin text-red-500" />
+      </div>
+    );
+  }
+
+  return (
+    <AnimatePresence mode="wait">
+      <motion.div
+        key={identifier}
+        variants={fadeVariants}
+        initial="initial"
+        animate="animate"
+        exit="exit"
+        transition={{ duration: 0.1 }}
+        className={className}
+      >
+        {children}
+      </motion.div>
+    </AnimatePresence>
+  );
+};

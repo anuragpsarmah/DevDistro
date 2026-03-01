@@ -1,27 +1,29 @@
-import { Edit } from "lucide-react";
+import { FolderOpen } from "lucide-react";
 
 export const NoProjectsScreen: React.FC = () => {
   return (
-    <div className="h-full p-4 lg:p-6">
-      <div className="relative h-full">
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-purple-500/5 to-pink-500/5 blur-2xl rounded-2xl pointer-events-none" />
-        <div className="relative h-full bg-gray-900/60 backdrop-blur-xl rounded-2xl border border-white/10 shadow-2xl flex flex-col items-center justify-center">
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/[0.02] to-purple-600/[0.02] pointer-events-none rounded-2xl" />
-          <div className="relative z-10 text-center p-8">
-            <div className="w-16 h-16 rounded-xl bg-gradient-to-r from-blue-500/20 to-purple-500/20 flex items-center justify-center border border-white/10 mb-6 mx-auto">
-              <Edit className="h-8 w-8 text-blue-400" strokeWidth={1.5} />
-            </div>
-            <h2 className="text-2xl font-bold text-gray-200 mb-4">
-              No Projects Listed
-            </h2>
-            <p className="text-gray-400 max-w-xs mx-auto">
-              Your project listing portfolio is empty. Start by listing your first project.
-            </p>
+    <div className="h-full p-4 lg:p-6 flex flex-col items-center justify-center">
+      <div className="w-full max-w-2xl border-2 border-black dark:border-white bg-white dark:bg-[#050505] p-8 lg:p-12 relative overflow-hidden flex flex-col items-center justify-center text-center transition-colors duration-300">
+
+        <div className="mb-8">
+          <div className="w-16 h-16 bg-black/5 dark:bg-white/5 flex items-center justify-center border-2 border-black dark:border-white">
+            <FolderOpen className="h-8 w-8 text-black dark:text-white" strokeWidth={2} />
           </div>
+        </div>
+
+        <h2 className="text-2xl lg:text-3xl font-syne uppercase tracking-widest font-black text-black dark:text-white mb-6 transition-colors duration-300">
+          No Projects Listed
+        </h2>
+
+        <div className="font-space max-w-md mx-auto space-y-4">
+          <p className="text-black/40 dark:text-white/40 uppercase tracking-wider text-sm font-bold">
+            [Status: Portfolio Empty]
+          </p>
+          <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed transition-colors duration-300">
+            Your project listing portfolio is empty. Head over to the List New Project tab to publish your first project to the marketplace.
+          </p>
         </div>
       </div>
     </div>
   );
 };
-
-

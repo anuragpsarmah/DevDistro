@@ -50,6 +50,7 @@ import { salesRouter } from "./routes/sales.routes";
 import { reviewRouter } from "./routes/reviews.routes";
 import { projectRouter } from "./routes/projects.routes";
 import { githubAppRouter } from "./routes/githubApp.routes";
+import { wishlistRouter } from "./routes/wishlist.routes";
 
 app.use("/api/auth", authRouter);
 app.use("/api/profile", profileRouter);
@@ -57,3 +58,4 @@ app.use("/api/sales", salesRouter);
 app.use("/api/reviews", reviewRouter);
 app.use("/api/projects", projectRouter);
 app.use("/api/github-app", githubAppRouter);
+app.use("/api/wishlist", wishlistRouter);

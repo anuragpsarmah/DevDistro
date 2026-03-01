@@ -404,12 +404,47 @@ const getPreSignedUrlForProjectMediaUpload = asyncHandler(
       else throw new ApiError("Something went wrong", 500);
     }
 
-    enrichContext({ outcome: "success", urls_generated: preSignedUrls.length });
+    let detailPreSignedUrls: { uploadSignedUrl: string; key: string }[] = [];
+    const { detailMetadata } = req.body;
+    if (detailMetadata && Array.isArray(detailMetadata) && detailMetadata.length > 0) {
+      const detailResult = fileMetadataSchema.safeParse(detailMetadata);
+      if (!detailResult.success) {
+        enrichContext({ outcome: "validation_failed", reason: "invalid_detail_metadata" });
+        response(res, 400, "Detail image metadata validation failed", {}, detailResult.error.errors[0].message);
+        return;
+      }
+
+      const hasNonImageDetail = (detailMetadata as FileMetaData[]).some(
+        (m) => !m.fileType.startsWith("image/")
+      );
+      if (hasNonImageDetail) {
+        enrichContext({ outcome: "validation_failed", reason: "non_image_detail_metadata" });
+        response(res, 400, "Detail images must be image files");
+        return;
+      }
+
+      const [detailUrls, detailUrlError] = await tryCatch(
+        Promise.all(
+          detailMetadata.map((file: FileMetaData) => s3Service.createPreSignedUploadUrl(file))
+        )
+      );
+
+      if (detailUrlError) {
+        enrichContext({ outcome: "error", error: { name: "S3Error" } });
+        logger.error("Failed to generate detail presigned URLs", detailUrlError);
+        throw new ApiError("Failed to generate presigned URLs for detail images", 500);
+      }
+
+      detailPreSignedUrls = detailUrls;
+    }
+
+    const totalGenerated = preSignedUrls.length + detailPreSignedUrls.length;
+    enrichContext({ outcome: "success", urls_generated: totalGenerated });
     response(
       res,
       200,
-      `${preSignedUrls.length} Pre-signed upload urls generated`,
-      preSignedUrls
+      `${totalGenerated} Pre-signed upload urls generated`,
+      [...preSignedUrls, ...detailPreSignedUrls]
     );
   }
 );
@@ -589,8 +624,7 @@ const validateMediaUploadAndStoreProject = asyncHandler(
       }
     }
 
-    const { existingImages, project_images, project_video, existingVideo } =
-      projectData;
+    const { imageOrder, imageOrder_detail, project_video, existingVideo } = projectData;
 
     const [project, projectError] = await tryCatch(
       Project.findOne({
@@ -626,25 +660,42 @@ const validateMediaUploadAndStoreProject = asyncHandler(
       return;
     }
 
-    let validatedExistingImages: string[] = [];
+    const cloudFrontDomain = process.env.S3_CLOUDFRONT_DISTRIBUTION as string;
+    const isExistingUrl = (item: string) => item.startsWith(cloudFrontDomain);
+    const existingUrls: string[] = imageOrder.filter(isExistingUrl);
+    const newKeys: string[] = imageOrder.filter(
+      (item: string) => !isExistingUrl(item)
+    );
+
+    if (modificationType === "new" && existingUrls.length > 0) {
+      enrichContext({
+        outcome: "validation_failed",
+        reason: "invalid_image_data",
+      });
+      response(res, 400, "Invalid image data");
+      return;
+    }
+
+    let validatedExistingSet: Set<string> = new Set();
     let validatedExistingVideo: string = "";
 
     if (modificationType === "existing" && project) {
-      validatedExistingImages = existingImages.filter((url: string) =>
+      const validExistingUrls = existingUrls.filter((url: string) =>
         project.project_images?.includes(url)
       );
+      validatedExistingSet = new Set(validExistingUrls);
 
       if (existingVideo && project.project_video === existingVideo) {
         validatedExistingVideo = existingVideo;
       }
 
-      if (validatedExistingImages.length !== existingImages.length) {
+      if (validatedExistingSet.size !== existingUrls.length) {
         enrichContext({
           security_warning: "unowned_images_attempt",
-          unowned_count: existingImages.length - validatedExistingImages.length,
+          unowned_count: existingUrls.length - validatedExistingSet.size,
         });
         logger.warn(
-          `Security: User ${userid} sent ${existingImages.length - validatedExistingImages.length} unowned image URL(s)`
+          `Security: User ${userid} sent ${existingUrls.length - validatedExistingSet.size} unowned image URL(s)`
         );
       }
       if (existingVideo && !validatedExistingVideo) {
@@ -652,16 +703,17 @@ const validateMediaUploadAndStoreProject = asyncHandler(
         logger.warn(`Security: User ${userid} sent unowned video URL`);
       }
     }
-    const allowedImagesCount = 5 - validatedExistingImages.length;
 
-    if (!validatedExistingImages.length && project_images.length === 0) {
+    const allowedImagesCount = MAX_ALLOWED_IMAGES - validatedExistingSet.size;
+
+    if (imageOrder.length === 0 || (validatedExistingSet.size === 0 && newKeys.length === 0)) {
       enrichContext({ outcome: "validation_failed", reason: "no_images" });
       response(res, 400, "At least one image is required");
       return;
     }
 
     if (
-      project_images.length > allowedImagesCount ||
+      newKeys.length > allowedImagesCount ||
       (project_video && validatedExistingVideo)
     ) {
       enrichContext({ outcome: "validation_failed", reason: "too_many_files" });
@@ -670,11 +722,11 @@ const validateMediaUploadAndStoreProject = asyncHandler(
     }
 
     const mediaKeys = [
-      ...project_images,
+      ...newKeys,
       ...(project_video ? [project_video] : []),
     ];
 
-    const [preSignedUrls, urlError] = await tryCatch(
+    const [validatedMediaUrls, urlError] = await tryCatch(
       Promise.all(
         mediaKeys.map((key) =>
           s3Service.validateAndCreatePreSignedDownloadUrl(key)
@@ -689,8 +741,79 @@ const validateMediaUploadAndStoreProject = asyncHandler(
       else throw new ApiError("Couldn't verify uploads. Try again.", 500);
     }
 
-    const preSignedImageUrls = preSignedUrls.slice(0, project_images.length);
-    const preSignedVideoUrl = preSignedUrls[project_images.length] || "";
+    const newKeyToUrl = new Map<string, string>(
+      newKeys.map((key, i) => [key, validatedMediaUrls[i]])
+    );
+    const preSignedVideoUrl = validatedMediaUrls[newKeys.length] || "";
+
+    const finalImages = imageOrder
+      .map((item: string) => {
+        if (isExistingUrl(item)) {
+          return validatedExistingSet.has(item) ? item : null;
+        }
+        return newKeyToUrl.get(item) || null;
+      })
+      .filter(Boolean) as string[];
+
+    if (finalImages.length === 0) {
+      enrichContext({ outcome: "validation_failed", reason: "no_valid_images" });
+      response(res, 400, "At least one valid image is required");
+      return;
+    }
+
+    let finalImages_detail: string[] = [];
+    const detailOrderInput: string[] = Array.isArray(imageOrder_detail) ? imageOrder_detail : [];
+
+    if (detailOrderInput.length > 0) {
+      const existingDetailUrls = detailOrderInput.filter(isExistingUrl);
+      const newDetailKeys = detailOrderInput.filter((item: string) => !isExistingUrl(item));
+
+      let validatedExistingDetailSet: Set<string> = new Set();
+
+      if (modificationType === "existing" && project) {
+        const validExistingDetailUrls = existingDetailUrls.filter((url: string) =>
+          (project as any).project_images_detail?.includes(url)
+        );
+        validatedExistingDetailSet = new Set(validExistingDetailUrls);
+
+        if (validatedExistingDetailSet.size !== existingDetailUrls.length) {
+          enrichContext({ security_warning: "unowned_detail_images_attempt" });
+          logger.warn(`Security: User ${userid} sent unowned detail image URL(s)`);
+        }
+      }
+
+      const [validatedDetailUrls, detailUrlError] = await tryCatch(
+        Promise.all(
+          newDetailKeys.map((key: string) => s3Service.validateAndCreatePreSignedDownloadUrl(key))
+        )
+      );
+
+      if (detailUrlError) {
+        enrichContext({ outcome: "error", error: { name: "S3ValidationError" } });
+        logger.error("Failed to verify detail uploads", detailUrlError);
+        if (detailUrlError instanceof Error) throw new ApiError(detailUrlError.message, 400);
+        else throw new ApiError("Couldn't verify detail uploads. Try again.", 500);
+      }
+
+      const newDetailKeyToUrl = new Map<string, string>(
+        newDetailKeys.map((key: string, i: number) => [key, validatedDetailUrls[i]])
+      );
+
+      finalImages_detail = detailOrderInput
+        .map((item: string) => {
+          if (isExistingUrl(item)) {
+            return validatedExistingDetailSet.has(item) ? item : null;
+          }
+          return newDetailKeyToUrl.get(item) || null;
+        })
+        .filter(Boolean) as string[];
+    }
+
+    if (finalImages_detail.length > 0 && finalImages_detail.length !== finalImages.length) {
+      enrichContext({ outcome: "validation_failed", reason: "image_array_length_mismatch" });
+      response(res, 400, "Image arrays length mismatch");
+      return;
+    }
 
     const filteredProjectData = {
       github_repo_id: projectData.github_repo_id,
@@ -700,7 +823,8 @@ const validateMediaUploadAndStoreProject = asyncHandler(
       tech_stack: result.data.tech_stack,
       live_link: result.data.live_link,
       price: result.data.price,
-      project_images: [...preSignedImageUrls, ...validatedExistingImages],
+      project_images: finalImages,
+      project_images_detail: finalImages_detail,
       project_video: validatedExistingVideo || preSignedVideoUrl,
       userid,
       github_installation_id: installationId,
@@ -731,10 +855,12 @@ const validateMediaUploadAndStoreProject = asyncHandler(
     } else {
       const currentMedia = [
         ...(project?.project_images ?? []),
+        ...((project as any)?.project_images_detail ?? []),
         ...(project?.project_video ? [project?.project_video] : []),
       ];
       const updatedMedia = [
         ...(filteredProjectData.project_images ?? []),
+        ...(filteredProjectData.project_images_detail ?? []),
         ...(filteredProjectData.project_video
           ? [filteredProjectData.project_video]
           : []),
@@ -941,7 +1067,7 @@ const getSpecificProjectData = asyncHandler(
         userid,
         github_repo_id: req.query.github_repo_id,
       }).select(
-        "github_repo_id github_installation_id price project_type live_link project_images project_video"
+        "github_repo_id github_installation_id price project_type live_link project_images project_images_detail project_video"
       )
     );
 
@@ -1110,7 +1236,7 @@ const deleteProjectListing = asyncHandler(
       Project.findOne({
         userid,
         github_repo_id: req.query.github_repo_id,
-      }).select("project_images project_video repo_zip_s3_key _id")
+      }).select("project_images project_images_detail project_video repo_zip_s3_key _id")
     );
 
     if (projectError) {
@@ -1150,8 +1276,24 @@ const deleteProjectListing = asyncHandler(
       return;
     }
 
+    if (projectData?._id) {
+      const [, wishlistCleanupError] = await tryCatch(
+        User.updateMany(
+          { wishlist: projectData._id },
+          { $pull: { wishlist: projectData._id } }
+        )
+      );
+      if (wishlistCleanupError) {
+        logger.error(
+          "Failed to remove deleted project from wishlists",
+          wishlistCleanupError
+        );
+      }
+    }
+
     const toBeDeletedKeys = [
       ...(projectData?.project_images ? projectData.project_images : []),
+      ...((projectData as any)?.project_images_detail ?? []),
       ...(projectData?.project_video ? [projectData.project_video] : []),
     ];
 
@@ -1505,6 +1647,77 @@ const refreshRepoZip = asyncHandler(async (req: Request, res: Response) => {
   response(res, 200, "Refresh initiated");
 });
 
+const DETAIL_SELECT = {
+  title: 1,
+  description: 1,
+  project_type: 1,
+  tech_stack: 1,
+  price: 1,
+  avgRating: 1,
+  totalReviews: 1,
+  live_link: 1,
+  createdAt: 1,
+  project_images: 1,
+  project_images_detail: 1,
+  project_video: 1,
+  repo_tree: 1,
+  repo_tree_status: 1,
+} as const;
+
+const DETAIL_SELLER_POPULATE = {
+  path: "userid",
+  select: "username name profile_image_url short_bio job_role location website_url x_username -_id",
+} as const;
+
+const getMarketplaceProjectDetail = asyncHandler(
+  async (req: Request, res: Response) => {
+    enrichContext({ action: "get_marketplace_project_detail" });
+
+    if (!req.user) {
+      enrichContext({ outcome: "unauthorized" });
+      throw new ApiError("Error during validation", 401);
+    }
+
+    const { project_id } = req.query;
+
+    if (!project_id || typeof project_id !== "string" || !mongoose.Types.ObjectId.isValid(project_id)) {
+      enrichContext({ outcome: "validation_failed", reason: "invalid_project_id" });
+      response(res, 400, "Valid project_id query parameter is required");
+      return;
+    }
+
+    enrichContext({ entity: { type: "project", id: project_id } });
+
+    const [projectData, projectError] = await tryCatch(
+      Project.findOne({
+        _id: new mongoose.Types.ObjectId(project_id),
+        isActive: true,
+        github_access_revoked: false,
+        repo_zip_status: "SUCCESS",
+      })
+        .select(DETAIL_SELECT)
+        .populate(DETAIL_SELLER_POPULATE)
+        .lean()
+    );
+
+    if (projectError) {
+      enrichContext({ outcome: "error", error: { name: "DatabaseError" } });
+      logger.error("Failed to fetch project detail", projectError);
+      response(res, 500, "Failed to fetch project data. Try again later.");
+      return;
+    }
+
+    if (!projectData) {
+      enrichContext({ outcome: "not_found" });
+      response(res, 404, "Project not found");
+      return;
+    }
+
+    enrichContext({ outcome: "success" });
+    response(res, 200, "Project detail fetched successfully", projectData);
+  }
+);
+
 export {
   getPrivateRepos,
   getPreSignedUrlForProjectMediaUpload,
@@ -1519,4 +1732,5 @@ export {
   getRepoZipStatus,
   retryRepoZipUpload,
   refreshRepoZip,
+  getMarketplaceProjectDetail,
 };

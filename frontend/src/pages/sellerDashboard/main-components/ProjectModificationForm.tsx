@@ -1,13 +1,16 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Undo2 } from "lucide-react";
-import { ProjectModificationFormProps, ProjectType } from "../utils/types";
+import { ImageItem, ImageCropResult, ProjectModificationFormProps, ProjectType } from "../utils/types";
 import { useProjectSubmission } from "../hooks/useProjectSubmission";
+import { projectListingFormDataValidation } from "../utils/projectListingFormValidation";
+import { errorToast } from "@/components/ui/customToast";
 import { useQueryClient } from "@tanstack/react-query";
 import UploadOverlay from "../sub-components/UploadOverlay";
 import ProjectGeneralInfo from "../sub-components/ProjectGeneralInfo";
 import ProjectMediaUploader from "../sub-components/ProjectMediaUploader";
 import ProjectPriceSelection from "../sub-components/ProjectPriceSelection";
+import ImageCropOverlay from "../sub-components/ImageCropOverlay";
 
 export default function ProjectModificationForm({
   formProps,
@@ -24,15 +27,26 @@ export default function ProjectModificationForm({
   const [techStack, setTechStack] = useState<string[]>(formProps.tech_stack);
   const [techInput, setTechInput] = useState("");
   const [liveLink, setLiveLink] = useState(formProps.live_link || "");
-  const [images, setImages] = useState<File[]>([]);
+  const [imageItems, setImageItems] = useState<ImageItem[]>(
+    formProps.project_images.map((url) => ({ type: "existing" as const, url }))
+  );
   const [video, setVideo] = useState<File | null>(null);
   const [price, setPrice] = useState(formProps.price || 299);
-  const [existingImages, setExistingImages] = useState<string[]>(
-    formProps.project_images
-  );
   const [existingVideo, setExistingVideo] = useState<string | null>(
     formProps.project_video || null
   );
+
+  const [showCropOverlay, setShowCropOverlay] = useState(false);
+
+  const detailUrlMap = useMemo(() => {
+    const map = new Map<string, string | undefined>();
+    if (formProps.project_images_detail && formProps.project_images_detail.length > 0) {
+      formProps.project_images.forEach((url, i) => {
+        map.set(url, formProps.project_images_detail?.[i]);
+      });
+    }
+    return map;
+  }, [formProps.project_images, formProps.project_images_detail]);
 
   const queryClient = useQueryClient();
 
@@ -66,24 +80,57 @@ export default function ProjectModificationForm({
     installation_id: formProps.github_installation_id,
   });
 
-  const onSubmit = () => {
-    handleSubmit({
+  const onSubmitClick = () => {
+    const formData = {
       title: title.current?.value || "",
       description,
       projectType,
       techStack,
       liveLink,
-      images,
+      imageItems,
       video,
       price,
-      existingImages,
       existingVideo,
-    });
+    };
+
+    const validationError = projectListingFormDataValidation(formData);
+    if (validationError) {
+      errorToast(validationError);
+      return;
+    }
+
+    setShowCropOverlay(true);
+  };
+
+  const onCropComplete = (croppedItems: ImageCropResult[]) => {
+    setShowCropOverlay(false);
+    handleSubmit(
+      {
+        title: title.current?.value || "",
+        description,
+        projectType,
+        techStack,
+        liveLink,
+        video,
+        price,
+        existingVideo,
+      },
+      croppedItems
+    );
   };
 
   return (
     <div>
       {isSubmitting && <UploadOverlay uploadProgress={uploadProgress} />}
+
+      {showCropOverlay && (
+        <ImageCropOverlay
+          imageItems={imageItems}
+          detailUrlMap={detailUrlMap}
+          onComplete={onCropComplete}
+          onCancel={() => setShowCropOverlay(false)}
+        />
+      )}
 
       <div className="space-y-6">
         <div>
@@ -116,12 +163,10 @@ export default function ProjectModificationForm({
             />
 
             <ProjectMediaUploader
-              images={images}
-              setImages={setImages}
+              imageItems={imageItems}
+              setImageItems={setImageItems}
               video={video}
               setVideo={setVideo}
-              existingImages={existingImages}
-              setExistingImages={setExistingImages}
               existingVideo={existingVideo}
               setExistingVideo={setExistingVideo}
             />
@@ -131,7 +176,7 @@ export default function ProjectModificationForm({
             <Button
               type="button"
               className="w-full px-8 py-4 bg-black text-white dark:bg-white dark:text-black font-space font-bold uppercase tracking-widest text-[10px] md:text-sm rounded-none border-2 border-transparent hover:bg-red-500 hover:text-white dark:hover:bg-red-500 dark:hover:text-white hover:border-black dark:hover:border-white transition-colors duration-300 mt-12"
-              onClick={onSubmit}
+              onClick={onSubmitClick}
             >
               Submit Modifications
             </Button>
@@ -141,4 +186,3 @@ export default function ProjectModificationForm({
     </div>
   );
 }
-

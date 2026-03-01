@@ -1,12 +1,15 @@
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Import } from "lucide-react";
-import { ProjectListingFormProps, ProjectType } from "../utils/types";
+import { ImageItem, ImageCropResult, ProjectListingFormProps, ProjectType } from "../utils/types";
 import { useProjectSubmission } from "../hooks/useProjectSubmission";
+import { projectListingFormDataValidation } from "../utils/projectListingFormValidation";
+import { errorToast } from "@/components/ui/customToast";
 import UploadOverlay from "../sub-components/UploadOverlay";
 import ProjectGeneralInfo from "../sub-components/ProjectGeneralInfo";
 import ProjectMediaUploader from "../sub-components/ProjectMediaUploader";
 import ProjectPriceSelection from "../sub-components/ProjectPriceSelection";
+import ImageCropOverlay from "../sub-components/ImageCropOverlay";
 
 export default function ProjectListingForm({
   formProps,
@@ -22,9 +25,11 @@ export default function ProjectListingForm({
   const [techStack, setTechStack] = useState<string[]>([formProps.language]);
   const [techInput, setTechInput] = useState("");
   const [liveLink, setLiveLink] = useState("");
-  const [images, setImages] = useState<File[]>([]);
+  const [imageItems, setImageItems] = useState<ImageItem[]>([]);
   const [video, setVideo] = useState<File | null>(null);
   const [price, setPrice] = useState<number>(0.1);
+
+  const [showCropOverlay, setShowCropOverlay] = useState(false);
 
   const handleDifferentProjectImport = () => {
     setFormPropsAndSwitchUI({
@@ -47,22 +52,55 @@ export default function ProjectListingForm({
     installation_id: formProps.installation_id,
   });
 
-  const onSubmit = () => {
-    handleSubmit({
+  const onSubmitClick = () => {
+    const formData = {
       title: title.current?.value || "",
       description,
       projectType,
       techStack,
       liveLink,
-      images,
+      imageItems,
       video,
       price,
-    });
+    };
+
+    const validationError = projectListingFormDataValidation(formData);
+    if (validationError) {
+      errorToast(validationError);
+      return;
+    }
+
+    setShowCropOverlay(true);
+  };
+
+  const onCropComplete = (croppedItems: ImageCropResult[]) => {
+    setShowCropOverlay(false);
+    handleSubmit(
+      {
+        title: title.current?.value || "",
+        description,
+        projectType,
+        techStack,
+        liveLink,
+        video,
+        price,
+      },
+      croppedItems
+    );
   };
 
   return (
     <div>
       {isSubmitting && <UploadOverlay uploadProgress={uploadProgress} />}
+
+      {showCropOverlay && (
+        <ImageCropOverlay
+          imageItems={imageItems}
+          detailUrlMap={new Map()}
+          onComplete={onCropComplete}
+          onCancel={() => setShowCropOverlay(false)}
+        />
+      )}
 
       <div className="space-y-6">
         <div className="rounded-xl">
@@ -95,8 +133,8 @@ export default function ProjectListingForm({
             />
 
             <ProjectMediaUploader
-              images={images}
-              setImages={setImages}
+              imageItems={imageItems}
+              setImageItems={setImageItems}
               video={video}
               setVideo={setVideo}
             />
@@ -106,7 +144,7 @@ export default function ProjectListingForm({
             <Button
               type="button"
               className="w-full px-8 py-4 bg-black text-white dark:bg-white dark:text-black font-space font-bold uppercase tracking-widest text-[10px] md:text-sm rounded-none border-2 border-transparent hover:bg-red-500 hover:text-white dark:hover:bg-red-500 dark:hover:text-white hover:border-black dark:hover:border-white transition-colors duration-300 mt-12"
-              onClick={onSubmit}
+              onClick={onSubmitClick}
             >
               Submit Project
             </Button>

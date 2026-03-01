@@ -41,7 +41,6 @@ export const projectListingFormDataValidation = (
         required_error: "Price is required",
       })
       .min(0, "Price should be greater than or equal to 0."),
-    existingImages: z.array(z.string()).optional(),
     existingVideo: z.string().nullable().optional(),
   });
 
@@ -50,8 +49,7 @@ export const projectListingFormDataValidation = (
     return result.error.errors[0].message;
   }
 
-  const totalImageCount =
-    (data.existingImages?.length || 0) + data.images.length;
+  const totalImageCount = data.imageItems.length;
 
   if (totalImageCount < 1) {
     return "At least one image is required";
@@ -61,8 +59,12 @@ export const projectListingFormDataValidation = (
     return "At most five images are allowed";
   }
 
-  if (data.images.length > 0) {
-    for (const file of data.images) {
+  const newFiles = data.imageItems
+    .filter((i): i is Extract<typeof i, { type: "new" }> => i.type === "new")
+    .map((i) => i.file);
+
+  if (newFiles.length > 0) {
+    for (const file of newFiles) {
       const nameArray = file.name.split(".");
       const extension = nameArray[nameArray.length - 1].toLowerCase();
 

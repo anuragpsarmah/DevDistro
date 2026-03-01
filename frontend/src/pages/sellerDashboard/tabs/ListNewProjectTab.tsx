@@ -132,13 +132,15 @@ export default function ListNewProjectTab({
     metadata: Array<ProjectMediaMetadata>,
     existingImageCount: number,
     existingVideoCount: number,
-    modificationType: string
+    modificationType: string,
+    detailMetadata?: Array<ProjectMediaMetadata>
   ) => {
     const response = await preSignedUrlMutate({
       metadata,
       existingImageCount,
       existingVideoCount,
       modificationType,
+      detailMetadata,
     });
     return response;
   };
