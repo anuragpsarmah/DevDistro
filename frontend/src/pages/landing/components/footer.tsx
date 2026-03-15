@@ -21,14 +21,14 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
           <div className="md:col-span-2">
-            <h3 className="font-syne text-3xl font-black uppercase tracking-widest mb-6 flex items-center gap-3">
+            <h3 className="font-syne text-3xl font-black uppercase tracking-widest mb-6 flex items-center gap-3 justify-center md:justify-start">
               <LogoIcon className="w-8 h-8" />
               DevExchange
             </h3>
-            <p className="text-gray-600 dark:text-gray-400 max-w-sm mb-8 leading-relaxed transition-colors">
+            <p className="text-gray-600 dark:text-gray-400 max-w-sm mb-8 leading-relaxed transition-colors text-center md:text-left mx-auto md:mx-0">
               A decentralized protocol for code monetization powered by Solana and GitHub.
             </p>
-            <div className="flex gap-4">
+            <div className="flex gap-4 justify-center md:justify-start">
               <a href="https://github.com/anuragpsarmah/DevExchange" target="_blank" rel="noopener noreferrer" className="p-3 border border-black/20 dark:border-white/20 hover:border-black dark:hover:border-white hover:text-red-500 transition-all flex items-center justify-center">
                 <Github size={20} />
               </a>
@@ -39,8 +39,8 @@ export default function Footer() {
           </div>
 
           <div>
-            <h4 className="font-bold uppercase tracking-widest text-xs mb-6 text-gray-500 dark:text-gray-500 transition-colors">Navigation</h4>
-            <ul className="space-y-4">
+            <h4 className="font-bold uppercase tracking-widest text-xs mb-6 text-gray-500 dark:text-gray-500 transition-colors text-center md:text-left">Navigation</h4>
+            <ul className="space-y-4 text-center md:text-left">
               {["DevExchange", "The Revelation", "The Mechanics", "Validations", "Query Log"].map((item) => {
                 let id = item.toLowerCase().replace(" ", "-");
                 if (id === "devexchange") id = "the-introduction";
@@ -49,7 +49,7 @@ export default function Footer() {
                     <Link
                       to={isHome ? `#${id}` : `/#${id}`}
                       onClick={() => handleScroll(id)}
-                      className="hover:text-red-500 hover:ml-2 transition-all block"
+                      className="hover:text-red-500 md:hover:ml-2 transition-all block"
                     >
                       {item}
                     </Link>
@@ -60,8 +60,8 @@ export default function Footer() {
           </div>
 
           <div>
-            <h4 className="font-bold uppercase tracking-widest text-xs mb-6 text-gray-500 dark:text-gray-500 transition-colors">Legal</h4>
-            <ul className="space-y-4">
+            <h4 className="font-bold uppercase tracking-widest text-xs mb-6 text-gray-500 dark:text-gray-500 transition-colors text-center md:text-left">Legal</h4>
+            <ul className="space-y-4 text-center md:text-left">
               <li><Link to="/privacy" onClick={() => window.scrollTo(0, 0)} className="hover:text-black dark:hover:text-white text-gray-600 dark:text-gray-400 transition-all">Privacy Policy</Link></li>
               <li><Link to="/terms" onClick={() => window.scrollTo(0, 0)} className="hover:text-black dark:hover:text-white text-gray-600 dark:text-gray-400 transition-all">Terms of Service</Link></li>
             </ul>

@@ -89,8 +89,8 @@ export default function MobileMenu({
               </button>
             </div>
 
-            <div className="mt-auto pb-12 opacity-10 dark:opacity-30 pointer-events-none">
-              <h2 className="font-syne text-5xl font-black text-transparent" style={{ WebkitTextStroke: isDarkMode ? "1px white" : "1px black" }}>
+            <div className="mt-auto pb-12 opacity-10 dark:opacity-30 pointer-events-none overflow-hidden">
+              <h2 className="font-syne text-2xl font-black text-transparent text-center w-full" style={{ WebkitTextStroke: isDarkMode ? "1px white" : "1px black" }}>
                 DEV_EXCHANGE
               </h2>
             </div>

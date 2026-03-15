@@ -11,10 +11,10 @@ export default function TheMechanics() {
           transition={{ duration: 0.6, ease: "easeOut" }}
           className="mb-20"
         >
-          <div className="flex items-center gap-3 mb-6 border-b-4 border-black/20 dark:border-white/20 pb-4 inline-flex transition-colors">
+          <div className="flex items-center gap-3 mb-6 border-b-4 border-black/20 dark:border-white/20 pb-4 transition-colors w-fit mx-auto md:mx-0">
             <span className="font-space font-bold uppercase tracking-[0.2em] text-xs">The Mechanics</span>
           </div>
-          <h2 className="font-syne text-5xl md:text-7xl font-black uppercase leading-none">
+          <h2 className="font-syne text-5xl md:text-7xl font-black uppercase leading-none text-center md:text-left">
             How The Machine<br />
             <span className="text-black/40 dark:text-white/40">Operates.</span>
           </h2>

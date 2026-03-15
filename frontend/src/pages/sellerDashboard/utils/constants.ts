@@ -101,6 +101,7 @@ export const PROJECT_TYPES = [
   "Library",
   "API",
   "CLI Tool",
+  "UI Component",
   "Data Visualization",
   "Game",
   "IoT Application",

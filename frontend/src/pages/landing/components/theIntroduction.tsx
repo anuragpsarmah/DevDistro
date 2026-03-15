@@ -34,8 +34,8 @@ export default function Prologue({ handleAuthNavigate }: PrologueProps) {
         className="absolute inset-0 pointer-events-none z-0 opacity-60 hidden dark:block"
         style={{
           backgroundImage: `
-            linear-gradient(to right, rgba(255,255,255,0.2) 1px, transparent 1px),
-            linear-gradient(to bottom, rgba(255,255,255,0.2) 1px, transparent 1px)
+            linear-gradient(to right, rgba(255,255,255,0.4) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(255,255,255,0.4) 1px, transparent 1px)
           `,
           backgroundSize: '4rem 4rem',
           maskImage: 'radial-gradient(ellipse at 50% 50%, black 0%, transparent 80%)',
@@ -49,19 +49,20 @@ export default function Prologue({ handleAuthNavigate }: PrologueProps) {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="flex items-center gap-4 mb-8"
+            className="flex items-center gap-4 mb-8 justify-center md:justify-start"
           >
             <div className="w-12 h-[2px] bg-red-500"></div>
             <span className="font-space font-bold uppercase tracking-[0.2em] text-xs text-red-500">
               DevExchange
             </span>
+            <div className="w-12 h-[2px] bg-red-500"></div>
           </motion.div>
 
           <motion.h1
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.1 }}
-            className="font-syne text-5xl md:text-7xl lg:text-8xl font-black leading-[0.9] text-black dark:text-white tracking-widest uppercase break-words hyphens-auto"
+            className="font-syne text-5xl md:text-7xl lg:text-8xl font-black leading-[0.9] text-black dark:text-white tracking-widest uppercase break-words hyphens-auto text-center md:text-left"
           >
             A SOURCE CODE MARKET THAT{" "}
             <span
@@ -77,7 +78,7 @@ export default function Prologue({ handleAuthNavigate }: PrologueProps) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.8, delay: 0.3 }}
-            className="font-space mt-10 text-base md:text-lg text-gray-500 dark:text-gray-400 max-w-xl leading-relaxed tracking-wide"
+            className="font-space mt-10 text-base md:text-lg text-gray-500 dark:text-gray-400 max-w-xl leading-relaxed tracking-wide text-center md:text-left mx-auto md:mx-0"
           >
             The open marketplace where developers sell private repos — priced in USD, settled in SOL, delivered instantly.
           </motion.p>
@@ -86,7 +87,7 @@ export default function Prologue({ handleAuthNavigate }: PrologueProps) {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.5 }}
-            className="mt-12 flex flex-col sm:flex-row gap-4"
+            className="mt-12 flex flex-col sm:flex-row gap-4 justify-center md:justify-start items-center md:items-start"
           >
             <button
               onClick={handleAuthNavigate}

@@ -9,6 +9,7 @@ export const PROJECT_TYPE_ENUM = [
   "Library",
   "API",
   "CLI Tool",
+  "UI Component",
   "Data Visualization",
   "Game",
   "IoT Application",
