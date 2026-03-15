@@ -3,7 +3,10 @@ import { JOB_ROLE_ENUM } from "../types/constants";
 
 export const profileInformationSchema = z.object({
   website_url: z.union([z.string().url(), z.literal("")]).optional(),
-  x_username: z.string().optional(),
+  x_username: z
+    .string()
+    .max(50, "X username must be 50 characters or less")
+    .optional(),
   short_bio: z
     .string()
     .max(250, "Short bio must be 250 characters or less")
@@ -18,13 +21,17 @@ export const profileInformationSchema = z.object({
       z.literal(""),
     ])
     .optional(),
-  location: z.string().optional(),
+  location: z
+    .string()
+    .max(100, "Location must be 100 characters or less")
+    .optional(),
   review_description: z
     .string()
     .max(200, "Review description must be 200 characters or less")
     .optional(),
   review_stars: z
     .number()
+    .int("Review stars must be a whole number")
     .min(0, "Review stars must be between 0 and 5")
     .max(5, "Review stars must be between 0 and 5")
     .optional(),

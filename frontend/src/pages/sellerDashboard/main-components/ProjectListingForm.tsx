@@ -27,7 +27,7 @@ export default function ProjectListingForm({
   const [liveLink, setLiveLink] = useState("");
   const [imageItems, setImageItems] = useState<ImageItem[]>([]);
   const [video, setVideo] = useState<File | null>(null);
-  const [price, setPrice] = useState<number>(0.1);
+  const [price, setPrice] = useState<number>(9.99);
 
   const [showCropOverlay, setShowCropOverlay] = useState(false);
 
@@ -109,7 +109,8 @@ export default function ProjectListingForm({
               <Button
                 type="button"
                 variant="outline"
-                className="flex items-center gap-3 px-6 py-4 bg-transparent border-2 border-black dark:border-white text-black dark:text-white font-space font-bold uppercase tracking-widest text-[10px] md:text-sm rounded-none hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black transition-colors duration-300"
+                disabled={isSubmitting}
+                className="flex items-center gap-3 px-6 py-4 bg-transparent border-2 border-black dark:border-white text-black dark:text-white font-space font-bold uppercase tracking-widest text-[10px] md:text-sm rounded-none hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                 onClick={handleDifferentProjectImport}
               >
                 <Import className="w-4 h-4" />
@@ -143,7 +144,8 @@ export default function ProjectListingForm({
 
             <Button
               type="button"
-              className="w-full px-8 py-4 bg-black text-white dark:bg-white dark:text-black font-space font-bold uppercase tracking-widest text-[10px] md:text-sm rounded-none border-2 border-transparent hover:bg-red-500 hover:text-white dark:hover:bg-red-500 dark:hover:text-white hover:border-black dark:hover:border-white transition-colors duration-300 mt-12"
+              disabled={isSubmitting}
+              className="w-full px-8 py-4 bg-black text-white dark:bg-white dark:text-black font-space font-bold uppercase tracking-widest text-[10px] md:text-sm rounded-none border-2 border-transparent hover:bg-red-500 hover:text-white dark:hover:bg-red-500 dark:hover:text-white hover:border-black dark:hover:border-white transition-colors duration-300 mt-12 disabled:opacity-50 disabled:cursor-not-allowed"
               onClick={onSubmitClick}
             >
               Submit Project

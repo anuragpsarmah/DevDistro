@@ -9,19 +9,20 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Trash2 } from "lucide-react";
+import { Loader2, Trash2 } from "lucide-react";
 
 interface DeleteConfirmationModalProps {
   deleteDialogOpen: boolean;
   setDeleteDialogOpen: React.Dispatch<React.SetStateAction<boolean>>;
   handleDeleteConfirm: () => Promise<void>;
+  isDeleting: boolean;
 }
 
 export const DeleteConfirmationModal: React.FC<
   DeleteConfirmationModalProps
-> = ({ deleteDialogOpen, setDeleteDialogOpen, handleDeleteConfirm }) => {
+> = ({ deleteDialogOpen, setDeleteDialogOpen, handleDeleteConfirm, isDeleting }) => {
   return (
-    <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+    <AlertDialog open={deleteDialogOpen} onOpenChange={(open) => { if (isDeleting) return; setDeleteDialogOpen(open); }}>
       <AlertDialogContent className="bg-white dark:bg-[#050505] p-8 border-2 border-black dark:border-white shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] dark:shadow-[8px_8px_0px_0px_rgba(255,255,255,1)] w-full max-w-lg mx-auto rounded-none overflow-hidden transition-colors duration-300">
         <AlertDialogHeader className="relative z-10 m-0 p-0">
           <div className="flex items-center gap-4 mb-8">
@@ -41,14 +42,19 @@ export const DeleteConfirmationModal: React.FC<
           </AlertDialogDescription>
         </div>
         <AlertDialogFooter className="relative z-10 flex flex-col space-y-4 sm:flex-row sm:space-y-0 sm:space-x-4">
-          <AlertDialogCancel className="bg-transparent border-2 border-black dark:border-white text-black dark:text-white hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black w-full sm:w-auto transition-all duration-300 rounded-none font-space uppercase tracking-widest font-bold text-xs py-3 px-6 h-auto m-0">
+          <AlertDialogCancel
+            disabled={isDeleting}
+            className="bg-transparent border-2 border-black dark:border-white text-black dark:text-white hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black w-full sm:w-auto transition-all duration-300 rounded-none font-space uppercase tracking-widest font-bold text-xs py-3 px-6 h-auto m-0 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
             Cancel
           </AlertDialogCancel>
           <AlertDialogAction
-            className="bg-red-500 text-white border-2 border-red-500 hover:bg-red-600 hover:border-red-600 w-full sm:w-auto transition-all duration-300 rounded-none font-space uppercase tracking-widest font-bold text-xs py-3 px-6 h-auto m-0"
+            disabled={isDeleting}
+            className="bg-red-500 text-white border-2 border-red-500 hover:bg-red-600 hover:border-red-600 w-full sm:w-auto transition-all duration-300 rounded-none font-space uppercase tracking-widest font-bold text-xs py-3 px-6 h-auto m-0 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-red-500 disabled:hover:border-red-500"
             onClick={handleDeleteConfirm}
           >
-            Delete Project
+            {isDeleting && <Loader2 className="w-4 h-4 animate-spin" />}
+            {isDeleting ? "Deleting..." : "Delete Project"}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

@@ -2,12 +2,12 @@ import { useEffect, useState } from "react";
 import { GithubIcon, Code2, ArrowRight } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuthValidationQuery } from "@/hooks/apiQueries";
+import { apiClient } from "@/lib/axiosInstance";
 import Header from "@/pages/landing/components/header";
 import MobileMenu from "@/pages/landing/components/mobileMenu";
 import Footer from "@/pages/landing/components/footer";
 
 export default function AuthPage() {
-  const clientID = import.meta.env.VITE_GITHUB_CLIENT_ID;
   const navigate = useNavigate();
   const { data, isLoading, isError } = useAuthValidationQuery();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -33,7 +33,11 @@ export default function AuthPage() {
   }, []);
 
   const handleLoginClick = () => {
-    window.location.href = `https://github.com/login/oauth/authorize?client_id=${clientID}&scope=read:user`;
+    apiClient
+      .get<{ data: { authorize_url: string } }>("/auth/githubLoginStart")
+      .then((res) => {
+        window.location.href = res.data.data.authorize_url;
+      });
   };
 
   const handleAuthNavigate = () => {
@@ -59,7 +63,7 @@ export default function AuthPage() {
           <div className="flex-1 flex flex-col justify-center">
             <div className="flex items-center gap-3 mb-8">
               <div className="w-12 h-[2px] bg-red-500"></div>
-              <span className="font-space font-bold uppercase tracking-[0.2em] text-xs text-red-500">Auth Potocol</span>
+              <span className="font-space font-bold uppercase tracking-[0.2em] text-xs text-red-500">Auth Protocol</span>
             </div>
 
             <h1 className="font-syne font-black uppercase tracking-widest leading-none text-5xl md:text-6xl lg:text-7xl mb-6 break-words hyphens-auto">
@@ -67,7 +71,7 @@ export default function AuthPage() {
             </h1>
 
             <p className="text-gray-600 dark:text-gray-400 text-lg md:text-xl leading-relaxed mb-10">
-              Authenticate securely using <span className="text-black dark:text-white font-bold">GITHUB OAUTH</span>. Access the market. Monetize your code. Be discovered.
+              Authenticate securely using <span className="text-black dark:text-white font-bold">GITHUB OAUTH</span>.
             </p>
 
             <ul className="flex flex-col gap-5">

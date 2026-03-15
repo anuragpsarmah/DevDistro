@@ -6,13 +6,15 @@ import { ImageItem, ImageCropResult } from "../utils/types";
 import {
   getCroppedImageBlob,
   getDefaultCrop,
+} from "@/pages/sellerDashboard/utils/cropImage";
+import {
   CARD_ASPECT_RATIO,
   CARD_CROP_WIDTH,
   CARD_CROP_HEIGHT,
   DETAIL_ASPECT_RATIO,
   DETAIL_CROP_WIDTH,
   DETAIL_CROP_HEIGHT,
-} from "@/utils/cropImage";
+} from "@/pages/sellerDashboard/utils/constants";
 import { errorToast } from "@/components/ui/customToast";
 
 interface PerImageCropState {
@@ -256,8 +258,8 @@ export default function ImageCropOverlay({
           <button
             onClick={() => handleTabClick("card")}
             className={`flex-1 py-2.5 font-space font-bold uppercase tracking-widest text-[10px] transition-colors border-r-2 border-black dark:border-white ${cropView === "card"
-                ? "bg-black text-white dark:bg-white dark:text-black"
-                : "text-black dark:text-white hover:bg-black/5 dark:hover:bg-white/5"
+              ? "bg-black text-white dark:bg-white dark:text-black"
+              : "text-black dark:text-white hover:bg-black/5 dark:hover:bg-white/5"
               }`}
           >
             Card (16:9)
@@ -265,8 +267,8 @@ export default function ImageCropOverlay({
           <button
             onClick={() => handleTabClick("detail")}
             className={`flex-1 py-2.5 font-space font-bold uppercase tracking-widest text-[10px] transition-colors ${cropView === "detail"
-                ? "bg-black text-white dark:bg-white dark:text-black"
-                : "text-black dark:text-white hover:bg-black/5 dark:hover:bg-white/5"
+              ? "bg-black text-white dark:bg-white dark:text-black"
+              : "text-black dark:text-white hover:bg-black/5 dark:hover:bg-white/5"
               }`}
           >
             Detail (21:9)
@@ -330,8 +332,8 @@ export default function ImageCropOverlay({
                     markVisited(i, "card");
                   }}
                   className={`flex-shrink-0 relative w-12 h-12 border-2 overflow-hidden transition-all ${isCurrentImage
-                      ? "border-red-500"
-                      : "border-black dark:border-white opacity-60 hover:opacity-100"
+                    ? "border-red-500"
+                    : "border-black dark:border-white opacity-60 hover:opacity-100"
                     }`}
                 >
                   <img

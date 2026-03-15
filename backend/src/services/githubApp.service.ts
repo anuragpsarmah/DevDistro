@@ -7,41 +7,15 @@ import { encrypt, decrypt } from "../utils/encryption.util";
 import { tryCatch } from "../utils/tryCatch.util";
 import logger from "../logger/logger";
 import { Project } from "../models/project.model";
+import { Installation, InstallationToken, Repository } from "../types/types";
 
 const {
   GITHUB_APP_ID,
   GITHUB_APP_PRIVATE_KEY,
   GITHUB_WEBHOOK_SECRET,
   ENCRYPTION_KEY_32,
-  ENCRYPTION_IV,
   JWT_SECRET,
 } = process.env;
-
-interface InstallationToken {
-  token: string;
-  expires_at: string;
-}
-
-interface Repository {
-  id: number;
-  name: string;
-  full_name: string;
-  private: boolean;
-  description: string | null;
-  language: string | null;
-  updated_at: string;
-}
-
-interface Installation {
-  id: number;
-  account: {
-    login: string;
-    id: number;
-    type: string;
-  };
-  repository_selection: "all" | "selected";
-  suspended_at: string | null;
-}
 
 const INSTALL_STATE_EXPIRY_SECONDS = 10 * 60;
 
@@ -99,8 +73,7 @@ class GitHubAppService {
         const [decryptedToken, decryptError] = await tryCatch(() =>
           decrypt(
             dbCachedData.cached_installation_token!,
-            ENCRYPTION_KEY_32 as string,
-            ENCRYPTION_IV as string
+            ENCRYPTION_KEY_32 as string
           )
         );
 
@@ -154,7 +127,7 @@ class GitHubAppService {
     );
 
     const [encryptedToken] = await tryCatch(() =>
-      encrypt(token, ENCRYPTION_KEY_32 as string, ENCRYPTION_IV as string)
+      encrypt(token, ENCRYPTION_KEY_32 as string)
     );
 
     if (encryptedToken) {
@@ -202,7 +175,7 @@ class GitHubAppService {
         page,
         error: error instanceof Error ? error.message : "Unknown error",
       });
-      return { repos: [], totalCount: 0, perPage };
+      throw new Error("Failed to fetch repositories from GitHub");
     }
 
     return {

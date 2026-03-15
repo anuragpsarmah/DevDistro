@@ -8,6 +8,7 @@ import { enrichContext } from "../utils/asyncContext";
 export const sessionValidation = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     const session_token = req.cookies.session_token;
+    const jwtSecret = process.env.JWT_SECRET;
 
     if (!session_token) {
       enrichContext({
@@ -18,33 +19,38 @@ export const sessionValidation = asyncHandler(
       return;
     }
 
-    jwt.verify(
-      session_token,
-      process.env.JWT_SECRET as string,
-      (err: any | null, decoded: any) => {
-        if (err) {
-          enrichContext({
-            auth_status: err.name === "TokenExpiredError" ? "token_expired" : "token_invalid",
-            outcome: "unauthorized",
-            error: {
-              name: err.name,
-              message: err.message,
-            },
-          });
-          throw new ApiError("Unauthorized Access", 401, {}, err);
-        } else {
-          req.user = decoded;
-          enrichContext({
-            auth_status: "authenticated",
-            user: {
-              id: decoded._id,
-              username: decoded.username,
-            },
-          });
-          next();
-        }
-      }
-    );
+    if (!jwtSecret) {
+      enrichContext({
+        outcome: "error",
+        error: {
+          name: "ConfigError",
+          message: "JWT secret is not configured",
+        },
+      });
+      throw new ApiError("Internal Server Error", 500);
+    }
+
+    try {
+      const decoded = jwt.verify(session_token, jwtSecret, { algorithms: ["HS256"] }) as JwtPayload;
+      req.user = decoded as any;
+      enrichContext({
+        auth_status: "authenticated",
+        user: {
+          id: decoded._id as string,
+          username: decoded.username as string,
+        },
+      });
+      next();
+    } catch (err: any) {
+      enrichContext({
+        auth_status: err.name === "TokenExpiredError" ? "token_expired" : "token_invalid",
+        outcome: "unauthorized",
+        error: {
+          name: err.name,
+          message: err.message,
+        },
+      });
+      throw new ApiError("Unauthorized Access", 401, {}, err);
+    }
   }
 );
-

@@ -1,5 +1,6 @@
 import { AxiosError } from "axios";
 import { useNavigate } from "react-router-dom";
+import { useCallback } from "react";
 import { errorToast } from "@/components/ui/customToast";
 
 interface useHandleErrorParameter {
@@ -9,26 +10,28 @@ interface useHandleErrorParameter {
 export const useHandleError = ({ logout }: useHandleErrorParameter) => {
   const navigate = useNavigate();
 
-  const handleError = async (error: unknown) => {
-    console.log("Error:", error);
-    if (error instanceof AxiosError) {
-      if (error?.response?.status === 429) {
-        errorToast("Too many requests");
-      } else if (error?.response?.status === 401) {
-        if (logout) {
-          await logout();
-          navigate("/");
+  const handleError = useCallback(
+    async (error: unknown) => {
+      if (error instanceof AxiosError) {
+        if (error?.response?.status === 429) {
+          errorToast("Too many requests");
+        } else if (error?.response?.status === 401) {
+          if (logout) {
+            await logout();
+            navigate("/");
+          } else {
+            navigate("/");
+            errorToast("Something went wrong. You might still be logged in.");
+          }
         } else {
-          navigate("/");
-          errorToast("Something went wrong. You might still be logged in.");
+          errorToast(error?.response?.data?.message || "Something went wrong");
         }
       } else {
-        errorToast(error?.response?.data?.message || "Something went wrong");
+        errorToast("Something went wrong");
       }
-    } else {
-      errorToast("Something went wrong");
-    }
-  };
+    },
+    [logout, navigate]
+  );
 
   return { handleError };
 };

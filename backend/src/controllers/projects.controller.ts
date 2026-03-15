@@ -27,6 +27,8 @@ import { githubAppService } from "../services/githubApp.service";
 import { MAX_ALLOWED_IMAGES } from "../types/constants";
 import { tryCatch } from "../utils/tryCatch.util";
 import { enrichContext } from "../utils/asyncContext";
+import { Purchase } from "../models/purchase.model";
+import { performProjectHardDelete } from "../utils/projectCleanup.util";
 
 const MARKETPLACE_SELECT = {
   title: 1,
@@ -39,6 +41,14 @@ const MARKETPLACE_SELECT = {
   live_link: 1,
   createdAt: 1,
   project_images: { $slice: 1 },
+} as const;
+
+// Projects that count against the listing quota: visible on the marketplace.
+const MARKETPLACE_VISIBLE_FILTER = {
+  isActive: true,
+  github_access_revoked: false,
+  repo_zip_status: "SUCCESS",
+  scheduled_deletion_at: null,
 } as const;
 
 const SELLER_POPULATE = {
@@ -60,6 +70,7 @@ const searchAndFilterProjects = async (
     isActive: true,
     github_access_revoked: false,
     repo_zip_status: "SUCCESS",
+    scheduled_deletion_at: null,
   };
 
   if (projectTypes.length > 0) {
@@ -275,7 +286,7 @@ const getPreSignedUrlForProjectMediaUpload = asyncHandler(
     if (modificationType === "new") {
       const [queryResult, countError] = await tryCatch(
         Promise.all([
-          Project.countDocuments({ userid }),
+          Project.countDocuments({ userid, ...MARKETPLACE_VISIBLE_FILTER }),
           User.findById(userid).select("project_listing_limit").lean(),
         ])
       );
@@ -406,11 +417,24 @@ const getPreSignedUrlForProjectMediaUpload = asyncHandler(
 
     let detailPreSignedUrls: { uploadSignedUrl: string; key: string }[] = [];
     const { detailMetadata } = req.body;
-    if (detailMetadata && Array.isArray(detailMetadata) && detailMetadata.length > 0) {
+    if (
+      detailMetadata &&
+      Array.isArray(detailMetadata) &&
+      detailMetadata.length > 0
+    ) {
       const detailResult = fileMetadataSchema.safeParse(detailMetadata);
       if (!detailResult.success) {
-        enrichContext({ outcome: "validation_failed", reason: "invalid_detail_metadata" });
-        response(res, 400, "Detail image metadata validation failed", {}, detailResult.error.errors[0].message);
+        enrichContext({
+          outcome: "validation_failed",
+          reason: "invalid_detail_metadata",
+        });
+        response(
+          res,
+          400,
+          "Detail image metadata validation failed",
+          {},
+          detailResult.error.errors[0].message
+        );
         return;
       }
 
@@ -418,21 +442,32 @@ const getPreSignedUrlForProjectMediaUpload = asyncHandler(
         (m) => !m.fileType.startsWith("image/")
       );
       if (hasNonImageDetail) {
-        enrichContext({ outcome: "validation_failed", reason: "non_image_detail_metadata" });
+        enrichContext({
+          outcome: "validation_failed",
+          reason: "non_image_detail_metadata",
+        });
         response(res, 400, "Detail images must be image files");
         return;
       }
 
       const [detailUrls, detailUrlError] = await tryCatch(
         Promise.all(
-          detailMetadata.map((file: FileMetaData) => s3Service.createPreSignedUploadUrl(file))
+          detailMetadata.map((file: FileMetaData) =>
+            s3Service.createPreSignedUploadUrl(file)
+          )
         )
       );
 
       if (detailUrlError) {
         enrichContext({ outcome: "error", error: { name: "S3Error" } });
-        logger.error("Failed to generate detail presigned URLs", detailUrlError);
-        throw new ApiError("Failed to generate presigned URLs for detail images", 500);
+        logger.error(
+          "Failed to generate detail presigned URLs",
+          detailUrlError
+        );
+        throw new ApiError(
+          "Failed to generate presigned URLs for detail images",
+          500
+        );
       }
 
       detailPreSignedUrls = detailUrls;
@@ -440,12 +475,10 @@ const getPreSignedUrlForProjectMediaUpload = asyncHandler(
 
     const totalGenerated = preSignedUrls.length + detailPreSignedUrls.length;
     enrichContext({ outcome: "success", urls_generated: totalGenerated });
-    response(
-      res,
-      200,
-      `${totalGenerated} Pre-signed upload urls generated`,
-      [...preSignedUrls, ...detailPreSignedUrls]
-    );
+    response(res, 200, `${totalGenerated} Pre-signed upload urls generated`, [
+      ...preSignedUrls,
+      ...detailPreSignedUrls,
+    ]);
   }
 );
 
@@ -477,7 +510,7 @@ const validateMediaUploadAndStoreProject = asyncHandler(
     if (modificationType === "new") {
       const [queryResult, countError] = await tryCatch(
         Promise.all([
-          Project.countDocuments({ userid }),
+          Project.countDocuments({ userid, ...MARKETPLACE_VISIBLE_FILTER }),
           User.findById(userid).select("project_listing_limit").lean(),
         ])
       );
@@ -624,7 +657,8 @@ const validateMediaUploadAndStoreProject = asyncHandler(
       }
     }
 
-    const { imageOrder, imageOrder_detail, project_video, existingVideo } = projectData;
+    const { imageOrder, imageOrder_detail, project_video, existingVideo } =
+      projectData;
 
     const [project, projectError] = await tryCatch(
       Project.findOne({
@@ -657,6 +691,50 @@ const validateMediaUploadAndStoreProject = asyncHandler(
     if (!project && modificationType === "existing") {
       enrichContext({ outcome: "not_found", reason: "project_not_found" });
       response(res, 400, "Project does not exist");
+      return;
+    }
+
+    if (
+      project &&
+      modificationType === "existing" &&
+      project.scheduled_deletion_at
+    ) {
+      enrichContext({
+        outcome: "validation_failed",
+        reason: "project_scheduled_for_deletion",
+      });
+      response(
+        res,
+        400,
+        "Cannot modify a project that is scheduled for deletion."
+      );
+      return;
+    }
+
+    const escapedTitle = result.data.title.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const titleRegex = new RegExp(`^${escapedTitle}$`, "i");
+    const duplicateTitleQuery: Record<string, unknown> = {
+      userid,
+      title: titleRegex,
+      scheduled_deletion_at: null,
+    };
+    if (modificationType === "existing" && project) {
+      duplicateTitleQuery._id = { $ne: project._id };
+    }
+
+    const [duplicateTitle, duplicateTitleError] = await tryCatch(
+      Project.findOne(duplicateTitleQuery).select("_id").lean()
+    );
+
+    if (duplicateTitleError) {
+      enrichContext({ outcome: "error", error: { name: "DatabaseError" } });
+      logger.error("Failed to check duplicate project title", duplicateTitleError);
+      throw new ApiError("Something went wrong", 500);
+    }
+
+    if (duplicateTitle) {
+      enrichContext({ outcome: "validation_failed", reason: "duplicate_title" });
+      response(res, 400, "A project with this name already exists");
       return;
     }
 
@@ -706,7 +784,10 @@ const validateMediaUploadAndStoreProject = asyncHandler(
 
     const allowedImagesCount = MAX_ALLOWED_IMAGES - validatedExistingSet.size;
 
-    if (imageOrder.length === 0 || (validatedExistingSet.size === 0 && newKeys.length === 0)) {
+    if (
+      imageOrder.length === 0 ||
+      (validatedExistingSet.size === 0 && newKeys.length === 0)
+    ) {
       enrichContext({ outcome: "validation_failed", reason: "no_images" });
       response(res, 400, "At least one image is required");
       return;
@@ -721,10 +802,7 @@ const validateMediaUploadAndStoreProject = asyncHandler(
       return;
     }
 
-    const mediaKeys = [
-      ...newKeys,
-      ...(project_video ? [project_video] : []),
-    ];
+    const mediaKeys = [...newKeys, ...(project_video ? [project_video] : [])];
 
     const [validatedMediaUrls, urlError] = await tryCatch(
       Promise.all(
@@ -756,47 +834,66 @@ const validateMediaUploadAndStoreProject = asyncHandler(
       .filter(Boolean) as string[];
 
     if (finalImages.length === 0) {
-      enrichContext({ outcome: "validation_failed", reason: "no_valid_images" });
+      enrichContext({
+        outcome: "validation_failed",
+        reason: "no_valid_images",
+      });
       response(res, 400, "At least one valid image is required");
       return;
     }
 
     let finalImages_detail: string[] = [];
-    const detailOrderInput: string[] = Array.isArray(imageOrder_detail) ? imageOrder_detail : [];
+    const detailOrderInput: string[] = Array.isArray(imageOrder_detail)
+      ? imageOrder_detail
+      : [];
 
     if (detailOrderInput.length > 0) {
       const existingDetailUrls = detailOrderInput.filter(isExistingUrl);
-      const newDetailKeys = detailOrderInput.filter((item: string) => !isExistingUrl(item));
+      const newDetailKeys = detailOrderInput.filter(
+        (item: string) => !isExistingUrl(item)
+      );
 
       let validatedExistingDetailSet: Set<string> = new Set();
 
       if (modificationType === "existing" && project) {
-        const validExistingDetailUrls = existingDetailUrls.filter((url: string) =>
-          (project as any).project_images_detail?.includes(url)
+        const validExistingDetailUrls = existingDetailUrls.filter(
+          (url: string) => (project as any).project_images_detail?.includes(url)
         );
         validatedExistingDetailSet = new Set(validExistingDetailUrls);
 
         if (validatedExistingDetailSet.size !== existingDetailUrls.length) {
           enrichContext({ security_warning: "unowned_detail_images_attempt" });
-          logger.warn(`Security: User ${userid} sent unowned detail image URL(s)`);
+          logger.warn(
+            `Security: User ${userid} sent unowned detail image URL(s)`
+          );
         }
       }
 
       const [validatedDetailUrls, detailUrlError] = await tryCatch(
         Promise.all(
-          newDetailKeys.map((key: string) => s3Service.validateAndCreatePreSignedDownloadUrl(key))
+          newDetailKeys.map((key: string) =>
+            s3Service.validateAndCreatePreSignedDownloadUrl(key)
+          )
         )
       );
 
       if (detailUrlError) {
-        enrichContext({ outcome: "error", error: { name: "S3ValidationError" } });
+        enrichContext({
+          outcome: "error",
+          error: { name: "S3ValidationError" },
+        });
         logger.error("Failed to verify detail uploads", detailUrlError);
-        if (detailUrlError instanceof Error) throw new ApiError(detailUrlError.message, 400);
-        else throw new ApiError("Couldn't verify detail uploads. Try again.", 500);
+        if (detailUrlError instanceof Error)
+          throw new ApiError(detailUrlError.message, 400);
+        else
+          throw new ApiError("Couldn't verify detail uploads. Try again.", 500);
       }
 
       const newDetailKeyToUrl = new Map<string, string>(
-        newDetailKeys.map((key: string, i: number) => [key, validatedDetailUrls[i]])
+        newDetailKeys.map((key: string, i: number) => [
+          key,
+          validatedDetailUrls[i],
+        ])
       );
 
       finalImages_detail = detailOrderInput
@@ -809,8 +906,14 @@ const validateMediaUploadAndStoreProject = asyncHandler(
         .filter(Boolean) as string[];
     }
 
-    if (finalImages_detail.length > 0 && finalImages_detail.length !== finalImages.length) {
-      enrichContext({ outcome: "validation_failed", reason: "image_array_length_mismatch" });
+    if (
+      finalImages_detail.length > 0 &&
+      finalImages_detail.length !== finalImages.length
+    ) {
+      enrichContext({
+        outcome: "validation_failed",
+        reason: "image_array_length_mismatch",
+      });
       response(res, 400, "Image arrays length mismatch");
       return;
     }
@@ -910,7 +1013,7 @@ const getTotalListedProjects = asyncHandler(
     const userid = new mongoose.Types.ObjectId(req.user._id);
     const [queryResult, countError] = await tryCatch(
       Promise.all([
-        Project.countDocuments({ userid }),
+        Project.countDocuments({ userid, ...MARKETPLACE_VISIBLE_FILTER }),
         User.findById(userid).select("project_listing_limit").lean(),
       ])
     );
@@ -918,7 +1021,7 @@ const getTotalListedProjects = asyncHandler(
     if (countError || !queryResult) {
       enrichContext({ outcome: "error", error: { name: "DatabaseError" } });
       logger.error("Failed to count listed projects", countError);
-      response(res, 200, "Failed to fetch total listed projects", {
+      response(res, 500, "Failed to fetch total listed projects", {
         totalListedProjects: -1,
         projectListingLimit: parseInt(
           process.env.DEFAULT_PROJECT_LISTING_LIMIT || "2",
@@ -961,7 +1064,7 @@ const getTotalActiveProjects = asyncHandler(
     if (countError) {
       enrichContext({ outcome: "error", error: { name: "DatabaseError" } });
       logger.error("Failed to count active projects", countError);
-      response(res, 200, "Failed to fetch total listed projects", {
+      response(res, 500, "Failed to fetch total active projects", {
         totalActiveProjects: -1,
       });
       return;
@@ -997,7 +1100,10 @@ const getInitialProjectData = asyncHandler(
           isActive: 1,
           github_access_revoked: 1,
           repo_zip_status: 1,
+          scheduled_deletion_at: 1,
           project_images: { $slice: 1 },
+          price: 1,
+          live_link: 1,
         })
         .lean()
         .then((result) => {
@@ -1122,8 +1228,9 @@ const toggleProjectListing = asyncHandler(
         Project.findOne({
           userid,
           github_repo_id: req.body.github_repo_id,
-        }).select("github_access_revoked"),
+        }).select("isActive github_access_revoked scheduled_deletion_at"),
         User.findById(userid).select("project_listing_limit").lean(),
+        Project.countDocuments({ userid, ...MARKETPLACE_VISIBLE_FILTER }),
       ])
     );
 
@@ -1134,11 +1241,24 @@ const toggleProjectListing = asyncHandler(
       return;
     }
 
-    const [existingProject, userData] = queryResult;
+    const [existingProject, userData, activeProjectCount] = queryResult;
 
     if (!existingProject) {
       enrichContext({ outcome: "not_found" });
       response(res, 404, "Invalid Repo ID. No such records found.");
+      return;
+    }
+
+    if (existingProject.scheduled_deletion_at) {
+      enrichContext({
+        outcome: "forbidden",
+        reason: "project_scheduled_for_deletion",
+      });
+      response(
+        res,
+        400,
+        "Cannot modify a project that is scheduled for deletion."
+      );
       return;
     }
 
@@ -1152,15 +1272,21 @@ const toggleProjectListing = asyncHandler(
       return;
     }
 
-    if (!existingProject.isActive && userData?.project_listing_limit === 0) {
+    const projectListingLimit =
+      userData?.project_listing_limit ??
+      parseInt(process.env.DEFAULT_PROJECT_LISTING_LIMIT || "2", 10);
+
+    if (!existingProject.isActive && activeProjectCount >= projectListingLimit) {
       enrichContext({
         outcome: "forbidden",
         reason: "project_listing_limit_reached",
+        active_count: activeProjectCount,
+        limit: projectListingLimit,
       });
       response(
         res,
         403,
-        "Cannot toggle project status. Project listing limit reached. Please upgrade your plan to list more projects."
+        `Cannot activate project. You already have ${activeProjectCount} of ${projectListingLimit} allowed active listings.`
       );
       return;
     }
@@ -1236,7 +1362,9 @@ const deleteProjectListing = asyncHandler(
       Project.findOne({
         userid,
         github_repo_id: req.query.github_repo_id,
-      }).select("project_images project_images_detail project_video repo_zip_s3_key _id")
+      }).select(
+        "project_images project_images_detail project_video repo_zip_s3_key repo_zip_status scheduled_deletion_at _id"
+      )
     );
 
     if (projectError) {
@@ -1246,91 +1374,95 @@ const deleteProjectListing = asyncHandler(
       return;
     }
 
-    if (projectData) {
-      enrichContext({
-        entity: {
-          type: "project",
-          id: projectData._id.toString(),
-          github_repo_id: req.query.github_repo_id as string,
-        },
-      });
-    }
-
-    const [deleteResponse, deleteError] = await tryCatch(
-      Project.deleteOne({
-        userid,
-        github_repo_id: req.query.github_repo_id,
-      })
-    );
-
-    if (deleteError) {
-      enrichContext({ outcome: "error", error: { name: "DatabaseError" } });
-      logger.error("Failed to delete project", deleteError);
-      response(res, 500, "Failed to delete listed project. Try again later.");
-      return;
-    }
-
-    if (deleteResponse.deletedCount == 0) {
+    if (!projectData) {
       enrichContext({ outcome: "not_found" });
       response(res, 404, "No such project was listed. Invalid Request.");
       return;
     }
 
-    if (projectData?._id) {
-      const [, wishlistCleanupError] = await tryCatch(
+    enrichContext({
+      entity: {
+        type: "project",
+        id: projectData._id.toString(),
+        github_repo_id: req.query.github_repo_id as string,
+      },
+    });
+
+    if ((projectData as any).scheduled_deletion_at) {
+      enrichContext({
+        outcome: "validation_failed",
+        reason: "already_scheduled_for_deletion",
+      });
+      response(res, 400, "Project is already scheduled for deletion.");
+      return;
+    }
+
+    if (projectData.repo_zip_status === "PROCESSING") {
+      enrichContext({
+        outcome: "validation_failed",
+        reason: "repo_zip_in_progress",
+      });
+      response(res, 400, "Cannot delete a project while its repository is being packaged.");
+      return;
+    }
+
+    const [hasSales, salesCheckError] = await tryCatch(
+      Purchase.exists({ projectId: projectData._id, status: "CONFIRMED" })
+    );
+
+    if (salesCheckError) {
+      logger.error(
+        "Failed to check project sales before deletion",
+        salesCheckError
+      );
+      response(res, 500, "Failed to delete listed project. Try again later.");
+      return;
+    }
+
+    if (hasSales) {
+      const [, softDeleteError] = await tryCatch(
+        Project.updateOne(
+          { _id: projectData._id },
+          {
+            isActive: false,
+            scheduled_deletion_at: new Date(
+              Date.now() + 7 * 24 * 60 * 60 * 1000
+            ),
+          }
+        )
+      );
+
+      if (softDeleteError) {
+        logger.error("Failed to soft-delete project", softDeleteError);
+        response(res, 500, "Failed to delete listed project. Try again later.");
+        return;
+      }
+
+      const [, wishlistError] = await tryCatch(
         User.updateMany(
           { wishlist: projectData._id },
           { $pull: { wishlist: projectData._id } }
         )
       );
-      if (wishlistCleanupError) {
+      if (wishlistError) {
         logger.error(
-          "Failed to remove deleted project from wishlists",
-          wishlistCleanupError
+          "Failed to remove soft-deleted project from wishlists",
+          wishlistError
         );
       }
+
+      enrichContext({ outcome: "success", deletion_type: "scheduled" });
+      response(
+        res,
+        200,
+        "Project scheduled for deletion in 7 days. Buyers will be notified."
+      );
+      return;
     }
 
-    const toBeDeletedKeys = [
-      ...(projectData?.project_images ? projectData.project_images : []),
-      ...((projectData as any)?.project_images_detail ?? []),
-      ...(projectData?.project_video ? [projectData.project_video] : []),
-    ];
+    await performProjectHardDelete(projectData);
 
-    enrichContext({ media_cleanup_count: toBeDeletedKeys.length });
-
-    for (const key of toBeDeletedKeys) {
-      const S3Uploadkey = key.replace(
-        `${process.env.S3_CLOUDFRONT_DISTRIBUTION as string}/`,
-        ""
-      );
-
-      const [, redisError] = await tryCatch(
-        redisClient.zadd("media-cleanup-schedule", Date.now(), S3Uploadkey)
-      );
-
-      if (redisError) {
-        enrichContext({ cleanup_queue_error: true });
-        logger.error("Failed to queue media for cleanup", redisError);
-      }
-    }
-
-    if (projectData?.repo_zip_s3_key) {
-      const [, zipCleanupError] = await tryCatch(
-        redisClient.zadd(
-          "media-cleanup-schedule",
-          Date.now(),
-          projectData.repo_zip_s3_key
-        )
-      );
-
-      if (zipCleanupError) {
-        enrichContext({ cleanup_queue_error: true });
-        logger.error("Failed to queue repo ZIP for cleanup", zipCleanupError);
-      }
-    }
-
-    enrichContext({ outcome: "success" });
+    enrichContext({ outcome: "success", deletion_type: "immediate" });
     response(res, 200, "Project was deleted successfully");
   }
 );
@@ -1492,7 +1624,9 @@ const retryRepoZipUpload = asyncHandler(async (req: Request, res: Response) => {
     Project.findOne({
       userid,
       github_repo_id: req.body.github_repo_id,
-    })
+    }).select(
+      "github_repo_id github_installation_id github_access_revoked repo_zip_status repo_zip_error scheduled_deletion_at"
+    )
   );
 
   if (error) {
@@ -1504,6 +1638,29 @@ const retryRepoZipUpload = asyncHandler(async (req: Request, res: Response) => {
   if (!project) {
     enrichContext({ outcome: "not_found" });
     response(res, 404, "Project not found");
+    return;
+  }
+
+  if (project.scheduled_deletion_at) {
+    enrichContext({
+      outcome: "validation_failed",
+      reason: "project_scheduled_for_deletion",
+    });
+    response(
+      res,
+      400,
+      "Cannot modify a project that is scheduled for deletion."
+    );
+    return;
+  }
+
+  if (project.github_access_revoked) {
+    enrichContext({ outcome: "forbidden", reason: "github_access_revoked" });
+    response(
+      res,
+      403,
+      "Cannot retry packaging. GitHub repository access has been revoked. Please reinstall the GitHub App with access to this repository."
+    );
     return;
   }
 
@@ -1529,7 +1686,6 @@ const retryRepoZipUpload = asyncHandler(async (req: Request, res: Response) => {
     throw new ApiError("Something went wrong", 500);
   }
 
-  // Fire-and-forget: restart background repo ZIP upload
   repoZipUploadService
     .processRepoZipUpload(
       project._id.toString(),
@@ -1573,7 +1729,9 @@ const refreshRepoZip = asyncHandler(async (req: Request, res: Response) => {
     Project.findOne({
       userid,
       github_repo_id: req.body.github_repo_id,
-    })
+    }).select(
+      "github_repo_id github_installation_id github_access_revoked repo_zip_status repo_zip_s3_key scheduled_deletion_at"
+    )
   );
 
   if (error) {
@@ -1588,6 +1746,29 @@ const refreshRepoZip = asyncHandler(async (req: Request, res: Response) => {
     return;
   }
 
+  if (project.scheduled_deletion_at) {
+    enrichContext({
+      outcome: "validation_failed",
+      reason: "project_scheduled_for_deletion",
+    });
+    response(
+      res,
+      400,
+      "Cannot modify a project that is scheduled for deletion."
+    );
+    return;
+  }
+
+  if (project.github_access_revoked) {
+    enrichContext({ outcome: "forbidden", reason: "github_access_revoked" });
+    response(
+      res,
+      403,
+      "Cannot refresh packaging. GitHub repository access has been revoked. Please reinstall the GitHub App with access to this repository."
+    );
+    return;
+  }
+
   if (project.repo_zip_status === "PROCESSING") {
     enrichContext({
       outcome: "validation_failed",
@@ -1597,7 +1778,6 @@ const refreshRepoZip = asyncHandler(async (req: Request, res: Response) => {
     return;
   }
 
-  // Schedule old ZIP for cleanup if it exists
   if (project.repo_zip_s3_key) {
     const [, cleanupError] = await tryCatch(
       redisClient.zadd(
@@ -1612,7 +1792,6 @@ const refreshRepoZip = asyncHandler(async (req: Request, res: Response) => {
     }
   }
 
-  // Reset status and trigger re-upload
   const [, updateError] = await tryCatch(
     Project.updateOne(
       { _id: project._id },
@@ -1629,7 +1808,6 @@ const refreshRepoZip = asyncHandler(async (req: Request, res: Response) => {
     throw new ApiError("Something went wrong", 500);
   }
 
-  // Fire-and-forget: trigger background re-upload
   repoZipUploadService
     .processRepoZipUpload(
       project._id.toString(),
@@ -1662,11 +1840,13 @@ const DETAIL_SELECT = {
   project_video: 1,
   repo_tree: 1,
   repo_tree_status: 1,
+  scheduled_deletion_at: 1,
 } as const;
 
 const DETAIL_SELLER_POPULATE = {
   path: "userid",
-  select: "username name profile_image_url short_bio job_role location website_url x_username -_id",
+  select:
+    "username name profile_image_url short_bio job_role location website_url x_username profile_visibility -_id",
 } as const;
 
 const getMarketplaceProjectDetail = asyncHandler(
@@ -1680,21 +1860,41 @@ const getMarketplaceProjectDetail = asyncHandler(
 
     const { project_id } = req.query;
 
-    if (!project_id || typeof project_id !== "string" || !mongoose.Types.ObjectId.isValid(project_id)) {
-      enrichContext({ outcome: "validation_failed", reason: "invalid_project_id" });
+    if (
+      !project_id ||
+      typeof project_id !== "string" ||
+      !mongoose.Types.ObjectId.isValid(project_id)
+    ) {
+      enrichContext({
+        outcome: "validation_failed",
+        reason: "invalid_project_id",
+      });
       response(res, 400, "Valid project_id query parameter is required");
       return;
     }
 
     enrichContext({ entity: { type: "project", id: project_id } });
 
-    const [projectData, projectError] = await tryCatch(
-      Project.findOne({
-        _id: new mongoose.Types.ObjectId(project_id),
-        isActive: true,
-        github_access_revoked: false,
-        repo_zip_status: "SUCCESS",
+    const projectObjectId = new mongoose.Types.ObjectId(project_id);
+    const buyerId = new mongoose.Types.ObjectId(req.user._id);
+
+    const [hasPurchased] = await tryCatch(
+      Purchase.exists({
+        buyerId,
+        projectId: projectObjectId,
+        status: "CONFIRMED",
       })
+    );
+
+    const projectQuery: any = { _id: projectObjectId };
+    if (!hasPurchased) {
+      projectQuery.isActive = true;
+      projectQuery.github_access_revoked = false;
+      projectQuery.repo_zip_status = "SUCCESS";
+    }
+
+    const [projectData, projectError] = await tryCatch(
+      Project.findOne(projectQuery)
         .select(DETAIL_SELECT)
         .populate(DETAIL_SELLER_POPULATE)
         .lean()
@@ -1711,6 +1911,12 @@ const getMarketplaceProjectDetail = asyncHandler(
       enrichContext({ outcome: "not_found" });
       response(res, 404, "Project not found");
       return;
+    }
+
+    if (projectData.userid && (projectData.userid as any).profile_visibility === false) {
+      const { short_bio, location, website_url, x_username, ...publicFields } =
+        projectData.userid as any;
+      projectData.userid = { ...publicFields, profile_visibility: false };
     }
 
     enrichContext({ outcome: "success" });

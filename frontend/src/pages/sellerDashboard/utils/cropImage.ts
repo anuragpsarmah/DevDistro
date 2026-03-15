@@ -1,20 +1,4 @@
-export interface CropArea {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-}
-
-// Card thumbnail: 16:9 at 1280x720
-export const CARD_CROP_WIDTH = 1280;
-export const CARD_CROP_HEIGHT = 720;
-export const CARD_ASPECT_RATIO = CARD_CROP_WIDTH / CARD_CROP_HEIGHT; // 16/9
-
-// Detail page banner: 21:9 at 1260x540
-export const DETAIL_CROP_WIDTH = 1260;
-export const DETAIL_CROP_HEIGHT = 540;
-export const DETAIL_ASPECT_RATIO = DETAIL_CROP_WIDTH / DETAIL_CROP_HEIGHT; // 7/3
-
+import { CropArea } from "./types";
 
 export function loadImageForCanvas(src: string): Promise<HTMLImageElement | null> {
   return new Promise((resolve) => {

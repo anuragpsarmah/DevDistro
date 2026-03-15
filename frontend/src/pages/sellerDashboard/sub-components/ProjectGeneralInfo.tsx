@@ -10,23 +10,8 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { X } from "lucide-react";
 import { ChangeEvent, KeyboardEvent } from "react";
-import { MAX_DESCRIPTION_LENGTH, PROJECT_TYPES } from "../utils/constants";
-import { ProjectType } from "../utils/types";
-
-interface ProjectGeneralInfoProps {
-  setDescription: (curr: string) => void;
-  setTechInput: (curr: string) => void;
-  setTechStack: (curr: string[]) => void;
-  setProjectType: (curr: ProjectType) => void;
-  setLiveLink: (curr: string) => void;
-  defaultTitle: string;
-  description: string;
-  techInput: string;
-  techStack: string[];
-  projectType: ProjectType;
-  liveLink: string;
-  title: React.MutableRefObject<HTMLInputElement | null>;
-}
+import { MAX_DESCRIPTION_LENGTH, MAX_TECH_STACK, PROJECT_TYPES } from "../utils/constants";
+import { ProjectGeneralInfoProps, ProjectType } from "../utils/types";
 
 export default function ProjectGeneralInfo({
   setDescription,
@@ -52,9 +37,12 @@ export default function ProjectGeneralInfo({
     setTechInput(e.target.value);
   };
 
+  const atTechLimit = techStack.length >= MAX_TECH_STACK;
+
   const handleTechInputKeyDown = (e: KeyboardEvent) => {
     if (e.key === "Enter" && techInput.trim()) {
       e.preventDefault();
+      if (atTechLimit) return;
       if (!techStack.includes(techInput.trim())) {
         setTechStack([...techStack, techInput.trim()]);
       }
@@ -128,16 +116,22 @@ export default function ProjectGeneralInfo({
       </div>
 
       <div>
-        <Label htmlFor="techStack" className="font-space text-[10px] uppercase font-bold tracking-[0.2em] text-gray-600 dark:text-gray-400 mb-3 block">
-          Tech Stack<span className="text-red-500 ml-1">*</span>
-        </Label>
+        <div className="flex items-center justify-between mb-3">
+          <Label htmlFor="techStack" className="font-space text-[10px] uppercase font-bold tracking-[0.2em] text-gray-600 dark:text-gray-400">
+            Tech Stack<span className="text-red-500 ml-1">*</span>
+          </Label>
+          <p className={`font-space text-xs font-bold tracking-widest uppercase ${atTechLimit ? "text-red-500" : "text-gray-500"}`}>
+            {techStack.length} / {MAX_TECH_STACK}
+          </p>
+        </div>
         <Input
           id="techStack"
           value={techInput}
           onChange={handleTechInputChange}
           onKeyDown={handleTechInputKeyDown}
-          className="bg-transparent border-2 border-black/20 dark:border-white/20 text-black dark:text-white rounded-none font-space py-6 focus:ring-0 focus:border-red-500 transition-colors duration-300"
-          placeholder="e.g., React, Node.js, MongoDB (Press Enter to add)"
+          disabled={atTechLimit}
+          className="bg-transparent border-2 border-black/20 dark:border-white/20 text-black dark:text-white rounded-none font-space py-6 focus:ring-0 focus:border-red-500 transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+          placeholder={atTechLimit ? "Limit reached (15/15)" : "e.g., React, Node.js, MongoDB (Press Enter to add)"}
         />
         <p className="font-space text-xs text-gray-500 mt-2 uppercase tracking-wider font-bold">
           Add all major technologies and frameworks used

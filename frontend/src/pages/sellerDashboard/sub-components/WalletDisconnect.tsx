@@ -4,6 +4,7 @@ import { useState } from "react";
 import { WalletDisconnectProps } from "../utils/types";
 import { SolanaLogo } from "@/components/ui/solanaLogo";
 import { WalletMismatchWarning } from "./WalletMismatchWarning";
+import { truncateAddress } from "../utils/walletUtils";
 
 export const WalletDisconnect = ({
   displayAddress,
@@ -18,11 +19,6 @@ export const WalletDisconnect = ({
   intentionalOperation,
 }: WalletDisconnectProps) => {
   const [copied, setCopied] = useState(false);
-
-  const truncateAddress = (address: string) => {
-    if (!address) return "";
-    return `${address.slice(0, 6)}...${address.slice(-4)}`;
-  };
 
   const handleCopyAddress = () => {
     onCopyAddress();

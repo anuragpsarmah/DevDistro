@@ -16,6 +16,7 @@ export interface LogContext {
         id?: string;
         ids?: string[];
         github_repo_id?: string;
+        project_id?: string;
     };
     search?: {
         term?: string;

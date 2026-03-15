@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { AxiosError } from "axios";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -11,6 +12,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { AlertOctagon } from "lucide-react";
+import { useDeleteAccountMutation } from "@/hooks/apiMutations";
+import { errorToast } from "@/components/ui/customToast";
 
 interface DeleteAccountModalProps {
     deleteDialogOpen: boolean;
@@ -22,21 +25,33 @@ export const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({
     setDeleteDialogOpen,
 }) => {
     const [confirmationText, setConfirmationText] = useState("");
+    const { mutateAsync, isPending } = useDeleteAccountMutation();
 
-    const handleDeleteConfirm = () => {
-        // API logic to be implemented
-        console.log("Delete account triggered");
-        setDeleteDialogOpen(false);
-        setConfirmationText("");
+    const handleDeleteConfirm = async () => {
+        try {
+            await mutateAsync();
+            // onSuccess in the mutation handles navigation — dialog unmounts automatically
+        } catch (error) {
+            if (error instanceof AxiosError) {
+                if (error.response?.status === 429) {
+                    errorToast("Too many attempts. Please try again later.");
+                } else {
+                    errorToast(error.response?.data?.message || "Account deletion failed. Please try again.");
+                }
+            } else {
+                errorToast("Something went wrong. Please try again.");
+            }
+            setConfirmationText("");
+        }
     };
 
     const isConfirmed = confirmationText === "I CONFIRM";
 
     return (
         <AlertDialog open={deleteDialogOpen} onOpenChange={(open) => {
+            if (isPending) return;
             setDeleteDialogOpen(open);
             if (!open) {
-                // Reset text when closing
                 setTimeout(() => setConfirmationText(""), 300);
             }
         }}>
@@ -77,11 +92,11 @@ export const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({
                         Cancel
                     </AlertDialogCancel>
                     <AlertDialogAction
-                        disabled={!isConfirmed}
+                        disabled={!isConfirmed || isPending}
                         className="bg-red-500 text-white border-2 border-red-500 hover:bg-red-600 hover:border-red-600 w-full sm:w-auto transition-all duration-300 rounded-none font-space uppercase tracking-widest font-bold text-xs py-3 px-6 h-auto m-0 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-red-500 disabled:hover:border-red-500"
                         onClick={handleDeleteConfirm}
                     >
-                        Permanently Delete
+                        {isPending ? "Deleting..." : "Permanently Delete"}
                     </AlertDialogAction>
                 </AlertDialogFooter>
             </AlertDialogContent>

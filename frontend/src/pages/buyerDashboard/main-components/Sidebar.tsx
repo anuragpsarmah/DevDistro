@@ -1,9 +1,10 @@
+import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { ChevronRight, Repeat, Menu, X, Sun, Moon } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { SidebarContentProps, SidebarProps } from "../utils/types";
 import { useTheme } from "@/components/providers/ThemeProvider";
-import { useGetWishlistQuery } from "@/hooks/apiQueries";
+import { useGetWishlistCountQuery } from "@/hooks/apiQueries";
 import { sidebarItems } from "../utils/constants";
 import LogoIcon from "@/assets/icons/LogoIcon";
 
@@ -85,8 +86,11 @@ function SidebarContent({
   onSwitchToSeller,
 }: SidebarContentProps) {
   const { isDarkMode, toggleTheme } = useTheme();
-  const { data: wishlistProjects } = useGetWishlistQuery({ logout });
-  const wishlistCount = wishlistProjects?.length || 0;
+  const { data: rawWishlistCount } = useGetWishlistCountQuery({ logout });
+  const wishlistCount = rawWishlistCount !== undefined && rawWishlistCount > 0
+    ? (rawWishlistCount > 99 ? "99+" : String(rawWishlistCount))
+    : undefined;
+  const [hoveredTab, setHoveredTab] = useState<string | null>(null);
 
   return (
     <div className="flex flex-col h-full bg-white dark:bg-[#050505] transition-colors duration-300">
@@ -102,13 +106,15 @@ function SidebarContent({
           <span className="font-space font-bold uppercase tracking-[0.2em] text-[10px] text-red-500">Buyer Marketplace</span>
         </div>
       </div>
-      <nav className="flex-1 overflow-y-auto px-6 py-4">
+      <nav className="flex-1 overflow-y-auto px-6 py-4" onMouseLeave={() => setHoveredTab(null)}>
         <ul className="space-y-4">
           {sidebarItems.map((item, index) => (
             <SidebarItem
               key={index}
               {...item}
               isActive={activeTab === item.label}
+              isHovered={hoveredTab === item.label}
+              onMouseEnter={() => setHoveredTab(item.label)}
               count={item.label === "Wishlist" ? wishlistCount : undefined}
               onClick={() => {
                 setActiveTab(item.label);
@@ -148,45 +154,57 @@ function SidebarItem({
   icon: Icon,
   label,
   isActive,
+  isHovered,
+  onMouseEnter,
   onClick,
   count,
 }: {
   icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
   label: string;
   isActive: boolean;
+  isHovered: boolean;
+  onMouseEnter: () => void;
   onClick: () => void;
-  count?: number;
+  count?: string;
 }) {
   return (
-    <li>
+    <li onMouseEnter={onMouseEnter}>
       <button
         onClick={onClick}
         className={cn(
           "group relative flex w-full items-center gap-4 px-4 py-3 transition-colors duration-300 focus:outline-none border-2 font-space font-bold uppercase tracking-widest text-xs",
           isActive
             ? "border-black dark:border-white bg-black text-white dark:bg-white dark:text-black"
-            : "border-transparent text-gray-600 dark:text-gray-400 hover:border-black/20 dark:hover:border-white/20 hover:text-black dark:hover:text-white"
+            : "border-transparent text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white"
         )}
       >
-        <span className="relative z-10 flex items-center gap-3 flex-1">
+        {isHovered && (
+          <motion.div
+            layoutId="buyer-sidebar-hover"
+            className={cn("absolute inset-0 border-2 z-0", isActive ? "border-black/50 dark:border-white/50 bg-black/10 dark:bg-white/10" : "border-black/20 dark:border-white/20 bg-black/[0.02] dark:bg-white/[0.02]")}
+            transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+          />
+        )}
+        <span className="relative z-10 flex items-center gap-3 flex-1 min-w-0">
           <Icon className="h-4 w-4 flex-shrink-0" />
           <span className="truncate">{label}</span>
-          {count !== undefined && count > 0 && (
-            <span
-              className={cn(
-                "ml-auto px-2 py-0.5 text-[10px] leading-none flex items-center justify-center font-bold",
-                isActive
-                  ? "bg-white text-black dark:bg-[#050505] dark:text-white"
-                  : "bg-red-500 text-white"
-              )}
-            >
-              {count}
-            </span>
-          )}
         </span>
+        {count !== undefined && (
+          <span
+            className={cn(
+              "relative z-10 flex items-center justify-center px-2 py-0.5 text-[10px] font-bold leading-none transition-transform duration-300",
+              isActive
+                ? "bg-white text-black dark:bg-[#050505] dark:text-white translate-x-0"
+                : "bg-red-500 text-white translate-x-8 group-hover:translate-x-0"
+            )}
+          >
+            {count}
+          </span>
+        )}
         <ChevronRight
           className={cn(
-            "relative z-10 h-4 w-4 ml-auto flex-shrink-0 transition-all duration-300",
+            "relative z-10 h-4 w-4 flex-shrink-0 transition-all duration-300",
+            count === undefined ? "ml-auto" : "",
             isActive ? "text-red-500 opacity-100 translate-x-0" : "opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0"
           )}
         />

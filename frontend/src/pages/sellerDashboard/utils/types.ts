@@ -18,11 +18,45 @@ export type SellerDashboardTabTypes =
   | "Settings"
   | "List Project"
   | "My Projects"
-  | "Orders"
+  | "Sales"
   | "Wallet";
+
+export interface CropArea {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
 export interface ChartDataObject {
   month: string;
   sales: number;
+}
+
+export interface SalesTransactionCardProps {
+  transaction: SellerSalesTransaction;
+  clusterParam: string;
+}
+
+export interface SellerSalesTransaction {
+  _id: string;
+  createdAt: string;
+  tx_signature: string;
+  price_usd: number;
+  price_sol_total: number;
+  price_sol_seller: number;
+  project_snapshot: {
+    title: string;
+    project_type: string;
+  };
+  projectId: {
+    _id: string;
+    title: string;
+    project_type: string;
+    scheduled_deletion_at?: string | null;
+  } | null;
+  buyer_username: string;
+  is_unlisted: boolean;
 }
 
 export interface CommonSalesInformation {
@@ -33,18 +67,6 @@ export interface CommonSalesInformation {
 }
 
 export interface ProfileInformation {
-  website_url: string;
-  x_username: string;
-  short_bio: string;
-  job_role: string;
-  location: string;
-  review_description: string;
-  review_stars: number;
-  profile_visibility: boolean;
-  auto_repackage_on_push: boolean;
-}
-
-export interface ProfileUpdatePayload {
   website_url: string;
   x_username: string;
   short_bio: string;
@@ -76,6 +98,7 @@ export interface User {
 
 export interface AccountInformationProps {
   isInitialLoading: boolean;
+  isSaving: boolean;
   activeUserData: User;
   profileInformationData: ProfileInformation;
   selectedJobRole: string;
@@ -102,13 +125,8 @@ export interface ProfileHeaderProps {
   activeUserData: User;
 }
 
-export interface chartDataObject {
-  month: string;
-  sales: number;
-}
-
 export interface ChartProps {
-  chartData: Array<chartDataObject>;
+  chartData: Array<ChartDataObject>;
   isLoading?: boolean;
 }
 
@@ -133,6 +151,7 @@ export interface RepoImportProps {
   userData: User;
   privateRepoData: Array<PrivateRepoData>;
   repoDataLoading: boolean;
+  repoDataError: boolean;
   setFormPropsAndSwitchUI: (curr: PrivateRepoData) => void;
   handleRefresh?: () => Promise<unknown>;
   isRefreshing?: boolean;
@@ -223,7 +242,7 @@ export interface MonthlySalesProps {
   years: number[];
   onYearChange: (value: string) => void;
   isLoading?: boolean;
-  chartData: Array<chartDataObject>;
+  chartData: Array<ChartDataObject>;
 }
 
 export interface YearSelectorProps {
@@ -244,6 +263,50 @@ export interface projectListingFormData {
   video: File | null;
   existingVideo?: string | null;
 }
+
+export interface SalesLedgerProps {
+  transactions: SellerSalesTransaction[];
+  isLoadingInitial: boolean;
+  isLoadingMore: boolean;
+  isInitialError: boolean;
+  hasMore: boolean;
+  onLoadMore: () => void;
+  clusterParam: string;
+}
+
+export interface ProjectGeneralInfoProps {
+  setDescription: (curr: string) => void;
+  setTechInput: (curr: string) => void;
+  setTechStack: (curr: string[]) => void;
+  setProjectType: (curr: ProjectType) => void;
+  setLiveLink: (curr: string) => void;
+  defaultTitle: string;
+  description: string;
+  techInput: string;
+  techStack: string[];
+  projectType: ProjectType;
+  liveLink: string;
+  title: React.MutableRefObject<HTMLInputElement | null>;
+}
+
+export interface GitHubAppInstallPromptProps {
+  installUrl: string;
+}
+
+export interface SalesTabProps {
+  logout?: () => Promise<void>;
+}
+
+export interface BillingAndPaymentsTabProps {
+  logout?: () => Promise<void>;
+}
+
+export interface ListNewProjectTabProps {
+  logout?: () => Promise<void>;
+  setActiveTab: (curr: SellerDashboardTabTypes) => void;
+}
+
+export type DatePreset = "all" | "7d" | "30d" | "thisYear";
 
 export type ProjectSubmitFormData = Omit<projectListingFormData, "imageItems">;
 
@@ -285,11 +348,14 @@ export interface InitialProjectData {
   github_repo_id: string;
   isActive: boolean;
   github_access_revoked?: boolean;
+  scheduled_deletion_at?: string | null;
   title: string;
   description: string;
   tech_stack: string[];
   project_images: string;
   repo_zip_status?: "PROCESSING" | "SUCCESS" | "FAILED";
+  price: number;
+  live_link?: string;
 }
 
 export interface ListedProjectsProps {
@@ -298,7 +364,7 @@ export interface ListedProjectsProps {
   handleDeleteProjectListing: (title: string) => Promise<unknown>;
   handleUIStateChange: (identifier: string, title: string) => void;
   handleRetryRepoZipUpload: (github_repo_id: string) => Promise<void>;
-  handleRefreshRepoZipStatus: (index: number) => Promise<void>;
+  handleRefreshRepoZipStatus: (index: number) => Promise<string | null>;
   handleRefreshRepoZip: (github_repo_id: string) => Promise<void>;
   isLoading: boolean;
   isError: boolean;

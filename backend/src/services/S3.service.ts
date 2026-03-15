@@ -3,6 +3,7 @@ import {
   PutObjectCommand,
   HeadObjectCommand,
   DeleteObjectCommand,
+  GetObjectCommand,
 } from "@aws-sdk/client-s3";
 import { Upload } from "@aws-sdk/lib-storage";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
@@ -178,6 +179,24 @@ export default class S3Service {
     });
 
     await upload.done();
+  }
+
+  async createSignedDownloadUrl(
+    key: string,
+    expiresIn: number = 900,
+    filename?: string
+  ): Promise<string> {
+    // Use the provided filename if given, otherwise fall back to the S3 key segment.
+    const resolvedFilename =
+      filename ?? key.split("/").pop() ?? "download.zip";
+    const getCommand = new GetObjectCommand({
+      Bucket: process.env.S3_BUCKET as string,
+      Key: key,
+      ResponseContentDisposition: `attachment; filename="${resolvedFilename}"`,
+    });
+
+    const signedUrl = await getSignedUrl(this.s3Client, getCommand, { expiresIn });
+    return signedUrl;
   }
 
   async deleteObject(key: string) {

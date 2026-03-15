@@ -22,6 +22,11 @@ import {
   toggleProjectListingLimiter,
   projectMediaUploadLimiter,
   refreshRepoZipLimiter,
+  retryRepoZipUploadLimiter,
+  deleteProjectListingLimiter,
+  validateProjectListingLimiter,
+  generalAuthReadLimiter,
+  heavyReadLimiter,
 } from "../utils/rateLimitConfig.util";
 
 export const projectRouter = Router();
@@ -43,35 +48,35 @@ projectRouter
   );
 projectRouter
   .route("/validateMediaUploadAndStoreProject")
-  .put(sessionValidation, validateMediaUploadAndStoreProject);
+  .put(validateProjectListingLimiter, sessionValidation, validateMediaUploadAndStoreProject);
 projectRouter
   .route("/getTotalListedProjects")
-  .get(sessionValidation, getTotalListedProjects);
+  .get(generalAuthReadLimiter, sessionValidation, getTotalListedProjects);
 projectRouter
   .route("/getTotalActiveProjects")
-  .get(sessionValidation, getTotalActiveProjects);
+  .get(generalAuthReadLimiter, sessionValidation, getTotalActiveProjects);
 projectRouter
   .route("/getInitialProjectData")
-  .get(sessionValidation, getInitialProjectData);
+  .get(generalAuthReadLimiter, sessionValidation, getInitialProjectData);
 projectRouter
   .route("/getSpecificProjectData")
-  .get(sessionValidation, getSpecificProjectData);
+  .get(generalAuthReadLimiter, sessionValidation, getSpecificProjectData);
 projectRouter
   .route("/toggleProjectListing")
   .patch(toggleProjectListingLimiter, sessionValidation, toggleProjectListing);
 projectRouter
   .route("/deleteProjectListing")
-  .delete(sessionValidation, deleteProjectListing);
+  .delete(deleteProjectListingLimiter, sessionValidation, deleteProjectListing);
 projectRouter
   .route("/getRepoZipStatus")
-  .get(sessionValidation, getRepoZipStatus);
+  .get(generalAuthReadLimiter, sessionValidation, getRepoZipStatus);
 projectRouter
   .route("/retryRepoZipUpload")
-  .post(sessionValidation, retryRepoZipUpload);
+  .post(retryRepoZipUploadLimiter, sessionValidation, retryRepoZipUpload);
 projectRouter
   .route("/refreshRepoZip")
   .post(refreshRepoZipLimiter, sessionValidation, refreshRepoZip);
-projectRouter.route("/search").post(sessionValidation, searchProject);
+projectRouter.route("/search").post(heavyReadLimiter, sessionValidation, searchProject);
 projectRouter
   .route("/getMarketplaceProjectDetail")
-  .get(sessionValidation, getMarketplaceProjectDetail);
+  .get(generalAuthReadLimiter, sessionValidation, getMarketplaceProjectDetail);

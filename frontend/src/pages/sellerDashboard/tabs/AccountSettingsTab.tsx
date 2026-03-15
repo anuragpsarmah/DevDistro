@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useProfileInformationQuery } from "@/hooks/apiQueries";
 import { useProfileUpdateMutation } from "@/hooks/apiMutations";
@@ -15,11 +16,7 @@ import AccountInformation from "../main-components/AccountInformation";
 import AnimatedLoadWrapper from "@/components/wrappers/AnimatedLoadWrapper";
 import { useRecoilState } from "recoil";
 import { user } from "@/utils/atom";
-
-
-interface AccountSettingsTabProps {
-  logout?: () => Promise<void>;
-}
+import { AccountSettingsTabProps } from "@/utils/types";
 
 export default function AccountSettingsTab({
   logout,
@@ -128,6 +125,7 @@ export default function AccountSettingsTab({
 
               <AccountInformation
                 isInitialLoading={isInitialLoading}
+                isSaving={isPending}
                 activeUserData={activeUser}
                 profileInformationData={profileInformationData}
                 setProfileInformationData={setProfileInformationData}
@@ -152,11 +150,12 @@ export default function AccountSettingsTab({
                   <Skeleton className="w-40 h-14 rounded-none bg-black/10 dark:bg-white/10" />
                 ) : (
                   <Button
-                    className="px-8 py-4 bg-black text-white dark:bg-white dark:text-black font-space font-bold uppercase tracking-widest text-[10px] md:text-sm rounded-none border-2 border-transparent hover:border-black dark:hover:border-white hover:bg-white dark:hover:bg-black hover:text-black dark:hover:text-white transition-all duration-300"
+                    className="px-8 py-4 bg-black text-white dark:bg-white dark:text-black font-space font-bold uppercase tracking-widest text-[10px] md:text-sm rounded-none border-2 border-transparent hover:border-black dark:hover:border-white hover:bg-white dark:hover:bg-black hover:text-black dark:hover:text-white transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                     onClick={handleProfileUpdate}
                     disabled={isPending}
                   >
-                    Save Changes
+                    {isPending && <Loader2 className="w-4 h-4 animate-spin" />}
+                    {isPending ? "Saving..." : "Save Changes"}
                   </Button>
                 )}
               </div>

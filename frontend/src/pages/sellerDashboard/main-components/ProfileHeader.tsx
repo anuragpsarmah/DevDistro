@@ -7,8 +7,8 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   activeUserData,
 }) => (
   <div className="flex flex-col md:flex-row items-center md:items-start mb-12">
-    <div className="mb-6 md:mb-0 md:mr-10 shrink-0">
-      <div className="w-32 h-32 md:w-48 md:h-48 border-2 border-black dark:border-white overflow-hidden bg-white dark:bg-[#050505] p-2">
+    <div className="mb-6 md:mb-0 md:mr-10 shrink-0 self-stretch flex">
+      <div className="w-32 md:w-48 border-2 border-black dark:border-white overflow-hidden bg-white dark:bg-[#050505] p-2">
         <img
           src={activeUserData.profile_image_url}
           alt="User Avatar"

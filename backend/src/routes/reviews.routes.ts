@@ -1,12 +1,31 @@
 import { Router } from "express";
-import rateLimit from "express-rate-limit";
-import { getFeaturedReviews } from "../controllers/reviews.controller";
-
-const limiter = rateLimit({
-  windowMs: 1000,
-  limit: 3,
-});
+import { sessionValidation } from "../middlewares/sessionValidation.middlewares";
+import {
+  submitReviewLimiter,
+  deleteReviewLimiter,
+  getReviewsLimiter,
+  featuredReviewsLimiter,
+  generalAuthReadLimiter,
+} from "../utils/rateLimitConfig.util";
+import {
+  getFeaturedReviews,
+  submitProjectReview,
+  updateProjectReview,
+  deleteProjectReview,
+  getProjectReviews,
+  getMyProjectReview,
+} from "../controllers/reviews.controller";
 
 export const reviewRouter = Router();
 
-reviewRouter.route("/getFeaturedReviews").get(limiter, getFeaturedReviews);
+reviewRouter.route("/getFeaturedReviews").get(featuredReviewsLimiter, getFeaturedReviews);
+
+reviewRouter
+  .route("/project")
+  .post(submitReviewLimiter, sessionValidation, submitProjectReview)
+  .put(submitReviewLimiter, sessionValidation, updateProjectReview)
+  .delete(deleteReviewLimiter, sessionValidation, deleteProjectReview)
+  .get(getReviewsLimiter, getProjectReviews);
+reviewRouter
+  .route("/my-review")
+  .get(generalAuthReadLimiter, sessionValidation, getMyProjectReview);

@@ -9,6 +9,7 @@ import { Redis } from "ioredis";
 import S3Service from "./services/S3.service";
 import RepoZipUploadService from "./services/repoZipUpload.service";
 import S3CleanupService from "./workers/S3Cleanup.worker";
+import { startScheduledDeletionJob } from "./utils/projectCleanup.util";
 
 
 
@@ -40,6 +41,8 @@ export let repoZipUploadService: RepoZipUploadService;
 
   s3Service = new S3Service();
   repoZipUploadService = new RepoZipUploadService();
+
+  startScheduledDeletionJob();
 
   S3CleanupService.startWorker().catch((err) => {
     logger.error("Failed to start cleanup worker:", err);

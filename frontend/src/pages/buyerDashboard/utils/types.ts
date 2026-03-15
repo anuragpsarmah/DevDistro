@@ -9,6 +9,29 @@ export interface SidebarContentProps {
   onSwitchToSeller?: () => void;
 }
 
+export interface MarketplaceTabProps {
+  logout?: () => Promise<void>;
+}
+
+export interface OrdersTabProps {
+  logout?: () => Promise<void>;
+}
+
+export interface ProjectDetailPageProps {
+  projectId: string;
+  onBack: () => void;
+  logout?: () => Promise<void>;
+  backLabel?: string;
+}
+
+export interface PurchaseLedgerTabProps {
+  logout?: () => Promise<void>;
+}
+
+export interface WishlistTabProps {
+  logout?: () => Promise<void>;
+}
+
 export interface SidebarProps {
   isSidebarOpen: boolean;
   setIsSidebarOpen: (val: boolean) => void;
@@ -21,9 +44,8 @@ export interface SidebarProps {
 export type BuyerDashboardTabTypes =
   | "Marketplace"
   | "Wishlist"
-  | "Settings"
-  | "Orders"
-  | "Wallet";
+  | "Purchases"
+  | "Purchase Ledger";
 
 export interface TransitionWrapperProps {
   isTransitioning: boolean;

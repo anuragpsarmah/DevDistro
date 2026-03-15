@@ -1,24 +1,11 @@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { SolanaLogo } from "@/components/ui/solanaLogo";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import {
   ChangeEvent,
   useState,
   KeyboardEvent,
   FocusEvent,
-  useEffect,
-  useRef,
 } from "react";
-import { useRecoilValue } from "recoil";
-import { userCurrency } from "@/utils/atom";
-import axios, { AxiosResponse } from "axios";
-import { tryCatch } from "@/utils/tryCatch.util";
 
 interface ProjectPriceSelectionProps {
   price: number;
@@ -30,10 +17,6 @@ export default function ProjectPriceSelection({
   setPrice,
 }: ProjectPriceSelectionProps) {
   const [inputValue, setInputValue] = useState<string>(price.toFixed(2));
-  const currency = useRecoilValue(userCurrency);
-
-  const [convertedValue, setConvertedValue] = useState<string | null>(null);
-  const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
   const isValidNumber = (val: string) => {
     return /^(\d+(\.\d{0,2})?)?$/.test(val);
@@ -68,110 +51,61 @@ export default function ProjectPriceSelection({
   };
 
   const incrementPrice = () => {
-    const newPrice = Math.round((price + 0.01) * 100) / 100;
+    const newPrice = Math.round((price + 1) * 100) / 100;
     setPrice(newPrice);
     setInputValue(newPrice.toFixed(2));
   };
 
   const decrementPrice = () => {
-    const newPrice = Math.max(0, Math.round((price - 0.01) * 100) / 100);
+    const newPrice = Math.max(0, Math.round((price - 1) * 100) / 100);
     setPrice(newPrice);
     setInputValue(newPrice.toFixed(2));
   };
 
-  useEffect(() => {
-    if (!currency) return;
-
-    if (debounceRef.current) {
-      clearTimeout(debounceRef.current);
-    }
-
-    debounceRef.current = setTimeout(async () => {
-      const [response, error] = await tryCatch<AxiosResponse>(() =>
-        axios.get(`https://api.coingecko.com/api/v3/simple/price`, {
-          params: {
-            ids: "solana",
-            vs_currencies: currency.toLowerCase(),
-          },
-        })
-      );
-
-      if (error || !response) {
-        setConvertedValue(null);
-        return;
-      }
-
-      const value = response.data?.solana?.[currency.toLowerCase()];
-      if (value) {
-        const total = (value * price).toFixed(2);
-        setConvertedValue(`${total} ${currency}`);
-      } else {
-        setConvertedValue(null);
-      }
-    }, 600);
-
-    return () => {
-      if (debounceRef.current) {
-        clearTimeout(debounceRef.current);
-      }
-    };
-  }, [price, currency]);
-
   return (
     <div className="border-t-2 border-black/10 dark:border-white/10 pt-10 mt-10">
       <Label htmlFor="price" className="font-space text-[10px] uppercase font-bold tracking-[0.2em] text-gray-600 dark:text-gray-400 mb-6 block text-center">
-        Project Price (SOL)
+        Project Price (USD)
       </Label>
       <div className="relative flex justify-center">
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <div className="lg:w-1/3 md:w-1/3 w-1/2 relative bg-transparent border-2 border-black/20 dark:border-white/20 transition-colors duration-300">
-                <span className="absolute top-1/2 left-4 transform -translate-y-1/2 flex items-center">
-                  <SolanaLogo className="w-6 h-6" />
-                </span>
-                <Input
-                  id="price"
-                  type="text"
-                  inputMode="decimal"
-                  pattern="^\d+(\.\d{0,2})?$"
-                  value={inputValue}
-                  onChange={handleInputChange}
-                  onBlur={handleBlur}
-                  onKeyDown={handleKeyDown}
-                  className="bg-transparent border-0 text-black dark:text-white focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 rounded-none transition-colors duration-300 font-space text-3xl md:text-4xl font-black text-center appearance-none py-8 pl-12 pr-12 h-auto"
-                  placeholder="0.00"
-                  required
-                />
-                <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex flex-col space-y-2">
-                  <button
-                    type="button"
-                    onClick={incrementPrice}
-                    className="text-black dark:text-white hover:text-red-500 dark:hover:text-red-500 transition-colors duration-200"
-                  >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="square" strokeLinejoin="miter">
-                      <path d="M18 15l-6-6-6 6" />
-                    </svg>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={decrementPrice}
-                    className="text-black dark:text-white hover:text-red-500 dark:hover:text-red-500 transition-colors duration-200"
-                  >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="square" strokeLinejoin="miter">
-                      <path d="M6 9l6 6 6-6" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-            </TooltipTrigger>
-            {convertedValue && (
-              <TooltipContent side="top" className="bg-black text-white dark:bg-white dark:text-black font-space font-bold uppercase tracking-widest text-[10px] rounded-none border-2 border-black dark:border-white">
-                ≈ {convertedValue}
-              </TooltipContent>
-            )}
-          </Tooltip>
-        </TooltipProvider>
+        <div className="lg:w-1/3 md:w-1/3 w-1/2 relative bg-transparent border-2 border-black/20 dark:border-white/20 transition-colors duration-300">
+          <span className="absolute top-1/2 left-4 transform -translate-y-1/2 flex items-center font-space font-black text-3xl md:text-4xl text-black dark:text-white leading-none">
+            $
+          </span>
+          <Input
+            id="price"
+            type="text"
+            inputMode="decimal"
+            pattern="^\d+(\.\d{0,2})?$"
+            value={inputValue}
+            onChange={handleInputChange}
+            onBlur={handleBlur}
+            onKeyDown={handleKeyDown}
+            className="bg-transparent border-0 text-black dark:text-white focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 rounded-none transition-colors duration-300 font-space text-3xl md:text-4xl font-black text-center appearance-none py-8 pl-12 pr-12 h-auto"
+            placeholder="0.00"
+            required
+          />
+          <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex flex-col space-y-2">
+            <button
+              type="button"
+              onClick={incrementPrice}
+              className="text-black dark:text-white hover:text-red-500 dark:hover:text-red-500 transition-colors duration-200"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="square" strokeLinejoin="miter">
+                <path d="M18 15l-6-6-6 6" />
+              </svg>
+            </button>
+            <button
+              type="button"
+              onClick={decrementPrice}
+              className="text-black dark:text-white hover:text-red-500 dark:hover:text-red-500 transition-colors duration-200"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="square" strokeLinejoin="miter">
+                <path d="M6 9l6 6 6-6" />
+              </svg>
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );

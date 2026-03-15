@@ -8,7 +8,7 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
-import { JOB_ROLES } from "../utils/constants";
+import { JOB_ROLES, MAX_BIO_LENGTH } from "../utils/constants";
 import { AccountInformationProps } from "../utils/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
@@ -24,6 +24,7 @@ import { Button } from "@/components/ui/button";
 
 export default function AccountInformation({
   isInitialLoading,
+  isSaving,
   activeUserData,
   profileInformationData,
   setProfileInformationData,
@@ -194,7 +195,7 @@ export default function AccountInformation({
                     placeholder="Briefly describe your expertise..."
                     value={profileInformationData.short_bio}
                     onChange={(e) => {
-                      if (e.target.value.length <= 250) {
+                      if (e.target.value.length <= MAX_BIO_LENGTH) {
                         setProfileInformationData((prev) => ({
                           ...prev,
                           short_bio: e.target.value,
@@ -208,12 +209,12 @@ export default function AccountInformation({
                       Keep it brief.
                     </p>
                     <p
-                      className={`font-space font-bold text-[10px] uppercase tracking-widest ${250 - profileInformationData.short_bio.length <= 20
+                      className={`font-space font-bold text-[10px] uppercase tracking-widest ${MAX_BIO_LENGTH - profileInformationData.short_bio.length <= 20
                         ? "text-red-500"
                         : "text-gray-500"
                         }`}
                     >
-                      {profileInformationData.short_bio.length}/250
+                      {profileInformationData.short_bio.length}/{MAX_BIO_LENGTH}
                     </p>
                   </div>
                 </div>
@@ -255,7 +256,8 @@ export default function AccountInformation({
                       profile_visibility: checked,
                     }));
                   }}
-                  className="data-[state=checked]:bg-red-500 data-[state=unchecked]:bg-black/20 dark:data-[state=unchecked]:bg-white/20 border-2 border-transparent hover:border-black dark:hover:border-white rounded-none transition-all duration-300"
+                  disabled={isSaving}
+                  className="data-[state=checked]:bg-red-500 data-[state=unchecked]:bg-black/20 dark:data-[state=unchecked]:bg-white/20 border-2 border-transparent hover:border-black dark:hover:border-white rounded-none transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                 />
               )}
             </div>
@@ -283,7 +285,8 @@ export default function AccountInformation({
                       auto_repackage_on_push: checked,
                     }));
                   }}
-                  className="data-[state=checked]:bg-red-500 data-[state=unchecked]:bg-black/20 dark:data-[state=unchecked]:bg-white/20 border-2 border-transparent hover:border-black dark:hover:border-white rounded-none transition-all duration-300"
+                  disabled={isSaving}
+                  className="data-[state=checked]:bg-red-500 data-[state=unchecked]:bg-black/20 dark:data-[state=unchecked]:bg-white/20 border-2 border-transparent hover:border-black dark:hover:border-white rounded-none transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                 />
               )}
             </div>

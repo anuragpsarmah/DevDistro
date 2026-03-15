@@ -19,6 +19,7 @@ export default function PrivateRepoImport({
   userData,
   privateRepoData,
   repoDataLoading,
+  repoDataError,
   totalListedProjectsDataLoading,
   totalListedProjectsData,
   setFormPropsAndSwitchUI,
@@ -73,6 +74,12 @@ export default function PrivateRepoImport({
     }
   }, [privateRepoData, hasNextPage, isFetchingNextPage, searchQuery, fetchNextPage, repoDataLoading]);
 
+  // When the user searches, eagerly load all remaining pages so the filter covers the full repo list.
+  useEffect(() => {
+    if (!searchQuery || !hasNextPage || isFetchingNextPage) return;
+    fetchNextPage();
+  }, [searchQuery, hasNextPage, isFetchingNextPage, fetchNextPage]);
+
   return (
     <div className="h-full flex flex-col">
       <div className="rounded-xl h-full flex flex-col">
@@ -123,11 +130,21 @@ export default function PrivateRepoImport({
 
           <div ref={scrollContainerRef} className="relative flex-1 min-h-0 mb-2 mt-4">
             <ScrollArea className="h-full border-2 border-black/20 dark:border-white/20 rounded-none bg-black/5 dark:bg-white/5 transition-colors duration-300">
-              <div className="space-y-0 p-0 hover:border-transparent">
+              <div className="space-y-0 p-0 hover:border-transparent h-full">
                 {repoDataLoading || totalListedProjectsDataLoading ? (
                   Array.from({ length: 20 }).map((_, index) => (
                     <RepoImportSkeleton key={index} />
                   ))
+                ) : repoDataError ? (
+                  <div className="flex flex-col items-center justify-center h-full min-h-64 space-y-4 px-6 text-center">
+                    <AlertCircle className="h-8 w-8 text-red-500" />
+                    <p className="font-space text-sm text-red-500 uppercase tracking-wider font-bold">
+                      Failed to load repositories
+                    </p>
+                    <p className="font-space text-xs text-gray-500 dark:text-gray-400">
+                      Could not reach GitHub. Click refresh to try again.
+                    </p>
+                  </div>
                 ) : filteredRepos.length > 0 ? (
                   <>
                     {filteredRepos.map((repo) => (
@@ -167,7 +184,7 @@ export default function PrivateRepoImport({
 
                     {isFetchingNextPage && (
                       <div className="flex justify-center py-4">
-                        <Loader2 className="h-5 w-5 animate-spin text-purple-400" />
+                        <Loader2 className="h-5 w-5 animate-spin text-black dark:text-white" />
                       </div>
                     )}
                   </>

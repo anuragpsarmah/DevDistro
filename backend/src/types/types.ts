@@ -31,6 +31,7 @@ export interface ProjectQuery {
   isActive: boolean;
   github_access_revoked: boolean;
   repo_zip_status: string;
+  scheduled_deletion_at?: Date | null;
   project_type?: { $in: string[] };
   tech_stack?: { $in: string[] };
   price?: { $gte?: number; $lte?: number };
@@ -51,3 +52,51 @@ export type SortOption =
   | "price_high"
   | "rating_high"
   | "rating_low";
+
+export interface InstallationToken {
+  token: string;
+  expires_at: string;
+}
+
+export type TreeNode = {
+  name: string;
+  type: "file" | "directory";
+  children?: TreeNode[];
+};
+
+export interface Repository {
+  id: number;
+  name: string;
+  full_name: string;
+  private: boolean;
+  description: string | null;
+  language: string | null;
+  updated_at: string;
+}
+
+export interface Installation {
+  id: number;
+  account: {
+    login: string;
+    id: number;
+    type: string;
+  };
+  repository_selection: "all" | "selected";
+  suspended_at: string | null;
+}
+
+export interface VerifyParams {
+  txSignature: string;
+  expectedBuyerWallet: string;
+  expectedSellerWallet: string;
+  expectedTreasuryWallet: string;
+  expectedSellerLamports: number;
+  expectedTreasuryLamports: number;
+  purchaseReference: string;
+  rpcUrl: string;
+}
+
+export interface VerifyResult {
+  valid: boolean;
+  error?: string;
+}

@@ -55,25 +55,13 @@ export default function Prologue({ handleAuthNavigate }: PrologueProps) {
             <span className="font-space font-bold uppercase tracking-[0.2em] text-xs text-red-500">
               DevExchange
             </span>
-            <a
-              href="https://github.com/anuragpsarmah/DevExchange"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="px-2 py-1 bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 flex items-center gap-2 rounded-sm ml-4 hover:bg-black/10 dark:hover:bg-white/10 transition-colors"
-            >
-              <Github size={12} className="text-gray-600 dark:text-gray-400" />
-              <span className="font-space font-bold uppercase tracking-widest text-[10px] text-gray-600 dark:text-gray-400 group-hover:text-black dark:group-hover:text-white transition-colors">
-                Open Source (MIT)
-              </span>
-            </a>
           </motion.div>
 
           <motion.h1
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.1 }}
-            className="font-syne text-5xl md:text-7xl lg:text-8xl font-black leading-[0.9] text-black dark:text-white tracking-widest uppercase break-words hyphens-auto dark:mix-blend-difference"
-            style={{ WebkitTextStroke: "1px rgba(128,128,128,0.2)" }}
+            className="font-syne text-5xl md:text-7xl lg:text-8xl font-black leading-[0.9] text-black dark:text-white tracking-widest uppercase break-words hyphens-auto"
           >
             A SOURCE CODE MARKET THAT{" "}
             <span
@@ -89,10 +77,9 @@ export default function Prologue({ handleAuthNavigate }: PrologueProps) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.8, delay: 0.3 }}
-            className="font-space mt-10 text-xl md:text-2xl text-gray-600 dark:text-gray-400 max-w-2xl leading-relaxed"
+            className="font-space mt-10 text-base md:text-lg text-gray-500 dark:text-gray-400 max-w-xl leading-relaxed tracking-wide"
           >
-            List your repos. Sell for Solana.<br />
-            Automated delivery, instant payouts.
+            The open marketplace where developers sell private repos — priced in USD, settled in SOL, delivered instantly.
           </motion.p>
 
           <motion.div
@@ -117,7 +104,7 @@ export default function Prologue({ handleAuthNavigate }: PrologueProps) {
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 1, delay: 0.2 }}
-          className="lg:col-span-4 hidden lg:flex flex-col justify-end items-end pb-12"
+          className="lg:col-span-4 hidden lg:flex flex-col justify-end items-end"
         >
           <div className="border-r-2 border-red-500 pr-6 py-2 flex flex-col gap-3 font-space text-[10px] sm:text-xs uppercase tracking-widest text-gray-500">
             <div className="text-black dark:text-white font-bold mb-4 text-right">System Diagnostics</div>

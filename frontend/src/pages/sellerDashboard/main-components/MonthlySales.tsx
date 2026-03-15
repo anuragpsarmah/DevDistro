@@ -27,6 +27,9 @@ export default function MonthlySales({
               <h2 className="font-syne text-3xl lg:text-5xl font-black uppercase tracking-widest text-black dark:text-white leading-none">
                 Monthly Sales
               </h2>
+              <p className="font-space text-xs uppercase tracking-[0.16em] text-gray-500 dark:text-gray-400">
+                Values represent monthly revenue in USD.
+              </p>
             </>
           )}
         </div>

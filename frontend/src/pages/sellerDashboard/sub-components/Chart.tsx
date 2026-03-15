@@ -10,7 +10,7 @@ import { ChartSkeleton } from "./Skeletons";
 
 const chartConfig = {
   sales: {
-    label: "SALES",
+    label: "Revenue (USD)",
     color: "#ef4444",
   },
 } satisfies ChartConfig;

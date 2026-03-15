@@ -12,7 +12,7 @@ export const SalesMetrics: React.FC<SalesMetricsProps> = ({
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
-      <DashboardCard title="TOTAL SALES" value={`₹${salesInfo.total_sales}`} />
+      <DashboardCard title="TOTAL SALES" value={`$${Number(salesInfo.total_sales).toFixed(2)}`} />
       <DashboardCard
         title="ACTIVE PROJECTS"
         value={salesInfo.active_projects.toString()}

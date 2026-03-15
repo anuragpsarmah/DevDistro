@@ -5,6 +5,8 @@ import Sidebar from "./main-components/Sidebar";
 import { BuyerDashboardTabTypes } from "./utils/types";
 import MarketplaceTab from "./tabs/MarketplaceTab";
 import WishlistTab from "./tabs/WishlistTab";
+import OrdersTab from "./tabs/OrdersTab";
+import PurchaseLedgerTab from "./tabs/PurchaseLedgerTab";
 
 interface BuyerDashboardPageProps {
   logout?: () => Promise<void>;
@@ -33,6 +35,8 @@ export default function BuyerDashboardPage({
       <main className="flex-1 p-8 overflow-auto relative z-10">
         {activeTab === "Marketplace" && <MarketplaceTab logout={logout} />}
         {activeTab === "Wishlist" && <WishlistTab logout={logout} />}
+        {activeTab === "Purchases" && <OrdersTab logout={logout} />}
+        {activeTab === "Purchase Ledger" && <PurchaseLedgerTab logout={logout} />}
       </main>
     </div>
   );

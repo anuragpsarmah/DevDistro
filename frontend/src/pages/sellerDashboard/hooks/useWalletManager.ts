@@ -4,6 +4,7 @@ import { WalletName } from "@solana/wallet-adapter-base";
 import { tryCatch } from "@/utils/tryCatch.util";
 import { errorToast } from "@/components/ui/customToast";
 import bs58 from "bs58";
+import { WALLET_OP_DEBOUNCE_MS } from "../utils/constants";
 
 interface UseWalletManagerProps {
   walletAddress: string | null;
@@ -98,7 +99,7 @@ export const useWalletManager = ({
       setLocalProcessing(false);
       setTimeout(() => {
         intentionalOperation.current = false;
-      }, 500);
+      }, WALLET_OP_DEBOUNCE_MS);
     }
   }, [disconnect, isLoading, onWalletDisconnect, localProcessing]);
 

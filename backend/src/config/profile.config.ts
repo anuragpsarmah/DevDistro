@@ -1,0 +1,2 @@
+export const WALLET_VERIFICATION_WINDOW_MS = 5 * 60 * 1000;
+export const WALLET_CLOCK_SKEW_MS = 60_000;

@@ -1,5 +1,5 @@
 import { Response } from "express";
-import { REFRESH_TOKEN_DURATION_MS } from "../config/tokenConfig";
+import { REFRESH_TOKEN_DURATION_MS } from "../config/token.config";
 
 const response = (
   res: Response,

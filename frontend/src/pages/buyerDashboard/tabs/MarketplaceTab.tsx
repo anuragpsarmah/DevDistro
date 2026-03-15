@@ -6,13 +6,9 @@ import MarketplaceCardSkeleton from "../sub-components/MarketplaceCardSkeleton";
 import { TransitionWrapper } from "../sub-components/TransitionWrapper";
 import { useMarketplaceSearchQuery } from "@/hooks/apiQueries";
 import { type MarketplaceSearchParams } from "@/utils/types";
-import ProjectDetailPage from "./ProjectDetailPage";
-
-interface MarketplaceTabProps {
-  logout?: () => Promise<void>;
-}
-
-const DEBOUNCE_MS = 400;
+import ProjectDetailPage from "../sub-components/ProjectDetailPage";
+import { MarketplaceTabProps } from "../utils/types";
+import { DEBOUNCE_MS } from "../utils/constants";
 
 export default function MarketplaceTab({ logout }: MarketplaceTabProps) {
   const [searchQuery, setSearchQuery] = useState("");
@@ -99,7 +95,7 @@ export default function MarketplaceTab({ logout }: MarketplaceTabProps) {
 
   return (
     <TransitionWrapper identifier="marketplace-list" isTransitioning={false}>
-      <div className="space-y-6 mt-6 lg:mt-0 md:mt-0">
+      <div className="space-y-6 mt-6 lg:mt-0 md:mt-0 flex flex-col min-h-[calc(100vh-4rem)]">
         <div className="flex-shrink-0 mb-8 lg:mb-10">
           <div className="flex items-start lg:items-center justify-between flex-col lg:flex-row gap-4">
             <div>
@@ -212,7 +208,7 @@ export default function MarketplaceTab({ logout }: MarketplaceTabProps) {
           hasResults &&
           !hasNextPage &&
           !isFetchingNextPage && (
-            <p className="text-center font-space font-bold uppercase tracking-widest text-black dark:text-white text-sm pb-4 border-t-2 border-black/10 dark:border-white/10 pt-8 mt-8">
+            <p className="text-center font-space font-bold uppercase tracking-widest text-black dark:text-white text-sm pb-4 pt-4">
               System Update: End of Catalog Reached
             </p>
           )}

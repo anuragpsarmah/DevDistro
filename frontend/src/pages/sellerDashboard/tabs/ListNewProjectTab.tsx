@@ -10,10 +10,10 @@ import {
   useInstallationStatusQuery,
 } from "@/hooks/apiQueries";
 import {
+  ListNewProjectTabProps,
   PrivateRepoData,
   projectListingValidatedFormData,
   ProjectMediaMetadata,
-  SellerDashboardTabTypes,
 } from "../utils/types";
 import PrivateRepoImport from "../main-components/PrivateRepoImport";
 import ProjectListingForm from "../main-components/ProjectListingForm";
@@ -24,15 +24,9 @@ import {
   useValidateMediaUploadAndStoreProjectMutation,
 } from "@/hooks/apiMutations";
 import AnimatedLoadWrapper from "@/components/wrappers/AnimatedLoadWrapper";
-import { Loader2 } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { errorToast, successToast } from "@/components/ui/customToast";
 import { tryCatch } from "@/utils/tryCatch.util";
-
-
-interface ListNewProjectTabProps {
-  logout?: () => Promise<void>;
-  setActiveTab: (curr: SellerDashboardTabTypes) => void;
-}
 
 export default function ListNewProjectTab({
   logout,
@@ -64,6 +58,7 @@ export default function ListNewProjectTab({
   const {
     data: repoData,
     isLoading: repoDataLoading,
+    isError: repoDataError,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
@@ -185,8 +180,19 @@ export default function ListNewProjectTab({
             <div className="relative h-full bg-white dark:bg-[#050505] border-2 border-black dark:border-white overflow-hidden flex flex-col transition-colors duration-300">
               <div className="relative z-10 h-full overflow-y-auto p-6 lg:p-10 custom-scrollbar">
                 {installationStatusLoading ? (
-                  <div className="h-full flex items-center justify-center">
-                    <Loader2 className="w-8 h-8 animate-spin text-red-500" />
+                  <div className="space-y-8">
+                    {[...Array(5)].map((_, i) => (
+                      <div key={i} className="flex items-center justify-between p-6 border-b-2 border-black/10 dark:border-white/10">
+                        <div className="flex items-center space-x-4">
+                          <Skeleton className="w-10 h-10 rounded-none bg-black/10 dark:bg-white/10" />
+                          <div className="space-y-3">
+                            <Skeleton className="w-40 h-5 bg-black/10 dark:bg-white/10 rounded-none" />
+                            <Skeleton className="w-24 h-3 bg-black/10 dark:bg-white/10 rounded-none" />
+                          </div>
+                        </div>
+                        <Skeleton className="w-24 h-12 bg-black/10 dark:bg-white/10 rounded-none" />
+                      </div>
+                    ))}
                   </div>
                 ) : (
                   <TransitionWrapper
@@ -199,6 +205,7 @@ export default function ListNewProjectTab({
                         userData={userData}
                         privateRepoData={allRepos}
                         repoDataLoading={repoDataLoading}
+                        repoDataError={repoDataError}
                         totalListedProjectsDataLoading={
                           totalListedProjectsDataLoading
                         }

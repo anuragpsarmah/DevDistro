@@ -8,7 +8,7 @@ import {
   REFRESH_TOKEN_DURATION_MS,
   REFRESH_TOKEN_DURATION_S,
   REUSE_DETECTION_GRACE_MS,
-} from "../config/tokenConfig";
+} from "../config/token.config";
 
 const REFRESH_TOKEN_BYTE_LENGTH = 40;
 const REFRESH_TOKEN_MAX_PER_USER = 5;

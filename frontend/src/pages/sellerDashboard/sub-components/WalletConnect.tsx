@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Wallet, ChevronRight, ExternalLink } from "lucide-react";
 import { WalletConnectProps } from "../utils/types";
 import { SolanaLogo } from "@/components/ui/solanaLogo";
+import { WALLET_LINKS } from "../utils/constants";
 
 export const WalletConnect = ({
   detectedWallets,
@@ -10,17 +11,10 @@ export const WalletConnect = ({
   onSelectWallet,
   onWalletRedirect,
 }: WalletConnectProps) => {
-  interface WalletLinks {
-    [key: string]: string;
-  }
+
 
   const getWalletLink = (walletName: string): string => {
-    const walletLinks: WalletLinks = {
-      Phantom: "https://phantom.app/",
-      Solflare: "https://solflare.com/",
-    };
-
-    return walletLinks[walletName] || "#";
+    return WALLET_LINKS[walletName] || "#";
   };
 
   const handleWalletRedirect = (walletName: string): void => {

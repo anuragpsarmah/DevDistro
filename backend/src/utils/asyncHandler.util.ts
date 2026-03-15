@@ -28,6 +28,14 @@ const asyncHandler = (
         status: error.status || 500,
       });
 
+      if (res.headersSent) {
+        logger.error("Headers already sent — cannot send error response", {
+          error_name: error.name,
+          error_message: error.message,
+        });
+        return;
+      }
+
       response(
         res,
         error.status || 500,

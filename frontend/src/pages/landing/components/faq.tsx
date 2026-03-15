@@ -18,8 +18,7 @@ export default function FAQ() {
             </div>
             <h2 className="font-syne text-4xl md:text-5xl font-black uppercase leading-tight mb-6 transition-colors">
               Frequently<br />
-              <span className="text-transparent dark:hidden" style={{ WebkitTextStroke: "1px black", opacity: 0.8 }}>Asked.</span>
-              <span className="text-transparent hidden dark:inline" style={{ WebkitTextStroke: "1px white", opacity: 0.8 }}>Asked.</span>
+              <span className="text-black/40 dark:text-white/40">Asked.</span>
             </h2>
             <p className="font-space text-gray-600 dark:text-gray-500 text-sm transition-colors">
               Operational specifications and technical constraints regarding DevExchange.

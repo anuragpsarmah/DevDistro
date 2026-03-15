@@ -23,10 +23,7 @@ import {
   projectListingValidatedFormData,
   ProjectMediaMetadata,
 } from "../utils/types";
-
-interface ManageProjectsTabProps {
-  logout?: () => Promise<void>;
-}
+import { ManageProjectsTabProps } from "@/utils/types";
 
 export default function ManageProjectsTab({ logout }: ManageProjectsTabProps) {
   const queryClient = useQueryClient();
@@ -151,14 +148,16 @@ export default function ManageProjectsTab({ logout }: ManageProjectsTabProps) {
     await refreshRepoZipMutate(github_repo_id);
   };
 
-  const handleRefreshRepoZipStatus = async (index: number) => {
+  const handleRefreshRepoZipStatus = async (index: number): Promise<string | null> => {
     const github_repo_id = initialData?.data?.[index]?.github_repo_id;
-    if (!github_repo_id) return;
+    if (!github_repo_id) return null;
 
     const result = await getRepoZipStatus(github_repo_id);
-    if (result?.data?.repo_zip_status === "SUCCESS") {
+    const status: string | null = result?.data?.repo_zip_status ?? null;
+    if (status === "SUCCESS") {
       queryClient.invalidateQueries({ queryKey: ["initialProjectDataQuery"] });
     }
+    return status;
   };
 
   return (
@@ -206,6 +205,7 @@ export default function ManageProjectsTab({ logout }: ManageProjectsTabProps) {
               <div className="relative h-full bg-white dark:bg-[#050505] border-2 border-black dark:border-white overflow-hidden flex flex-col transition-colors duration-300">
                 <div className="relative z-10 h-full overflow-y-auto custom-scrollbar p-6 lg:p-10">
                   <ProjectModificationForm
+                    key={formProps.github_repo_id}
                     formProps={formProps}
                     setFormProps={setFormProps}
                     handleUIStateChange={handleUIStateChange}

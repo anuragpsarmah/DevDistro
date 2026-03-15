@@ -41,3 +41,13 @@ export const JOB_ROLE_ENUM = [
 export const FILE_TYPE_ENUM = ["image/png", "image/jpeg", "video/mp4"] as const;
 
 export const MAX_ALLOWED_IMAGES = 5;
+
+export const MAX_REPO_SIZE_BYTES = 500 * 1024 * 1024;
+
+export const LOCK_TTL_SECONDS = 600;
+
+export const MEMO_PROGRAM_ID = "MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr";
+
+// Fixed lamport tolerance: both sides compute from the identical price_sol_total float
+// using the same deterministic integer arithmetic, so the delta is always 0.
+export const LAMPORT_FIXED_TOLERANCE = 5;

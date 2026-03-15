@@ -99,7 +99,7 @@ export default function ProtectedRouteWrapper({
             preFetchImage(userData.data.profile_image_url)
           );
           if (error) {
-            console.warn("Failed to prefetch profile image:", error);
+            //do nothing
           }
         }
       }

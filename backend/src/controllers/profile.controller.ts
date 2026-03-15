@@ -13,6 +13,10 @@ import logger from "../logger/logger";
 import { tryCatch } from "../utils/tryCatch.util";
 import { enrichContext } from "../utils/asyncContext";
 import { verifyWalletSignature } from "../utils/walletVerification.util";
+import {
+  WALLET_VERIFICATION_WINDOW_MS,
+  WALLET_CLOCK_SKEW_MS,
+} from "../config/profile.config";
 
 const getProfileInformation = asyncHandler(
   async (req: Request, res: Response) => {
@@ -129,17 +133,7 @@ const updateProfileInformation = asyncHandler(
       return;
     }
 
-    Object.assign(user, {
-      website_url,
-      x_username,
-      short_bio,
-      job_role,
-      review_description,
-      review_stars,
-      location,
-      profile_visibility,
-      auto_repackage_on_push,
-    });
+    Object.assign(user, result.data);
 
     const [, saveUserError] = await tryCatch(user.save());
     if (saveUserError) {
@@ -152,6 +146,17 @@ const updateProfileInformation = asyncHandler(
     }
 
     if (!review_description || !review_stars) {
+      const [, deleteReviewError] = await tryCatch(
+        SiteReview.deleteOne({ username: req.user.username })
+      );
+      if (deleteReviewError) {
+        enrichContext({
+          outcome: "error",
+          error: { name: "DatabaseError", message: deleteReviewError instanceof Error ? deleteReviewError.message : "Failed to delete site review" },
+        });
+        logger.error("Failed to delete cleared site review", deleteReviewError);
+        throw new ApiError("Internal Server Error", 500);
+      }
       enrichContext({ outcome: "success", has_review: false });
       response(res, 200, "User profile information updated successfully.");
       return;
@@ -314,9 +319,8 @@ const updateWalletAddress = asyncHandler(
 
       const timestamp = parseInt(timestampStr, 10);
       const now = Date.now();
-      const fiveMinutesMs = 5 * 60 * 1000;
 
-      if (isNaN(timestamp) || now - timestamp > fiveMinutesMs || timestamp > now + 60000) {
+      if (isNaN(timestamp) || now - timestamp > WALLET_VERIFICATION_WINDOW_MS || timestamp > now + WALLET_CLOCK_SKEW_MS) {
         enrichContext({ outcome: "validation_failed", reason: "timestamp_expired" });
         logger.warn("Expired or invalid timestamp in wallet verification", {
           timestamp,

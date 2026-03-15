@@ -3,6 +3,7 @@ import { SolanaLogo } from "@/components/ui/solanaLogo";
 import {
   ChartDataObject,
   CommonSalesInformation,
+  DatePreset,
   ProfileInformation,
 } from "./types";
 
@@ -11,7 +12,7 @@ export const sidebarItems = [
   { icon: User, label: "Settings" },
   { icon: PlusSquare, label: "List Project" },
   { icon: Layers, label: "My Projects" },
-  { icon: History, label: "Orders" },
+  { icon: History, label: "Sales" },
   { icon: SolanaLogo, label: "Wallet" },
 ] as const;
 
@@ -52,7 +53,27 @@ export const JOB_ROLES = [
   "Other",
 ] as const;
 
+export const DEFAULT_PROJECT_OPTIONS = [
+  { value: "all", label: "All Projects" },
+  { value: "unlisted", label: "Unlisted" },
+];
+
+export const WALLET_LINKS: Record<string, string> = {
+  Phantom: "https://phantom.app/",
+  Solflare: "https://solflare.com/",
+};
+
+export const DATE_PRESET_OPTIONS: Array<{ value: DatePreset; label: string }> = [
+  { value: "all", label: "All Time" },
+  { value: "7d", label: "Last 7 Days" },
+  { value: "30d", label: "Last 30 Days" },
+  { value: "thisYear", label: "This Year" },
+];
+
+export const MAX_TECH_STACK = 15;
 export const MAX_REVIEW_LENGTH = 200;
+export const MAX_BIO_LENGTH = 250;
+export const WALLET_OP_DEBOUNCE_MS = 500;
 export const CITY_SEARCH_DELAY = 300;
 export const MAX_DESCRIPTION_LENGTH = 1000;
 export const MAX_IMAGES = 5;
@@ -106,3 +127,13 @@ export const ALLOWED_VIDEO_TYPES: { [key: string]: string[] } = {
 export const MAX_IMAGE_FILE_SIZE = 2 * 1024 * 1024;
 
 export const MAX_VIDEO_FILE_SIZE = 50 * 1024 * 1024;
+
+// Card thumbnail: 16:9 at 1280x720
+export const CARD_CROP_WIDTH = 1280;
+export const CARD_CROP_HEIGHT = 720;
+export const CARD_ASPECT_RATIO = CARD_CROP_WIDTH / CARD_CROP_HEIGHT; // 16/9
+
+// Detail page banner: 21:9 at 1260x540
+export const DETAIL_CROP_WIDTH = 1260;
+export const DETAIL_CROP_HEIGHT = 540;
+export const DETAIL_ASPECT_RATIO = DETAIL_CROP_WIDTH / DETAIL_CROP_HEIGHT; // 7/3

@@ -1,9 +1,6 @@
 import { Github, Shield, CheckCircle, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-
-interface GitHubAppInstallPromptProps {
-  installUrl: string;
-}
+import { GitHubAppInstallPromptProps } from "../utils/types";
 
 export default function GitHubAppInstallPrompt({
   installUrl,

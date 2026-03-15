@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { useToast } from "@/hooks/use-toast";
 import {
   useCommonSalesInformationQuery,
   useYearlySalesInformationQuery,
@@ -7,13 +6,12 @@ import {
 import { useYearOptions } from "../hooks/useYearOptions";
 import { INITIAL_CHART_DATA, INITIAL_SALES_INFO } from "../utils/constants";
 import type { ChartDataObject } from "../utils/types";
+import { mergeChartData } from "../utils/chartUtils";
 import AnimatedLoadWrapper from "@/components/wrappers/AnimatedLoadWrapper";
 import { SalesMetrics } from "../main-components/SalesMetrics";
 import MonthlySales from "../main-components/MonthlySales";
-
-interface DashboardOverviewTabProps {
-  logout?: () => Promise<void>;
-}
+import { ErrorScreenDashboardSection } from "../sub-components/ErrorScreens";
+import { DashboardOverviewTabProps } from "@/utils/types";
 
 export default function DashboardOverviewTab({
   logout,
@@ -24,7 +22,6 @@ export default function DashboardOverviewTab({
     new Date().getFullYear().toString()
   );
 
-  const { toast } = useToast();
   const years = useYearOptions();
 
   const {
@@ -42,16 +39,10 @@ export default function DashboardOverviewTab({
   useEffect(() => {
     if (!yearlyLoading && !yearlyError && yearlyData?.data) {
       setChartData((prevData) =>
-        prevData.map((item, index) => ({
-          ...item,
-          sales:
-            index < yearlyData.data.monthly_sales.length
-              ? yearlyData.data.monthly_sales[index].sales
-              : item.sales,
-        }))
+        mergeChartData(prevData, yearlyData.data.monthly_sales)
       );
     }
-  }, [yearlyData, yearlyLoading, yearlyError, toast]);
+  }, [yearlyData, yearlyLoading, yearlyError]);
 
   return (
     <AnimatedLoadWrapper>
@@ -74,24 +65,40 @@ export default function DashboardOverviewTab({
         </div>
 
         <div className="flex-shrink-0 w-full mb-8 lg:mb-10">
-          <SalesMetrics
-            salesInfo={
-              !commonInfoLoading && !commonInfoError && commonInfoData
-                ? commonInfoData.data
-                : INITIAL_SALES_INFO
-            }
-            isLoading={commonInfoLoading}
-          />
+          {commonInfoError && !commonInfoLoading ? (
+            <ErrorScreenDashboardSection
+              title="Overview Metrics Unavailable"
+              errorCode="[Error: Failed to Load Overview Metrics]"
+              description="We couldn't fetch your dashboard metrics right now. Please check your network connection and reload the page."
+            />
+          ) : (
+            <SalesMetrics
+              salesInfo={
+                !commonInfoLoading && commonInfoData
+                  ? commonInfoData.data
+                  : INITIAL_SALES_INFO
+              }
+              isLoading={commonInfoLoading}
+            />
+          )}
         </div>
 
         <div className="flex-1 min-h-0 w-full">
-          <MonthlySales
-            selectedYear={selectedYear}
-            years={years}
-            onYearChange={setSelectedYear}
-            isLoading={yearlyLoading}
-            chartData={chartData}
-          />
+          {yearlyError && !yearlyLoading ? (
+            <ErrorScreenDashboardSection
+              title="Monthly Sales Unavailable"
+              errorCode="[Error: Failed to Load Monthly Sales]"
+              description="We couldn't fetch your yearly sales timeline for the selected year. Please reload the page or switch tabs and return."
+            />
+          ) : (
+            <MonthlySales
+              selectedYear={selectedYear}
+              years={years}
+              onYearChange={setSelectedYear}
+              isLoading={yearlyLoading}
+              chartData={chartData}
+            />
+          )}
         </div>
       </div>
     </AnimatedLoadWrapper>

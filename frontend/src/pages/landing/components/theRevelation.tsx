@@ -64,11 +64,10 @@ export default function TheShift() {
             transition={{ duration: 0.8 }}
             className="order-1 md:order-2"
           >
-            <h2 className="font-syne text-4xl md:text-6xl font-bold text-black dark:text-white uppercase leading-tight mb-8 transition-colors">
+            <h2 className="font-syne text-4xl md:text-6xl font-bold text-black dark:text-white uppercase leading-snug mb-8 transition-colors">
               A Direct Pipeline from{" "}
-              <span className="text-transparent dark:hidden" style={{ WebkitTextStroke: "1px black" }}>Commit</span>
-              <span className="text-transparent hidden dark:inline" style={{ WebkitTextStroke: "1px white" }}>Commit</span>
-              {" "}to <span className="text-white dark:text-black bg-black dark:bg-white px-2 transition-colors">PAYOUT</span>.
+              <span className="text-black/40 dark:text-white/40">Commit</span>
+              {" "}to <span className="inline-block text-white dark:text-black bg-black dark:bg-white px-2 py-0.5 leading-none transition-colors">PAYOUT</span>.
             </h2>
             <div className="space-y-6 font-space text-gray-600 dark:text-gray-400 text-lg transition-colors">
               <p>

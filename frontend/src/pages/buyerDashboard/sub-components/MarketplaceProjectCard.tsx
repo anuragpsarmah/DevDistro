@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Star, ExternalLink, User, Heart, Loader2 } from "lucide-react";
 import type { MarketplaceProject } from "@/utils/types";
 import { useGetWishlistQuery } from "@/hooks/apiQueries";
@@ -7,6 +8,9 @@ interface MarketplaceProjectCardProps {
   project: MarketplaceProject;
   onProjectClick?: (id: string) => void;
   logout?: () => Promise<void>;
+  isPurchased?: boolean;
+  noHoverEffect?: boolean;
+  footerContent?: React.ReactNode;
 }
 
 const truncateText = (text: string, maxLength: number) => {
@@ -18,7 +22,11 @@ export default function MarketplaceProjectCard({
   project,
   onProjectClick,
   logout,
+  isPurchased = false,
+  noHoverEffect = false,
+  footerContent,
 }: MarketplaceProjectCardProps) {
+  const [imageError, setImageError] = useState(false);
   const { data: wishlist } = useGetWishlistQuery({ logout });
   const toggleWishlist = useToggleWishlistMutation({ logout });
   const isWishlisted = wishlist?.some((p) => p._id === project._id) ?? false;
@@ -32,14 +40,15 @@ export default function MarketplaceProjectCard({
       className="relative group h-full cursor-pointer"
       onClick={() => onProjectClick?.(project._id)}
     >
-      <div className="relative h-full bg-white dark:bg-[#050505] border-2 border-black dark:border-white transition-all duration-300 ease-in-out flex flex-col shadow-[4px_4px_0_0_rgba(0,0,0,1)] dark:shadow-[4px_4px_0_0_rgba(255,255,255,1)] hover:translate-x-[-4px] hover:translate-y-[-4px] hover:shadow-[8px_8px_0_0_rgba(0,0,0,1)] dark:hover:shadow-[8px_8px_0_0_rgba(255,255,255,1)]">
+      <div className={`relative h-full bg-white dark:bg-[#050505] border-2 border-black dark:border-white transition-shadow duration-300 ease-in-out flex flex-col ${!noHoverEffect ? "hover:shadow-[4px_4px_0_0_rgba(0,0,0,1)] dark:hover:shadow-[4px_4px_0_0_rgba(255,255,255,1)]" : ""}`}>
         <div className="relative z-10 border-b-2 border-black dark:border-white">
           <div className="w-full aspect-video overflow-hidden bg-gray-100 dark:bg-gray-900">
-            {project.project_images ? (
+            {project.project_images && !imageError ? (
               <img
                 src={project.project_images}
                 alt={project.title}
                 className="w-full h-full object-cover transition-all duration-300"
+                onError={() => setImageError(true)}
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center">
@@ -49,29 +58,31 @@ export default function MarketplaceProjectCard({
           </div>
 
           <div className="absolute top-3 right-3 flex items-center gap-2">
-            <button
-              onClick={handleWishlistToggle}
-              disabled={toggleWishlist.isPending}
-              className={`w-9 h-9 flex items-center justify-center border-2 transition-all duration-200 shadow-[2px_2px_0_0_rgba(0,0,0,1)] dark:shadow-[2px_2px_0_0_rgba(255,255,255,1)] disabled:opacity-50 ${isWishlisted
+            {!isPurchased && (
+              <button
+                onClick={handleWishlistToggle}
+                disabled={toggleWishlist.isPending}
+                className={`w-9 h-9 flex items-center justify-center border-2 transition-all duration-200 disabled:opacity-50 ${isWishlisted
                   ? "bg-red-500 border-black dark:border-white text-white hover:bg-black dark:hover:bg-white hover:text-red-500"
                   : "bg-white dark:bg-[#050505] border-black dark:border-white text-black dark:text-white hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black"
-                }`}
-            >
-              {toggleWishlist.isPending ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <Heart
-                  className={`w-4 h-4 ${isWishlisted ? "fill-current" : ""}`}
-                />
-              )}
-            </button>
-            <span className="px-3 py-1.5 bg-white dark:bg-black text-black dark:text-white font-space font-bold uppercase tracking-wider text-sm border-2 border-black dark:border-white shadow-[2px_2px_0_0_rgba(0,0,0,1)] dark:shadow-[2px_2px_0_0_rgba(255,255,255,1)]">
-              {project.price === 0 ? "Free" : `${project.price} SOL`}
+                  }`}
+              >
+                {toggleWishlist.isPending ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Heart
+                    className={`w-4 h-4 ${isWishlisted ? "fill-current" : ""}`}
+                  />
+                )}
+              </button>
+            )}
+            <span className="px-3 py-1.5 bg-white dark:bg-black text-black dark:text-white font-space font-bold uppercase tracking-wider text-sm border-2 border-black dark:border-white">
+              {project.price === 0 ? "Free" : `$ ${project.price}`}
             </span>
           </div>
 
           <div className="absolute top-3 left-3">
-            <span className="px-2.5 py-1 bg-red-500 text-white font-space font-bold uppercase tracking-wider text-xs border-2 border-black dark:border-white shadow-[2px_2px_0_0_rgba(0,0,0,1)] dark:shadow-[2px_2px_0_0_rgba(255,255,255,1)]">
+            <span className="px-2.5 py-1 bg-red-500 text-white font-space font-bold uppercase tracking-wider text-xs border-2 border-black dark:border-white">
               {project.project_type}
             </span>
           </div>
@@ -132,7 +143,7 @@ export default function MarketplaceProjectCard({
                   <ExternalLink className="w-4 h-4" />
                 </a>
               )}
-              <div className="flex items-center justify-center gap-1.5 px-2 py-1 border-2 border-black dark:border-white bg-white dark:bg-[#050505] shadow-[2px_2px_0_0_rgba(0,0,0,1)] dark:shadow-[2px_2px_0_0_rgba(255,255,255,1)]">
+              <div className="flex items-center justify-center gap-1.5 px-2 h-8 border-2 border-black dark:border-white bg-white dark:bg-[#050505]">
                 <Star className="w-3.5 h-3.5 text-black dark:text-white" />
                 <span className="font-space font-bold text-black dark:text-white text-xs">
                   {project.avgRating > 0 ? project.avgRating.toFixed(1) : "New"}
@@ -146,6 +157,11 @@ export default function MarketplaceProjectCard({
             </div>
           </div>
         </div>
+        {footerContent && (
+          <div className="border-t-2 border-black dark:border-white" onClick={(e) => e.stopPropagation()}>
+            {footerContent}
+          </div>
+        )}
       </div>
     </div>
   );

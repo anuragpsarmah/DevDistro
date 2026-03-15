@@ -18,7 +18,7 @@ export const projectFormDataSchema = z.object({
       required_error: "Description is required",
     })
     .min(1, "Description is required")
-    .max(1000, "Review description must be 1000 characters or less"),
+    .max(1000, "Description must be 1000 characters or less"),
   project_type: z.enum(PROJECT_TYPE_ENUM, {
     errorMap: () => ({
       message: `Invalid project type was provided. Expected one of: ${PROJECT_TYPE_ENUM.join(", ")}`,
@@ -26,7 +26,8 @@ export const projectFormDataSchema = z.object({
   }),
   tech_stack: z
     .array(z.string())
-    .min(1, "At least one tech stack value required"),
+    .min(1, "At least one tech stack value required")
+    .max(15, "Maximum 15 tech stack items allowed"),
   live_link: z
     .string()
     .transform((val) => (val === "" ? undefined : val))
@@ -47,7 +48,7 @@ export const fileMetadataSchema = z.array(
         required_error: "Original file name is required",
       })
       .min(2, "Original file name is required")
-      .max(100, "Name can be at most 50 characters long"),
+      .max(100, "Name can be at most 100 characters long"),
     fileType: z.enum(FILE_TYPE_ENUM, {
       errorMap: () => ({
         message: `Invalid file type was provided. Expected one of: ${FILE_TYPE_ENUM.join(

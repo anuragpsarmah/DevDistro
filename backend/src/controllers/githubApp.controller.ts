@@ -1,6 +1,5 @@
 import { Request, Response } from "express";
 import { User } from "../models/user.model";
-import { Project } from "../models/project.model";
 import { GitHubAppInstallation } from "../models/githubAppInstallation.model";
 import asyncHandler from "../utils/asyncHandler.util";
 import response from "../utils/response.util";
@@ -138,24 +137,29 @@ const handleAppInstallCallback = asyncHandler(
       return;
     }
 
-    const [newInstallation, createError] = await tryCatch(
-      GitHubAppInstallation.create({
-        installation_id: installationId,
-        account_type: "User",
-        account_login: installation.account.login,
-        account_id: installation.account.id,
-        repository_selection: installation.repository_selection,
-        user_id: req.user._id,
-        github_id: user.github_id,
-        suspended_at: installation.suspended_at
-          ? new Date(installation.suspended_at)
-          : null,
-      })
+    const [upsertedInstallation, createError] = await tryCatch(
+      GitHubAppInstallation.findOneAndUpdate(
+        { installation_id: installationId },
+        {
+          $set: {
+            account_type: "User",
+            account_login: installation.account.login,
+            account_id: installation.account.id,
+            repository_selection: installation.repository_selection,
+            user_id: req.user._id,
+            github_id: user.github_id,
+            suspended_at: installation.suspended_at
+              ? new Date(installation.suspended_at)
+              : null,
+          },
+        },
+        { upsert: true, new: true }
+      )
     );
 
-    if (createError) {
+    if (createError || !upsertedInstallation) {
       enrichContext({ outcome: "error" });
-      logger.error("Failed to create installation", createError);
+      logger.error("Failed to upsert installation", createError);
       throw new ApiError("Internal Server Error", 500);
     }
 
@@ -171,7 +175,7 @@ const handleAppInstallCallback = asyncHandler(
     });
     response(res, 200, "Installation registered", {
       installation_id: installationId,
-      account_login: newInstallation.account_login,
+      account_login: upsertedInstallation.account_login,
       reactivated_projects: reactivatedCount,
     });
   }

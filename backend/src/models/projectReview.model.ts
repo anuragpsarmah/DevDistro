@@ -24,7 +24,6 @@ const reviewSchema = new Schema(
     },
     review: {
       type: String,
-      required: [true, "Review text is required"],
       trim: true,
     },
   },
@@ -32,6 +31,7 @@ const reviewSchema = new Schema(
 );
 
 reviewSchema.index({ projectId: 1, rating: -1 });
+reviewSchema.index({ projectId: 1, createdAt: -1 });
 reviewSchema.index({ userId: 1, projectId: 1 }, { unique: true });
 
 export const Review = model("Review", reviewSchema);

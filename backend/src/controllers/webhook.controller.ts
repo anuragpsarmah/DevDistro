@@ -452,6 +452,7 @@ async function handlePushEvent(payload: WebhookPayload) {
       github_repo_id: repoId,
       github_access_revoked: { $ne: true },
       repo_zip_status: "SUCCESS",
+      scheduled_deletion_at: null,
     })
       .select("_id userid github_repo_id github_installation_id repo_zip_s3_key")
       .lean()

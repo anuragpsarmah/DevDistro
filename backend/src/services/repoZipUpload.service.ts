@@ -4,15 +4,8 @@ import { githubAppService } from "./githubApp.service";
 import { Project } from "../models/project.model";
 import logger from "../logger/logger";
 import { tryCatch } from "../utils/tryCatch.util";
-
-const MAX_REPO_SIZE_BYTES = 500 * 1024 * 1024;
-const LOCK_TTL_SECONDS = 600;
-
-type TreeNode = {
-  name: string;
-  type: "file" | "directory";
-  children?: TreeNode[];
-};
+import { TreeNode } from "../types/types";
+import { LOCK_TTL_SECONDS, MAX_REPO_SIZE_BYTES } from "../types/constants";
 
 export default class RepoZipUploadService {
   private getLockKey(projectId: string): string {

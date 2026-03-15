@@ -15,16 +15,16 @@ interface FileTreeNodeProps {
 
 function FileTreeNode({ node, depth }: FileTreeNodeProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const paddingLeft = depth * 16;
+  const paddingLeft = depth * 20;
 
   if (node.type === "file") {
     return (
       <div
-        className="flex items-center gap-1.5 py-0.5 hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
-        style={{ paddingLeft: `${paddingLeft + 4}px` }}
+        className="flex items-center gap-2 py-1 hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+        style={{ paddingLeft: `${paddingLeft + 6}px` }}
       >
-        <FileText className="w-3.5 h-3.5 flex-shrink-0 text-gray-500 dark:text-gray-400" />
-        <span className="font-mono text-xs text-black dark:text-white truncate">
+        <FileText className="w-4 h-4 flex-shrink-0 text-gray-500 dark:text-gray-400" />
+        <span className="font-mono text-sm text-black dark:text-white truncate">
           {node.name}
         </span>
       </div>
@@ -35,26 +35,26 @@ function FileTreeNode({ node, depth }: FileTreeNodeProps) {
     <div>
       <button
         onClick={() => setIsOpen((prev) => !prev)}
-        className="w-full flex items-center gap-1.5 py-0.5 hover:bg-black/5 dark:hover:bg-white/5 transition-colors text-left"
-        style={{ paddingLeft: `${paddingLeft + 4}px` }}
+        className="w-full flex items-center gap-2 py-1 hover:bg-black/5 dark:hover:bg-white/5 transition-colors text-left"
+        style={{ paddingLeft: `${paddingLeft + 6}px` }}
       >
         {isOpen ? (
-          <ChevronDown className="w-3.5 h-3.5 flex-shrink-0 text-red-500" />
+          <ChevronDown className="w-4 h-4 flex-shrink-0 text-red-500" />
         ) : (
-          <ChevronRight className="w-3.5 h-3.5 flex-shrink-0 text-gray-500 dark:text-gray-400" />
+          <ChevronRight className="w-4 h-4 flex-shrink-0 text-gray-500 dark:text-gray-400" />
         )}
         {isOpen ? (
-          <FolderOpen className="w-3.5 h-3.5 flex-shrink-0 text-red-500" />
+          <FolderOpen className="w-4 h-4 flex-shrink-0 text-red-500" />
         ) : (
-          <Folder className="w-3.5 h-3.5 flex-shrink-0 text-black dark:text-white" />
+          <Folder className="w-4 h-4 flex-shrink-0 text-black dark:text-white" />
         )}
-        <span className="font-mono text-xs font-bold text-black dark:text-white truncate">
+        <span className="font-mono text-sm font-bold text-black dark:text-white truncate">
           {node.name}
         </span>
       </button>
 
       {isOpen && node.children && node.children.length > 0 && (
-        <div className="border-l-2 border-black/20 dark:border-white/20 ml-4" style={{ marginLeft: `${paddingLeft + 12}px` }}>
+        <div className="border-l-2 border-black/20 dark:border-white/20" style={{ marginLeft: `${paddingLeft + 14}px` }}>
           {node.children.map((child, idx) => (
             <FileTreeNode key={`${child.name}-${idx}`} node={child} depth={0} />
           ))}
@@ -80,7 +80,7 @@ export default function FileTree({ node }: FileTreeProps) {
   }
 
   return (
-    <div className="border-2 border-black dark:border-white bg-white dark:bg-[#050505] overflow-auto max-h-96 shadow-[4px_4px_0_0_rgba(0,0,0,1)] dark:shadow-[4px_4px_0_0_rgba(255,255,255,1)]">
+    <div className="overflow-auto max-h-96">
       <div className="py-2">
         {children.map((child, idx) => (
           <FileTreeNode key={`${child.name}-${idx}`} node={child} depth={0} />

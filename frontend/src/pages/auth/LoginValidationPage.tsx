@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { AxiosResponse } from "axios";
+import { AxiosError, AxiosResponse } from "axios";
 import { apiClient } from "@/lib/axiosInstance";
 import { tryCatch } from "@/utils/tryCatch.util";
 import { useNavigate } from "react-router-dom";
@@ -12,6 +12,7 @@ export default function LoginValidationPage() {
   const navigate = useNavigate();
   const url = new URL(window.location.href);
   const githubCode = url.searchParams.get("code");
+  const oauthState = url.searchParams.get("state");
   const hasValidated = useRef(false);
 
   useEffect(() => {
@@ -20,12 +21,15 @@ export default function LoginValidationPage() {
 
     const validateLogin = async () => {
       const [response, error] = await tryCatch<AxiosResponse>(() =>
-        apiClient.get(`/auth/githubLogin?code=${githubCode}`)
+        apiClient.get(`/auth/githubLogin?code=${githubCode}&state=${oauthState}`)
       );
 
       if (error || !response) {
-        console.log(error);
-        errorToast("Error validating login");
+        if (error instanceof AxiosError && error.response?.status === 403) {
+          errorToast(error.response.data?.message ?? "Account creation is currently restricted.");
+        } else {
+          errorToast("Error validating login");
+        }
         navigate("/authentication");
       } else {
         setActiveUser(response.data.data);
@@ -34,7 +38,7 @@ export default function LoginValidationPage() {
     };
 
     validateLogin();
-  }, [githubCode, navigate, setActiveUser]);
+  }, [githubCode, oauthState, navigate, setActiveUser]);
 
   return (
     <div className="min-h-screen overflow-hidden w-full bg-white dark:bg-[#050505] text-black dark:text-white font-space selection:bg-red-500 selection:text-white transition-colors duration-300 relative flex items-center justify-center p-4">

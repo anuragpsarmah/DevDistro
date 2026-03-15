@@ -174,3 +174,30 @@ export const ListedProjectSkeleton = () => (
     </div>
   </div>
 );
+
+export const SalesTransactionCardSkeleton = () => (
+  <div className="border-2 border-black/10 dark:border-white/10 p-6 lg:p-8 flex flex-col xl:flex-row xl:items-center justify-between gap-8 transition-colors duration-300">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-6 w-full xl:w-auto flex-1">
+      {[...Array(4)].map((_, i) => (
+        <div key={i} className="flex flex-col gap-3">
+          <div className="border-b-2 border-black/10 dark:border-white/10 pb-1">
+            <Skeleton className="h-2 w-20 rounded-none bg-black/10 dark:bg-white/10" />
+          </div>
+          <Skeleton className="h-5 w-full rounded-none bg-black/10 dark:bg-white/10" />
+          <Skeleton className="h-3 w-16 rounded-none bg-black/10 dark:bg-white/10" />
+        </div>
+      ))}
+    </div>
+    <div className="pt-6 xl:pt-0 border-t-2 xl:border-t-0 xl:border-l-2 border-black/10 dark:border-white/10 xl:pl-8 w-full xl:w-auto shrink-0">
+      <Skeleton className="h-14 w-full xl:w-36 rounded-none bg-black/10 dark:bg-white/10" />
+    </div>
+  </div>
+);
+
+export const SalesLedgerSkeleton = () => (
+  <div className="space-y-6">
+    {[...Array(4)].map((_, i) => (
+      <SalesTransactionCardSkeleton key={i} />
+    ))}
+  </div>
+);

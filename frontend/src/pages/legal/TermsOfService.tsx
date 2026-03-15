@@ -107,11 +107,18 @@ export default function TermsOfService() {
 
           <section>
             <h2 className="font-syne text-2xl md:text-3xl font-bold text-black dark:text-white mb-6 uppercase tracking-wider">05. Limitation of Liability</h2>
-            <p className="text-gray-600 dark:text-gray-400 leading-relaxed text-lg">
+            <p className="text-gray-600 dark:text-gray-400 leading-relaxed text-lg mb-6">
               The Platform is provided "AS IS" without warranty of any kind.
               We are not liable for any direct, indirect, incidental, or consequential damages arising from your use of the Platform,
               including but not limited to loss of data, unauthorized access to your GitHub account or Web3 wallet,
               smart contract vulnerabilities, market volatility of SOL, or any other financial loss.
+            </p>
+            <p className="text-gray-600 dark:text-gray-400 leading-relaxed text-lg mb-6">
+              <strong className="text-black dark:text-white uppercase text-sm tracking-widest font-syne mr-2">Platform Errors & Software Defects /</strong>
+              DevExchange makes reasonable efforts to maintain the integrity, security, and reliability of the Platform. However, all software may contain defects, bugs, or vulnerabilities. To the maximum extent permitted by applicable law, DevExchange shall not be held responsible or liable for any loss of funds, digital assets, cryptocurrency, or financial damages of any nature arising from software errors, bugs, platform malfunctions, failed transactions, incorrect price calculations, or any other technical deficiency — whether or not such deficiency was known or foreseeable by DevExchange at the time of the incident.
+            </p>
+            <p className="text-gray-600 dark:text-gray-400 leading-relaxed text-lg">
+              By using the Platform and initiating any financial transaction, you expressly acknowledge and accept that all transactions are executed at your own risk. You are solely responsible for independently verifying transaction details — including recipient addresses and SOL amounts — prior to authorizing any payment through your connected Web3 wallet. DevExchange strongly recommends transacting only amounts you are prepared to lose in the event of an unforeseen technical failure.
             </p>
           </section>
 

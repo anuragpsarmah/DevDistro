@@ -6,10 +6,8 @@ import { useGetWalletAddress } from "@/hooks/apiQueries";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { errorToast } from "@/components/ui/customToast";
 import { tryCatch } from "@/utils/tryCatch.util";
-
-interface BillingAndPaymentsTabProps {
-  logout?: () => Promise<void>;
-}
+import { WALLET_OP_DEBOUNCE_MS } from "../utils/constants";
+import { BillingAndPaymentsTabProps } from "../utils/types";
 
 export default function BillingAndPaymentsTab({
   logout,
@@ -50,7 +48,7 @@ export default function BillingAndPaymentsTab({
           }
           setTimeout(() => {
             setIsInitializing(false);
-          }, 500);
+          }, WALLET_OP_DEBOUNCE_MS);
         };
 
         cleanupSilentConnection();
@@ -84,7 +82,7 @@ export default function BillingAndPaymentsTab({
 
       setTimeout(() => {
         pendingOperation.current = false;
-      }, 500);
+      }, WALLET_OP_DEBOUNCE_MS);
 
       if (error) throw error;
     },
@@ -107,7 +105,7 @@ export default function BillingAndPaymentsTab({
 
     setTimeout(() => {
       pendingOperation.current = false;
-    }, 500);
+    }, WALLET_OP_DEBOUNCE_MS);
 
     if (error) throw error;
   }, [

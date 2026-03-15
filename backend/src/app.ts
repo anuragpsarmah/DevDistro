@@ -3,9 +3,12 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import loggerMiddleware from "./middlewares/logger.middleware";
 import response from "./utils/response.util";
-import { healthMemoryCheckLimiter } from "./utils/rateLimitConfig.util";
+import { globalRateLimiter, healthMemoryCheckLimiter } from "./utils/rateLimitConfig.util";
 
 export const app = express();
+
+// Trust the first proxy hop so express-rate-limit uses the real client IP
+app.set("trust proxy", 1);
 
 /* global middlewares */
 app.use(
@@ -15,8 +18,9 @@ app.use(
   })
 );
 app.use(loggerMiddleware);
+app.use(globalRateLimiter);
 
-/* Mounting webhook route before express.json() so that the raw body is preserved for HMAC signature verification*/
+// Mounting webhook route before express.json() so that the raw body is preserved for HMAC signature verification
 import { webhookRouter } from "./routes/webhook.routes";
 app.use(
   "/api/webhooks",
@@ -51,6 +55,7 @@ import { reviewRouter } from "./routes/reviews.routes";
 import { projectRouter } from "./routes/projects.routes";
 import { githubAppRouter } from "./routes/githubApp.routes";
 import { wishlistRouter } from "./routes/wishlist.routes";
+import { purchaseRouter } from "./routes/purchase.routes";
 
 app.use("/api/auth", authRouter);
 app.use("/api/profile", profileRouter);
@@ -59,3 +64,4 @@ app.use("/api/reviews", reviewRouter);
 app.use("/api/projects", projectRouter);
 app.use("/api/github-app", githubAppRouter);
 app.use("/api/wishlist", wishlistRouter);
+app.use("/api/purchases", purchaseRouter);

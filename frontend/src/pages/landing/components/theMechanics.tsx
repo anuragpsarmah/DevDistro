@@ -16,8 +16,7 @@ export default function TheMechanics() {
           </div>
           <h2 className="font-syne text-5xl md:text-7xl font-black uppercase leading-none">
             How The Machine<br />
-            <span className="text-transparent dark:hidden" style={{ WebkitTextStroke: "2px black", opacity: 0.8 }}>Operates.</span>
-            <span className="text-transparent hidden dark:inline" style={{ WebkitTextStroke: "2px rgba(255,255,255,0.8)" }}>Operates.</span>
+            <span className="text-black/40 dark:text-white/40">Operates.</span>
           </h2>
         </motion.div>
 
