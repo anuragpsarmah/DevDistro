@@ -34,7 +34,7 @@ export default function LandingPage() {
 
   useEffect(() => {
     const handleAuthValidation = async () => {
-      if (!isLoading && !isError && data) {
+      if (!isLoading && !isError && data?.data?._id) {
         navigate("/profile-selection");
       }
     };
