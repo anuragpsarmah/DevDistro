@@ -10,7 +10,7 @@ COPY . .
 RUN npm run build
 
 # Production stage
-FROM ghcr.io/platformatic/node-caged:25-slim AS production
+FROM platformatic/node-caged:25-slim AS production
 
 WORKDIR /app
 ENV NODE_ENV=production
