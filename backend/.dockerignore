@@ -4,9 +4,6 @@ node_modules
 .env
 .env.sample
 
-# Ignore TypeScript source files after build
-src/**/*.ts
-
 # Ignore build output (if any exists locally)
 dist
 
