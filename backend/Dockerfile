@@ -18,10 +18,7 @@ ENV NODE_ENV=production
 COPY package*.json ./
 RUN npm ci --omit=dev
 
-COPY --from=builder --chown=node:node /app/dist ./dist
-RUN chown -R node:node /app
-
-USER node
+COPY --from=builder /app/dist ./dist
 
 EXPOSE 3000
 # Default: API server. Worker containers override CMD with "node dist/worker.js"
