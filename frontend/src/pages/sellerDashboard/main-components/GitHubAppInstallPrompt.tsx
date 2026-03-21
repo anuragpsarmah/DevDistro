@@ -10,7 +10,7 @@ export default function GitHubAppInstallPrompt({
   };
 
   return (
-    <div className="h-full overflow-y-auto">
+    <div className="h-full overflow-y-auto hide-scrollbar-if-needed">
       <div className="min-h-full flex flex-col items-center justify-center p-4 lg:p-6">
         <div className="w-full max-w-2xl">
           <div className="relative bg-white dark:bg-[#050505] p-6 lg:p-10 border-2 border-black dark:border-white transition-colors duration-300">

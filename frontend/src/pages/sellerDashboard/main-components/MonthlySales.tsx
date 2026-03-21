@@ -41,8 +41,10 @@ export default function MonthlySales({
         />
       </div>
 
-      <div className="flex-1 min-h-[250px] border-t border-black/10 dark:border-white/10 pt-8 mt-2 relative">
-        <Chart chartData={chartData} isLoading={isLoading} />
+      <div className="flex-1 min-h-0 overflow-y-auto hide-scrollbar-if-needed border-t border-black/10 dark:border-white/10 pt-8 mt-2">
+        <div className="min-h-[250px] h-full">
+          <Chart chartData={chartData} isLoading={isLoading} />
+        </div>
       </div>
     </div>
   );
