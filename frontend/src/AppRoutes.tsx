@@ -12,6 +12,7 @@ import TermsOfService from "@/pages/legal/TermsOfService";
 import PrivacyPolicy from "@/pages/legal/PrivacyPolicy";
 import SmoothTransitionWrapper from "@/components/wrappers/SmoothTransitionWrapper";
 import SharedProjectPage from "@/pages/share/SharedProjectPage";
+import ApiPage from "@/pages/api/ApiPage";
 
 export const router = createBrowserRouter([
   {
@@ -45,6 +46,10 @@ export const router = createBrowserRouter([
       {
         path: "/privacy",
         element: <PrivacyPolicy />,
+      },
+      {
+        path: "/api",
+        element: <ApiPage />,
       },
       {
         path: "/app-install-callback",

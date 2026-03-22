@@ -6,6 +6,8 @@ import LogoIcon from "@/assets/icons/LogoIcon";
 export default function Footer() {
   const location = useLocation();
   const isHome = location.pathname === "/";
+  const footerLinkClassName =
+    "text-gray-600 dark:text-gray-400 hover:text-red-500 md:hover:ml-2 transition-all inline-block";
 
   const handleScroll = (id: string) => {
     if (isHome) {
@@ -19,7 +21,7 @@ export default function Footer() {
   return (
     <footer className="bg-gray-100 dark:bg-black text-black dark:text-white py-20 px-6 md:px-12 font-space transition-colors duration-300">
       <div className="max-w-7xl mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-12 mb-16">
           <div className="md:col-span-2">
             <h3 className="font-syne text-3xl font-black uppercase tracking-widest mb-6 flex items-center gap-3 justify-center md:justify-start">
               <LogoIcon className="w-8 h-8" />
@@ -68,13 +70,30 @@ export default function Footer() {
                     <Link
                       to={isHome ? `#${id}` : `/#${id}`}
                       onClick={() => handleScroll(id)}
-                      className="hover:text-red-500 md:hover:ml-2 transition-all block"
+                      className={footerLinkClassName}
                     >
                       {item}
                     </Link>
                   </li>
                 );
               })}
+            </ul>
+          </div>
+
+          <div>
+            <h4 className="font-bold uppercase tracking-widest text-xs mb-6 text-gray-500 dark:text-gray-500 transition-colors text-center md:text-left">
+              Developers
+            </h4>
+            <ul className="space-y-4 text-center md:text-left">
+              <li>
+                <Link
+                  to="/api"
+                  onClick={() => window.scrollTo(0, 0)}
+                  className={footerLinkClassName}
+                >
+                  World Cities API
+                </Link>
+              </li>
             </ul>
           </div>
 
@@ -87,7 +106,7 @@ export default function Footer() {
                 <Link
                   to="/privacy"
                   onClick={() => window.scrollTo(0, 0)}
-                  className="hover:text-black dark:hover:text-white text-gray-600 dark:text-gray-400 transition-all"
+                  className={footerLinkClassName}
                 >
                   Privacy Policy
                 </Link>
@@ -96,7 +115,7 @@ export default function Footer() {
                 <Link
                   to="/terms"
                   onClick={() => window.scrollTo(0, 0)}
-                  className="hover:text-black dark:hover:text-white text-gray-600 dark:text-gray-400 transition-all"
+                  className={footerLinkClassName}
                 >
                   Terms of Service
                 </Link>
