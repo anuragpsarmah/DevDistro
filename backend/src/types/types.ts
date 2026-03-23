@@ -94,6 +94,8 @@ export interface VerifyParams {
   expectedTreasuryLamports: number;
   purchaseReference: string;
   rpcUrl: string;
+  /** Optional fallback RPC to retry against if the primary call fails. Only pass for mainnet. */
+  fallbackRpcUrl?: string;
 }
 
 export interface VerifyResult {

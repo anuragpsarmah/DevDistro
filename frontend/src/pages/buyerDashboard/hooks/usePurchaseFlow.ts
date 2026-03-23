@@ -28,8 +28,9 @@ const textEncoder = new TextEncoder();
 
 const PENDING_CONFIRM_KEY_PREFIX = "devsdistro_pending_confirm:";
 
-// Stored after on-chain confirmation so a backend failure can be retried
-// without re-sending an on-chain payment.
+// Stored immediately after sendTransaction() so that if confirmTransaction()
+// fails (e.g. RPC rate-limit), recovery state is already in place and the user
+// cannot be led into a second payment.
 interface PendingConfirm {
   txSignature: string;
   purchaseReference: string;
@@ -311,27 +312,11 @@ export function usePurchaseFlow({ logout, onSuccess }: UsePurchaseFlowParams) {
       // so there is no distinct "broadcasting" phase to wait on.
       const txSignature = await wallet.sendTransaction(tx, connection);
 
-      // Wait for on-chain finalization using the SAME blockhash fetched before building
-      setFlowState("CONFIRMING_ONCHAIN");
-      const confirmation = await connection.confirmTransaction(
-        { signature: txSignature, blockhash, lastValidBlockHeight },
-        "finalized"
-      );
-      // confirmTransaction can resolve without throwing even if the TX failed on-chain.
-      // Always check value.err — a non-null error means the TX was rejected at the VM level
-      // (e.g. insufficient funds, slippage, instruction error). We must not proceed to
-      // backend confirmation with a failed TX: the backend would reject it anyway after an
-      // expensive RPC call, but the user would also see a misleading "Retry Confirmation"
-      // button instead of the correct "Try Again" flow.
-      if (confirmation.value.err) {
-        throw new Error(
-          `Transaction failed on-chain: ${JSON.stringify(confirmation.value.err)}`
-        );
-      }
-
-      // TX is finalized on-chain. Persist these details so that if the backend call
-      // fails, the user can retry confirmation without re-sending the payment —
-      // even after a page refresh or browser close.
+      // Persist recovery state immediately after broadcast so that if
+      // confirmTransaction() throws (e.g. RPC rate-limit, timeout), the user
+      // gets "Retry Confirmation" instead of "Try Again" and cannot be led into
+      // a second payment. If the TX definitively fails on-chain (value.err below),
+      // we clear this state before throwing so the correct "Try Again" path is used.
       const buyerWallet = buyerPubkey.toBase58();
       const pendingConfirm: PendingConfirm = {
         txSignature,
@@ -355,6 +340,27 @@ export function usePurchaseFlow({ logout, onSuccess }: UsePurchaseFlowParams) {
         } satisfies StoredPendingConfirm)
       );
 
+      // Wait for on-chain finalization using the SAME blockhash fetched before building
+      setFlowState("CONFIRMING_ONCHAIN");
+      const confirmation = await connection.confirmTransaction(
+        { signature: txSignature, blockhash, lastValidBlockHeight },
+        "finalized"
+      );
+      // confirmTransaction can resolve without throwing even if the TX failed on-chain.
+      // value.err non-null means the TX was rejected at the VM level (e.g. insufficient
+      // funds, instruction error). Clear the recovery state we just persisted — this is
+      // not a backend retry scenario, the TX itself failed, so "Try Again" is correct.
+      if (confirmation.value.err) {
+        if (pendingConfirmStorageKeyRef.current) {
+          localStorage.removeItem(pendingConfirmStorageKeyRef.current);
+        }
+        pendingConfirmRef.current = null;
+        pendingConfirmStorageKeyRef.current = null;
+        throw new Error(
+          `Transaction failed on-chain: ${JSON.stringify(confirmation.value.err)}`
+        );
+      }
+
       // Confirm with our backend
       setFlowState("CONFIRMING_BACKEND");
       const result = await confirmMutation.mutateAsync({
@@ -377,8 +383,8 @@ export function usePurchaseFlow({ logout, onSuccess }: UsePurchaseFlowParams) {
         err?.message ||
         "Purchase failed. Please try again.";
       setError(msg);
-      // If pendingConfirmRef is set, the TX is already on-chain — the failure
-      // happened in the backend step, not the on-chain step.
+      // If pendingConfirmRef is set, the TX was broadcast and recovery state is
+      // persisted — show "Retry Confirmation" so the user does not pay again.
       if (pendingConfirmRef.current) {
         setFailedAfterOnChain(true);
       }

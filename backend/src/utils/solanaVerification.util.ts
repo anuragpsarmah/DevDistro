@@ -15,31 +15,45 @@ export async function verifySolanaTransaction(
     expectedTreasuryLamports,
     purchaseReference,
     rpcUrl,
+    fallbackRpcUrl,
   } = params;
 
   // Fetch transaction from Solana RPC using jsonParsed encoding
+  const rpcBody = {
+    jsonrpc: "2.0",
+    id: 1,
+    method: "getTransaction",
+    params: [
+      txSignature,
+      {
+        encoding: "jsonParsed",
+        commitment: "finalized",
+        maxSupportedTransactionVersion: 0,
+      },
+    ],
+  };
+
   let rpcResponse: any;
   try {
-    rpcResponse = await axios.post(
-      rpcUrl,
-      {
-        jsonrpc: "2.0",
-        id: 1,
-        method: "getTransaction",
-        params: [
-          txSignature,
-          {
-            encoding: "jsonParsed",
-            commitment: "finalized",
-            maxSupportedTransactionVersion: 0,
-          },
-        ],
-      },
-      { timeout: 15000 }
-    );
-  } catch (err) {
-    logger.error("Solana RPC getTransaction request failed", err);
-    return { valid: false, error: "Failed to reach Solana network" };
+    rpcResponse = await axios.post(rpcUrl, rpcBody, { timeout: 15000 });
+  } catch (primaryErr) {
+    if (fallbackRpcUrl) {
+      logger.warn(
+        "Primary Solana RPC failed, retrying with fallback RPC",
+        primaryErr
+      );
+      try {
+        rpcResponse = await axios.post(fallbackRpcUrl, rpcBody, {
+          timeout: 15000,
+        });
+      } catch (fallbackErr) {
+        logger.error("Solana RPC fallback also failed", fallbackErr);
+        return { valid: false, error: "Failed to reach Solana network" };
+      }
+    } else {
+      logger.error("Solana RPC getTransaction request failed", primaryErr);
+      return { valid: false, error: "Failed to reach Solana network" };
+    }
   }
 
   const tx = rpcResponse.data?.result;

@@ -10,7 +10,7 @@
  *   - initiate(): IDLE → INITIATING → AWAITING_WALLET / FAILED
  *   - executePurchase(): happy path through to SUCCESS
  *   - executePurchase(): wallet rejection, on-chain failure, backend failure
- *   - failedAfterOnChain flag: set when TX is on-chain but backend fails
+ *   - failedAfterOnChain flag: set when TX is broadcast but confirmation/backend fails
  *   - retryConfirm(): retries only the backend step
  *   - refreshQuote(): re-runs initiate and resets countdown
  *   - reset(): clears all state and stops the countdown interval
@@ -458,7 +458,7 @@ describe("usePurchaseFlow", () => {
       expect(result.current.error).toMatch(/User rejected/i);
     });
 
-    it("goes to FAILED without failedAfterOnChain when on-chain confirmation fails", async () => {
+    it("goes to FAILED with failedAfterOnChain when on-chain confirmation throws (RPC flaky)", async () => {
       mockConfirmTransaction.mockRejectedValue(
         new Error("BlockheightExceeded")
       );
@@ -475,8 +475,13 @@ describe("usePurchaseFlow", () => {
       });
 
       expect(result.current.flowState).toBe("FAILED");
-      // confirmTransaction failed, so pendingConfirmRef was not yet set
-      expect(result.current.failedAfterOnChain).toBe(false);
+      // sendTransaction succeeded and persisted recovery state before confirmTransaction ran.
+      // A confirmTransaction throw (e.g. RPC rate-limit) does not clear that state —
+      // the TX may already be on-chain, so "Retry Confirmation" is the safe path.
+      expect(result.current.failedAfterOnChain).toBe(true);
+      expect(
+        localStorage.getItem(makePendingConfirmKey(PURCHASE_REF))
+      ).not.toBeNull();
     });
 
     it("sets failedAfterOnChain = true when on-chain TX succeeds but backend confirm fails", async () => {

@@ -402,6 +402,9 @@ const confirmPurchase = asyncHandler(async (req: Request, res: Response) => {
     return;
   }
 
+  // Only fall back to public mainnet if configured for mainnet-beta.
+  // Never use mainnet as a fallback for devnet/testnet — transactions don't cross networks.
+  const isMainnet = process.env.SOLANA_NETWORK === "mainnet-beta";
   const verifyResult = await verifySolanaTransaction({
     txSignature: tx_signature,
     expectedBuyerWallet: buyer_wallet,
@@ -411,6 +414,9 @@ const confirmPurchase = asyncHandler(async (req: Request, res: Response) => {
     expectedTreasuryLamports: intent.treasury_lamports,
     purchaseReference: purchase_reference,
     rpcUrl,
+    fallbackRpcUrl: isMainnet
+      ? "https://api.mainnet-beta.solana.com"
+      : undefined,
   });
 
   if (!verifyResult.valid) {

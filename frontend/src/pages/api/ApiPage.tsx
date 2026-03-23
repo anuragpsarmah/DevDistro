@@ -50,7 +50,7 @@ export default function ApiPage() {
 
         <p className="text-gray-600 dark:text-gray-400 text-lg leading-relaxed mb-8">
           A free, public REST API for fast trie based look up for cities around
-          the world . No authentication required.
+          the world. No authentication required.
         </p>
 
         <div className="space-y-16 border-l-2 border-black/10 dark:border-white/10 pl-6 md:pl-10">
