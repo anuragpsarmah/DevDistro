@@ -189,6 +189,7 @@ describe("reviews.controller", () => {
         _id: VALID_PROJECT_ID,
         userid: VALID_SELLER_ID,
         isActive: true,
+        price: 49,
       });
       mockPurchaseFindOne(null);
       mockReviewFindOne(null);
@@ -205,11 +206,49 @@ describe("reviews.controller", () => {
       expect(res.status).toHaveBeenCalledWith(403);
     });
 
+    it("allows submitting a review for a free project without a purchase", async () => {
+      mockProjectFindById({
+        _id: VALID_PROJECT_ID,
+        userid: VALID_SELLER_ID,
+        isActive: true,
+        price: 0,
+      });
+      vi.mocked(Review.create).mockResolvedValue({
+        _id: VALID_REVIEW_ID,
+        userId: VALID_USER_ID,
+        projectId: VALID_PROJECT_ID,
+        rating: 5,
+        review: "great free project",
+      } as any);
+
+      const req = makeReq({
+        body: {
+          project_id: VALID_PROJECT_ID,
+          rating: 5,
+          review: "great free project",
+        },
+      });
+      submitProjectReview(req, res, next);
+      await flushPromises();
+
+      expect(Purchase.findOne).not.toHaveBeenCalled();
+      expect(Review.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          projectId: expect.anything(),
+          userId: expect.anything(),
+          rating: 5,
+          review: "great free project",
+        })
+      );
+      expect(res.status).toHaveBeenCalledWith(201);
+    });
+
     it("creates review and recalculates project and seller aggregates", async () => {
       mockProjectFindById({
         _id: VALID_PROJECT_ID,
         userid: VALID_SELLER_ID,
         isActive: true,
+        price: 49,
       });
       mockPurchaseFindOne({ _id: "purchase_1" });
       mockReviewFindOne(null);
@@ -251,6 +290,11 @@ describe("reviews.controller", () => {
 
   describe("updateProjectReview (PUT /reviews/project)", () => {
     it("returns 403 if user did not purchase project in confirmed state", async () => {
+      mockProjectFindById({
+        _id: VALID_PROJECT_ID,
+        userid: VALID_SELLER_ID,
+        price: 49,
+      });
       mockPurchaseFindOne(null);
       const req = makeReq({
         body: { project_id: VALID_PROJECT_ID, rating: 4, review: "text" },
@@ -264,7 +308,50 @@ describe("reviews.controller", () => {
       expect(res.status).toHaveBeenCalledWith(403);
     });
 
+    it("allows updating an existing review for a free project without a purchase", async () => {
+      mockProjectFindById({
+        _id: VALID_PROJECT_ID,
+        userid: VALID_SELLER_ID,
+        price: 0,
+      });
+      vi.mocked(Review.findOneAndUpdate).mockReturnValue({
+        lean: vi.fn().mockResolvedValue({
+          _id: VALID_REVIEW_ID,
+          userId: VALID_USER_ID,
+          projectId: VALID_PROJECT_ID,
+          rating: 4,
+          review: "updated free review",
+        }),
+      } as any);
+
+      const req = makeReq({
+        body: {
+          project_id: VALID_PROJECT_ID,
+          rating: 4,
+          review: "updated free review",
+        },
+      });
+      updateProjectReview(req, res, next);
+      await flushPromises();
+
+      expect(Purchase.findOne).not.toHaveBeenCalled();
+      expect(Review.findOneAndUpdate).toHaveBeenCalledWith(
+        {
+          userId: expect.anything(),
+          projectId: expect.anything(),
+        },
+        { $set: { rating: 4, review: "updated free review" } },
+        { new: true, runValidators: true }
+      );
+      expect(res.status).toHaveBeenCalledWith(200);
+    });
+
     it("returns 404 when trying to update a non-existent review", async () => {
+      mockProjectFindById({
+        _id: VALID_PROJECT_ID,
+        userid: VALID_SELLER_ID,
+        price: 49,
+      });
       mockPurchaseFindOne({ _id: "purchase_1" });
       vi.mocked(Review.findOneAndUpdate).mockReturnValue({
         lean: vi.fn().mockResolvedValue(null),
@@ -280,6 +367,11 @@ describe("reviews.controller", () => {
     });
 
     it("updates existing review and recalculates aggregates", async () => {
+      mockProjectFindById({
+        _id: VALID_PROJECT_ID,
+        userid: VALID_SELLER_ID,
+        price: 49,
+      });
       mockPurchaseFindOne({ _id: "purchase_1" });
       vi.mocked(Review.findOneAndUpdate).mockReturnValue({
         lean: vi.fn().mockResolvedValue({

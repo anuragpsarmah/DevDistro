@@ -101,7 +101,7 @@ const submitProjectReview = asyncHandler(
 
     const dbStart = performance.now();
     const [project, projectError] = await tryCatch(
-      Project.findById(projectObjectId).select("_id userid isActive").lean()
+      Project.findById(projectObjectId).select("_id userid isActive price").lean()
     );
     enrichContext({ db_latency_ms: Math.round(performance.now() - dbStart) });
 
@@ -123,30 +123,34 @@ const submitProjectReview = asyncHandler(
       return;
     }
 
-    const [purchase, purchaseError] = await tryCatch(
-      Purchase.findOne({
-        buyerId: userId,
-        projectId: projectObjectId,
-        status: "CONFIRMED",
-      })
-        .select("_id")
-        .lean()
-    );
+    const isFreeProject = (project as any).price <= 0;
 
-    if (purchaseError) {
-      logger.error("Failed to verify purchase for review", purchaseError);
-      response(res, 500, "Failed to submit review. Try again later.");
-      return;
-    }
-
-    if (!purchase) {
-      enrichContext({ outcome: "forbidden", reason: "not_purchased" });
-      response(
-        res,
-        403,
-        "You must purchase this project before leaving a review"
+    if (!isFreeProject) {
+      const [purchase, purchaseError] = await tryCatch(
+        Purchase.findOne({
+          buyerId: userId,
+          projectId: projectObjectId,
+          status: "CONFIRMED",
+        })
+          .select("_id")
+          .lean()
       );
-      return;
+
+      if (purchaseError) {
+        logger.error("Failed to verify purchase for review", purchaseError);
+        response(res, 500, "Failed to submit review. Try again later.");
+        return;
+      }
+
+      if (!purchase) {
+        enrichContext({ outcome: "forbidden", reason: "not_purchased" });
+        response(
+          res,
+          403,
+          "You must purchase this project before leaving a review"
+        );
+        return;
+      }
     }
 
     const [savedReview, saveError] = await tryCatch(
@@ -210,33 +214,52 @@ const updateProjectReview = asyncHandler(
 
     enrichContext({ entity: { type: "review", project_id } });
 
-    const [purchase, purchaseError] = await tryCatch(
-      Purchase.findOne({
-        buyerId: userId,
-        projectId: projectObjectId,
-        status: "CONFIRMED",
-      })
-        .select("_id")
-        .lean()
+    const [projectForUpdate, projectForUpdateError] = await tryCatch(
+      Project.findById(projectObjectId).select("_id price").lean()
     );
 
-    if (purchaseError) {
-      logger.error(
-        "Failed to verify purchase for review update",
-        purchaseError
-      );
+    if (projectForUpdateError) {
+      logger.error("Failed to fetch project for review update", projectForUpdateError);
       response(res, 500, "Failed to update review. Try again later.");
       return;
     }
 
-    if (!purchase) {
-      enrichContext({ outcome: "forbidden", reason: "not_purchased" });
-      response(
-        res,
-        403,
-        "You must purchase this project before updating a review"
-      );
+    if (!projectForUpdate) {
+      response(res, 404, "Project not found");
       return;
+    }
+
+    const isFreeProject = (projectForUpdate as any).price <= 0;
+
+    if (!isFreeProject) {
+      const [purchase, purchaseError] = await tryCatch(
+        Purchase.findOne({
+          buyerId: userId,
+          projectId: projectObjectId,
+          status: "CONFIRMED",
+        })
+          .select("_id")
+          .lean()
+      );
+
+      if (purchaseError) {
+        logger.error(
+          "Failed to verify purchase for review update",
+          purchaseError
+        );
+        response(res, 500, "Failed to update review. Try again later.");
+        return;
+      }
+
+      if (!purchase) {
+        enrichContext({ outcome: "forbidden", reason: "not_purchased" });
+        response(
+          res,
+          403,
+          "You must purchase this project before updating a review"
+        );
+        return;
+      }
     }
 
     const [savedReview, saveError] = await tryCatch(

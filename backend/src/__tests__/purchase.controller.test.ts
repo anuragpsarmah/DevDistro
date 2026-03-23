@@ -898,8 +898,26 @@ describe("confirmPurchase", () => {
     await flushPromises();
 
     expect(User.updateOne).toHaveBeenCalledWith(
-      expect.objectContaining({}),
-      expect.objectContaining({ $pull: expect.any(Object) })
+      { _id: expect.any(Object) },
+      { $pull: { wishlist: expect.any(Object) } }
+    );
+  });
+
+  it("still returns 200 when wishlist cleanup fails after the purchase is already recorded", async () => {
+    vi.mocked(User.updateOne).mockRejectedValue(
+      new Error("wishlist collection temporarily unavailable")
+    );
+
+    const req = makeReq({ body: VALID_CONFIRM_BODY });
+    const res = makeRes();
+
+    confirmPurchase(req, res, next);
+    await flushPromises();
+
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(Purchase.create).toHaveBeenCalledTimes(1);
+    expect(redisClient.del).toHaveBeenCalledWith(
+      `purchase_intent_${PURCHASE_REF}`
     );
   });
 
@@ -1324,6 +1342,110 @@ describe("downloadProject", () => {
     expect(vi.mocked(res.json).mock.calls[0][0].message).toMatch(
       /not purchased/i
     );
+  });
+
+  it("verifies confirmed purchase ownership before generating a paid download URL", async () => {
+    const req = makeReq({ query: { project_id: PROJECT_ID } });
+    const res = makeRes();
+
+    downloadProject(req, res, next);
+    await flushPromises();
+
+    expect(Purchase.findOne).toHaveBeenCalledWith({
+      buyerId: expect.any(Object),
+      projectId: expect.any(Object),
+      status: "CONFIRMED",
+    });
+    expect(s3Service.createSignedDownloadUrl).toHaveBeenCalledTimes(1);
+  });
+
+  it("returns 500 when paid-project purchase verification fails", async () => {
+    vi.mocked(Purchase.findOne).mockReturnValue({
+      select: vi.fn().mockReturnValue({
+        lean: vi.fn().mockRejectedValue(new Error("purchase lookup failed")),
+      }),
+    } as any);
+
+    const req = makeReq({ query: { project_id: PROJECT_ID } });
+    const res = makeRes();
+
+    downloadProject(req, res, next);
+    await flushPromises();
+
+    expect(res.status).toHaveBeenCalledWith(500);
+    expect(s3Service.createSignedDownloadUrl).not.toHaveBeenCalled();
+  });
+
+  it("allows a free project download without requiring any purchase record", async () => {
+    vi.mocked(Project.findById).mockReturnValue(
+      mockSelectLean({
+        repo_zip_status: "SUCCESS",
+        repo_zip_s3_key: "zips/free-project.zip",
+        title: "Free Project",
+        price: 0,
+      }) as any
+    );
+
+    const req = makeReq({ query: { project_id: PROJECT_ID } });
+    const res = makeRes();
+
+    downloadProject(req, res, next);
+    await flushPromises();
+
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(Purchase.findOne).not.toHaveBeenCalled();
+    expect(s3Service.createSignedDownloadUrl).toHaveBeenCalledWith(
+      "zips/free-project.zip",
+      900,
+      "free-project.zip"
+    );
+  });
+
+  it("treats free-project downloads as project-specific and does not let the frontend override which file is signed", async () => {
+    vi.mocked(Project.findById).mockReturnValue(
+      mockSelectLean({
+        repo_zip_status: "SUCCESS",
+        repo_zip_s3_key: "zips/free-catalog-item.zip",
+        title: "Free Catalog Item",
+        price: 0,
+      }) as any
+    );
+
+    const req = makeReq({
+      query: { project_id: PROJECT_ID, repo_zip_s3_key: "zips/paid-secret.zip" },
+    });
+    const res = makeRes();
+
+    downloadProject(req, res, next);
+    await flushPromises();
+
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(s3Service.createSignedDownloadUrl).toHaveBeenCalledWith(
+      "zips/free-catalog-item.zip",
+      900,
+      "free-catalog-item.zip"
+    );
+  });
+
+  it("still blocks free-project downloads when the zip is unavailable", async () => {
+    vi.mocked(Project.findById).mockReturnValue(
+      mockSelectLean({
+        repo_zip_status: "PROCESSING",
+        repo_zip_s3_key: null,
+        title: "Free Project",
+        price: 0,
+      }) as any
+    );
+
+    const req = makeReq({ query: { project_id: PROJECT_ID } });
+    const res = makeRes();
+
+    downloadProject(req, res, next);
+    await flushPromises();
+
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(Purchase.findOne).not.toHaveBeenCalled();
+    expect(s3Service.createSignedDownloadUrl).not.toHaveBeenCalled();
   });
 
   it("returns 404 when the project has been deleted after purchase", async () => {
