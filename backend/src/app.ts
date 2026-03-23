@@ -3,6 +3,7 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import loggerMiddleware from "./middlewares/logger.middleware";
 import response from "./utils/response.util";
+import { getMemorySnapshot } from "./utils/memory.util";
 import {
   globalRateLimiter,
   healthMemoryCheckLimiter,
@@ -42,11 +43,7 @@ app.get("/health", healthMemoryCheckLimiter, (req: Request, res: Response) => {
 
 /* server memory */
 app.get("/memory", healthMemoryCheckLimiter, (req, res) => {
-  const used = process.memoryUsage();
-  response(res, 200, "", {
-    heapTotal: `${Math.round((used.heapTotal / 1024 / 1024) * 100) / 100} MB`,
-    heapUsed: `${Math.round((used.heapUsed / 1024 / 1024) * 100) / 100} MB`,
-  });
+  response(res, 200, "", getMemorySnapshot());
   return;
 });
 

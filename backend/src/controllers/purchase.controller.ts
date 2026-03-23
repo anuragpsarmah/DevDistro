@@ -640,9 +640,9 @@ const getPurchasedProjects = asyncHandler(
       _id: p._id,
       projectId: p.projectId
         ? {
-            ...p.projectId,
-            project_images: p.projectId.project_images?.[0] ?? "",
-          }
+          ...p.projectId,
+          project_images: p.projectId.project_images?.[0] ?? "",
+        }
         : null,
       price_usd: p.price_usd,
       price_sol_total: p.price_sol_total,
@@ -1006,7 +1006,7 @@ const downloadReceipt = asyncHandler(async (req: Request, res: Response) => {
     .font("Helvetica")
     .fontSize(11)
     .fillColor("#666666")
-    .text("Developer Project Marketplace", 84, 78);
+    .text("A decentralized protocol for code monetization powered by Solana and GitHub.", 84, 78);
 
   doc
     .font("Helvetica-Bold")
