@@ -344,7 +344,7 @@ export function usePurchaseFlow({ logout, onSuccess }: UsePurchaseFlowParams) {
       setFlowState("CONFIRMING_ONCHAIN");
       const confirmation = await connection.confirmTransaction(
         { signature: txSignature, blockhash, lastValidBlockHeight },
-        "finalized"
+        "confirmed"
       );
       // confirmTransaction can resolve without throwing even if the TX failed on-chain.
       // value.err non-null means the TX was rejected at the VM level (e.g. insufficient

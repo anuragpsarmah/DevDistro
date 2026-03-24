@@ -145,21 +145,20 @@ describe("verifySolanaTransaction", () => {
 
   it("returns valid: false when the transaction is not found (null result after retries)", async () => {
     vi.useFakeTimers();
-    // 1 initial call + 3 retries = 4 total axios.post calls, all returning null
-    mockPost.mockResolvedValueOnce({ data: { result: null } });
-    mockPost.mockResolvedValueOnce({ data: { result: null } });
-    mockPost.mockResolvedValueOnce({ data: { result: null } });
-    mockPost.mockResolvedValueOnce({ data: { result: null } });
+    // 1 initial call + 10 retries = 11 total axios.post calls, all returning null
+    for (let i = 0; i < 11; i++) {
+      mockPost.mockResolvedValueOnce({ data: { result: null } });
+    }
 
     const resultPromise = verifySolanaTransaction(BASE_PARAMS);
-    // Advance through all retry delays (3 × 2000 ms) without real waiting
+    // Advance through all retry delays (10 × 3000 ms) without real waiting
     await vi.runAllTimersAsync();
     const result = await resultPromise;
 
     vi.useRealTimers();
     expect(result.valid).toBe(false);
     expect(result.error).toMatch(/not found/i);
-    expect(mockPost).toHaveBeenCalledTimes(4);
+    expect(mockPost).toHaveBeenCalledTimes(11);
   });
 
   // ── On-chain failure ────────────────────────────────────────────────────────

@@ -63,8 +63,8 @@ export async function verifySolanaTransaction(
   // 2-second delay before giving up — this closes the propagation race window.
   if (!tx) {
     const activeRpcUrl = fallbackRpcUrl ?? rpcUrl;
-    for (let attempt = 1; attempt <= 3; attempt++) {
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+    for (let attempt = 1; attempt <= 10; attempt++) {
+      await new Promise((resolve) => setTimeout(resolve, 3000));
       try {
         const retryResponse = await axios.post(activeRpcUrl, rpcBody, {
           timeout: 15000,
