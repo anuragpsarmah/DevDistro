@@ -49,8 +49,8 @@ const ACTIVE_STATES: PurchaseFlowState[] = [
 const STEP_LABELS: Record<string, string> = {
   BUILDING_TX: "Building Transaction",
   AWAITING_SIGNATURE: "Awaiting Wallet Signature",
-  CONFIRMING_ONCHAIN: "Confirming On-Chain",
-  CONFIRMING_BACKEND: "Finalizing Purchase",
+  CONFIRMING_ONCHAIN: "Transaction Confirmed",
+  CONFIRMING_BACKEND: "Awaiting Finality",
 };
 
 export default function PurchaseModal({

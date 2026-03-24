@@ -165,8 +165,8 @@ describe("PurchaseModal — active transaction progress steps", () => {
 
       expect(screen.getByText("Building Transaction")).toBeInTheDocument();
       expect(screen.getByText("Awaiting Wallet Signature")).toBeInTheDocument();
-      expect(screen.getByText("Confirming On-Chain")).toBeInTheDocument();
-      expect(screen.getByText("Finalizing Purchase")).toBeInTheDocument();
+      expect(screen.getByText("Transaction Confirmed")).toBeInTheDocument();
+      expect(screen.getByText("Awaiting Finality")).toBeInTheDocument();
     }
   );
 
