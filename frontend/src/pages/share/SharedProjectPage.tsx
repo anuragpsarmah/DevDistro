@@ -139,7 +139,7 @@ export default function SharedProjectPage() {
               <img
                 src={coverImage}
                 alt={project.title}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover object-top"
               />
             </div>
           )}

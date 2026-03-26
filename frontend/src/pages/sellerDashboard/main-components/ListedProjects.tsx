@@ -344,7 +344,7 @@ const ListedProjects = ({
                   <img
                     src={project.project_images}
                     alt={project.title}
-                    className={`w-full h-full object-cover transition-opacity duration-300 ${!!project.scheduled_deletion_at || !projectStatuses[idx] || project.github_access_revoked ? "opacity-30 grayscale" : ""}`}
+                    className={`w-full h-full object-cover object-top transition-opacity duration-300 ${!!project.scheduled_deletion_at || !projectStatuses[idx] || project.github_access_revoked ? "opacity-30 grayscale" : ""}`}
                   />
                   {(!!project.scheduled_deletion_at ||
                     !projectStatuses[idx] ||

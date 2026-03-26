@@ -49,7 +49,7 @@ export default function MarketplaceProjectCard({
               <img
                 src={project.project_images}
                 alt={project.title}
-                className="w-full h-full object-cover transition-all duration-300"
+                className="w-full h-full object-cover object-top transition-all duration-300"
                 onError={() => setImageError(true)}
               />
             ) : (
