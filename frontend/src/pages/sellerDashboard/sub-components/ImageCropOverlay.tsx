@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import Cropper from "react-easy-crop";
 import type { Point, Area } from "react-easy-crop";
 import { ChevronLeft, ChevronRight, Loader2, X } from "lucide-react";
@@ -38,6 +38,10 @@ function makeDefaultCropState(): PerImageCropState {
   };
 }
 
+function makeViewKey(itemIndex: number, view: CropView) {
+  return `${itemIndex}_${view}`;
+}
+
 export default function ImageCropOverlay({
   imageItems,
   detailUrlMap,
@@ -54,12 +58,11 @@ export default function ImageCropOverlay({
   const [croppablePos, setCroppablePos] = useState(0);
   const [cropView, setCropView] = useState<CropView>("card");
   const [isGenerating, setIsGenerating] = useState(false);
-  const [userVisitedTabs, setUserVisitedTabs] = useState<Set<string>>(
-    new Set()
-  );
-  const markVisited = (itemIndex: number, view: CropView) => {
-    const key = `${itemIndex}_${view}`;
-    setUserVisitedTabs((prev) => {
+  const activeInteractionsRef = useRef<Set<string>>(new Set());
+  const [dirtyViews, setDirtyViews] = useState<Set<string>>(new Set());
+  const markDirty = (itemIndex: number, view: CropView) => {
+    const key = makeViewKey(itemIndex, view);
+    setDirtyViews((prev) => {
       if (prev.has(key)) return prev;
       const next = new Set(prev);
       next.add(key);
@@ -88,8 +91,32 @@ export default function ImageCropOverlay({
   const handleCropChange = (crop: Point) =>
     updateCropState(currentItemIndex, cropView, { crop });
 
-  const handleZoomChange = (zoom: number) =>
+  const handleZoomChange = (zoom: number) => {
+    const currentZoom = currentCropState?.[cropView].zoom ?? 1;
+    if (Math.abs(currentZoom - zoom) > Number.EPSILON) {
+      markDirty(currentItemIndex, cropView);
+    }
     updateCropState(currentItemIndex, cropView, { zoom });
+  };
+
+  const onCropChange = (crop: Point) => {
+    if (
+      activeInteractionsRef.current.has(makeViewKey(currentItemIndex, cropView))
+    ) {
+      markDirty(currentItemIndex, cropView);
+    }
+    handleCropChange(crop);
+  };
+
+  const handleInteractionStart = () => {
+    activeInteractionsRef.current.add(makeViewKey(currentItemIndex, cropView));
+  };
+
+  const handleInteractionEnd = () => {
+    activeInteractionsRef.current.delete(
+      makeViewKey(currentItemIndex, cropView)
+    );
+  };
 
   const handleCropComplete = useCallback(
     (_: Area, croppedAreaPixels: Area) =>
@@ -102,7 +129,6 @@ export default function ImageCropOverlay({
     if (newPos === croppablePos) return;
     setCroppablePos(newPos);
     setCropView("card");
-    markVisited(newPos, "card");
   };
 
   const goToNext = () => {
@@ -110,12 +136,10 @@ export default function ImageCropOverlay({
     if (newPos === croppablePos) return;
     setCroppablePos(newPos);
     setCropView("card");
-    markVisited(newPos, "card");
   };
 
   const handleTabClick = (view: CropView) => {
     setCropView(view);
-    markVisited(currentItemIndex, view);
   };
 
   const handleConfirmAll = async () => {
@@ -135,10 +159,10 @@ export default function ImageCropOverlay({
 
         const detailSrc = existingDetailUrl;
 
-        const visitedCard = userVisitedTabs.has(`${i}_card`);
-        const visitedDetail = userVisitedTabs.has(`${i}_detail`);
+        const dirtyCard = dirtyViews.has(makeViewKey(i, "card"));
+        const dirtyDetail = dirtyViews.has(makeViewKey(i, "detail"));
 
-        if (!visitedCard && !visitedDetail) {
+        if (!dirtyCard && !dirtyDetail) {
           results.push({
             type: "existing_complete",
             cardUrl: item.url,
@@ -148,7 +172,7 @@ export default function ImageCropOverlay({
         }
 
         const [cardBlob, detailBlob] = await Promise.all([
-          visitedCard
+          dirtyCard
             ? getCroppedImageBlob(
                 cardSrc,
                 state.card.croppedAreaPixels!,
@@ -156,7 +180,7 @@ export default function ImageCropOverlay({
                 CARD_CROP_HEIGHT
               )
             : Promise.resolve(null),
-          visitedDetail
+          dirtyDetail
             ? getCroppedImageBlob(
                 detailSrc,
                 state.detail.croppedAreaPixels!,
@@ -166,7 +190,7 @@ export default function ImageCropOverlay({
             : Promise.resolve(null),
         ]);
 
-        if ((visitedCard && !cardBlob) || (visitedDetail && !detailBlob)) {
+        if ((dirtyCard && !cardBlob) || (dirtyDetail && !detailBlob)) {
           results.push({
             type: "existing_complete",
             cardUrl: item.url,
@@ -329,9 +353,11 @@ export default function ImageCropOverlay({
               crop={currentState.crop}
               zoom={currentState.zoom}
               aspect={aspectRatio}
-              onCropChange={handleCropChange}
+              onCropChange={onCropChange}
               onZoomChange={handleZoomChange}
               onCropComplete={handleCropComplete}
+              onInteractionStart={handleInteractionStart}
+              onInteractionEnd={handleInteractionEnd}
               showGrid={true}
               style={{
                 containerStyle: { borderRadius: 0 },
@@ -355,11 +381,7 @@ export default function ImageCropOverlay({
               max={3}
               step={0.05}
               value={currentState?.zoom ?? 1}
-              onChange={(e) =>
-                updateCropState(currentItemIndex, cropView, {
-                  zoom: Number(e.target.value),
-                })
-              }
+              onChange={(e) => handleZoomChange(Number(e.target.value))}
               className="flex-1 accent-black dark:accent-white h-1"
             />
           </div>
@@ -377,7 +399,6 @@ export default function ImageCropOverlay({
                   onClick={() => {
                     setCroppablePos(i);
                     setCropView("card");
-                    markVisited(i, "card");
                   }}
                   className={`flex-shrink-0 relative w-12 h-12 border-2 overflow-hidden transition-all ${
                     isCurrentImage
