@@ -381,7 +381,11 @@ export default function ProjectDetailPage({
                   )}
                   <div className="min-w-0 flex-1 pt-1 space-y-2.5">
                     <p className="font-syne font-black uppercase tracking-widest text-black dark:text-white text-xl leading-none truncate">
-                      {seller?.username ? (seller.username.startsWith('@') ? seller.username : `@${seller.username}`) : "@UNKNOWN_USER"}
+                      {seller?.username
+                        ? seller.username.startsWith("@")
+                          ? seller.username
+                          : `@${seller.username}`
+                        : "@UNKNOWN_USER"}
                     </p>
                     {seller?.name && (
                       <p className="font-space text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-[0.2em] truncate">

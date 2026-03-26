@@ -2029,7 +2029,9 @@ const getPublicProjectDetail = asyncHandler(
     // immediately. A race between two concurrent requests is harmless: the
     // $exists:false filter makes the second update a no-op.
     if (!(projectData as any).slug) {
-      const backfillSlug = generateProjectSlug((projectData as any).title as string);
+      const backfillSlug = generateProjectSlug(
+        (projectData as any).title as string
+      );
       Project.updateOne(
         { _id: (projectData as any)._id, slug: { $exists: false } },
         { $set: { slug: backfillSlug } }

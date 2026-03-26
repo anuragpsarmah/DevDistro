@@ -18,7 +18,9 @@ import {
 } from "@/hooks/apiQueries";
 import { successToast, errorToast } from "@/components/ui/customToast";
 
-function isValidProjectIdentifier(value: string | null | undefined): value is string {
+function isValidProjectIdentifier(
+  value: string | null | undefined
+): value is string {
   return (
     typeof value === "string" &&
     value.length >= 3 &&
@@ -173,7 +175,8 @@ export default function SharedProjectPage() {
                   {project.avgRating.toFixed(1)}
                 </span>
                 <span className="text-gray-500 dark:text-gray-400 text-xs font-bold uppercase tracking-widest">
-                  ({project.totalReviews} review{project.totalReviews !== 1 ? "s" : ""})
+                  ({project.totalReviews} review
+                  {project.totalReviews !== 1 ? "s" : ""})
                 </span>
               </div>
             )}
@@ -220,7 +223,11 @@ export default function SharedProjectPage() {
                     <p className="font-syne font-black text-sm uppercase tracking-widest truncate">
                       {seller.name || seller.username}
                     </p>
-                    <p className="text-gray-500 dark:text-gray-400 text-xs font-space font-bold tracking-wider mt-0.5">{seller.username?.startsWith('@') ? seller.username : `@${seller.username}`}</p>
+                    <p className="text-gray-500 dark:text-gray-400 text-xs font-space font-bold tracking-wider mt-0.5">
+                      {seller.username?.startsWith("@")
+                        ? seller.username
+                        : `@${seller.username}`}
+                    </p>
                     {seller.profile_visibility !== false && (
                       <div className="flex items-center gap-3 mt-1">
                         {seller.location && (
@@ -247,7 +254,10 @@ export default function SharedProjectPage() {
                             rel="noopener noreferrer"
                             className="flex items-center gap-1 text-xs text-gray-500 hover:text-red-500 transition-colors"
                           >
-                            <XIcon className="w-3 h-3" />{seller.x_username?.startsWith('@') ? seller.x_username : `@${seller.x_username}`}
+                            <XIcon className="w-3 h-3" />
+                            {seller.x_username?.startsWith("@")
+                              ? seller.x_username
+                              : `@${seller.x_username}`}
                           </a>
                         )}
                       </div>
