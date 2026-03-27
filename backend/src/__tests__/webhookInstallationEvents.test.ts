@@ -32,7 +32,7 @@
  * handleRepositoryEvent — 'deleted':
  *   - Project.updateMany marks project access revoked
  *   - Project.findOne fetches userid → redisClient.del
- *   - 'privatized'/'publicized' → no DB calls
+ *   - 'privatized'/'publicized' → no project mutation, clears private repo cache
  *
  * All webhook handlers:
  *   - DB errors → still respond 200 (webhook ack)
@@ -718,11 +718,17 @@ describe("handleRepositoryEvent — 'deleted'", () => {
     expect(res.status).toHaveBeenCalledWith(200);
   });
 
-  it("does NOT call Project.updateMany for 'privatized' or 'publicized' events", async () => {
+  it("does NOT call Project.updateMany and clears cache for 'privatized' or 'publicized' events", async () => {
     for (const action of ["privatized", "publicized"]) {
       vi.clearAllMocks();
       res = makeRes();
       vi.mocked(githubAppService.verifyWebhookSignature).mockReturnValue(true);
+      vi.mocked(GitHubAppInstallation.findOne).mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          lean: vi.fn().mockResolvedValue({ user_id: VALID_USER_ID }),
+        }),
+      } as any);
+      vi.mocked(redisClient.del).mockResolvedValue(1 as any);
 
       const req = makeWebhookReq("repository", {
         action,
@@ -731,6 +737,7 @@ describe("handleRepositoryEvent — 'deleted'", () => {
           name: "repo",
           full_name: "u/repo",
           private: action === "privatized",
+          owner: { id: 42, login: "seller_user" },
         },
         sender: { login: "u", id: 1 },
       });
@@ -738,7 +745,12 @@ describe("handleRepositoryEvent — 'deleted'", () => {
       await flushPromises();
 
       expect(Project.updateMany).not.toHaveBeenCalled();
-      expect(redisClient.del).not.toHaveBeenCalled();
+      expect(GitHubAppInstallation.findOne).toHaveBeenCalledWith({
+        account_id: 42,
+      });
+      expect(redisClient.del).toHaveBeenCalledWith(
+        `private-repos:${VALID_USER_ID}`
+      );
       expect(res.status).toHaveBeenCalledWith(200);
     }
   });

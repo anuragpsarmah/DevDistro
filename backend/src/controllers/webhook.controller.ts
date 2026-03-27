@@ -43,6 +43,11 @@ interface WebhookPayload {
     name: string;
     full_name: string;
     private: boolean;
+    owner?: {
+      id: number;
+      login: string;
+      type?: string;
+    };
   };
   sender: {
     login: string;
@@ -397,6 +402,49 @@ async function handleRepositoryEvent(payload: WebhookPayload) {
 
   const repoId = repository.id.toString();
 
+  const clearPrivateRepoCacheForRepository = async () => {
+    let cacheOwnerUserId: string | null = null;
+
+    if (repository.owner?.id) {
+      const [installationDoc] = await tryCatch(
+        GitHubAppInstallation.findOne({
+          account_id: repository.owner.id,
+        })
+          .select("user_id")
+          .lean()
+      );
+
+      if (installationDoc?.user_id) {
+        cacheOwnerUserId = installationDoc.user_id.toString();
+      }
+    }
+
+    if (!cacheOwnerUserId) {
+      const [affectedProject] = await tryCatch(
+        Project.findOne({ github_repo_id: repoId }).select("userid").lean()
+      );
+
+      if (affectedProject?.userid) {
+        cacheOwnerUserId = affectedProject.userid.toString();
+      }
+    }
+
+    if (!cacheOwnerUserId) return;
+
+    const [, cacheError] = await tryCatch(
+      redisClient.del(privateRepoPrefix(cacheOwnerUserId))
+    );
+
+    if (cacheError) {
+      logger.error("Failed to clear private repos cache after repo event", {
+        repoId,
+        action,
+        userId: cacheOwnerUserId,
+        cacheError,
+      });
+    }
+  };
+
   switch (action) {
     case "deleted":
       const [result] = await tryCatch(
@@ -432,6 +480,7 @@ async function handleRepositoryEvent(payload: WebhookPayload) {
 
     case "privatized":
     case "publicized":
+      await clearPrivateRepoCacheForRepository();
       logger.info("Repository visibility changed", { repoId, action });
       break;
 
