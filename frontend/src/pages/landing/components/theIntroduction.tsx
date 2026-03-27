@@ -123,12 +123,6 @@ export default function Prologue({ handleAuthNavigate }: PrologueProps) {
               </span>
             </div>
             <div className="flex justify-end gap-6 text-right">
-              <span>Protocol:</span>
-              <span className="text-black dark:text-white w-24 text-left">
-                DevsDistro
-              </span>
-            </div>
-            <div className="flex justify-end gap-6 text-right">
               <span>Version:</span>
               <span className="text-red-500 w-24 text-left">V_1.0.0</span>
             </div>
