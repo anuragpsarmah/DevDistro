@@ -13,6 +13,7 @@ import { Project } from "../models/project.model";
 import { User } from "../models/user.model";
 import { GitHubAppInstallation } from "../models/githubAppInstallation.model";
 import { Purchase } from "../models/purchase.model";
+import { ProjectDownload } from "../models/projectDownload.model";
 import { Sales } from "../models/sales.model";
 import {
   initiatePurchaseSchema,
@@ -772,7 +773,7 @@ const downloadProject = asyncHandler(async (req: Request, res: Response) => {
   const [project, projectError] = await tryCatch(
     Project.findById(projectObjectId)
       .select(
-        "isActive github_access_revoked scheduled_deletion_at repo_zip_status repo_zip_s3_key title price"
+        "userid isActive github_access_revoked scheduled_deletion_at repo_zip_status repo_zip_s3_key title price"
       )
       .lean()
   );
@@ -855,6 +856,40 @@ const downloadProject = asyncHandler(async (req: Request, res: Response) => {
     logger.error("Failed to generate download URL", downloadError);
     response(res, 500, "Failed to generate download link. Try again later.");
     return;
+  }
+
+  const sellerId = (project.userid as mongoose.Types.ObjectId | undefined)
+    ?.toString?.()
+    ?.trim();
+
+  if (sellerId && sellerId !== buyerId.toString()) {
+    const [, projectDownloadError] = await tryCatch(
+      ProjectDownload.updateOne(
+        {
+          projectId: projectObjectId,
+          userId: buyerId,
+        },
+        {
+          $setOnInsert: {
+            projectId: projectObjectId,
+            userId: buyerId,
+            sellerId: new mongoose.Types.ObjectId(sellerId),
+          },
+        },
+        { upsert: true }
+      )
+    );
+
+    if (projectDownloadError) {
+      logger.error("Failed to record unique project download", {
+        projectId: project_id,
+        buyerId: buyerId.toString(),
+        error:
+          projectDownloadError instanceof Error
+            ? projectDownloadError.message
+            : "Unknown error",
+      });
+    }
   }
 
   enrichContext({ outcome: "success", project_id });

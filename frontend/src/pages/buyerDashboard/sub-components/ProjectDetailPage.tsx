@@ -142,6 +142,8 @@ export default function ProjectDetailPage({
     month: "long",
     day: "numeric",
   });
+  const downloadCount = project.downloadCount ?? 0;
+  const downloadLabel = `${downloadCount} download${downloadCount === 1 ? "" : "s"}`;
 
   const handleShareProject = async () => {
     const shareUrl = `${window.location.origin}/p/${project.slug ?? projectId}`;
@@ -219,6 +221,16 @@ export default function ProjectDetailPage({
           <span className="font-space text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">
             LISTED {listedDate.toUpperCase()}
           </span>
+          {downloadCount > 0 && (
+            <>
+              <span className="text-gray-300 dark:text-gray-700 font-bold">
+                /
+              </span>
+              <span className="font-space text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">
+                {downloadLabel.toUpperCase()}
+              </span>
+            </>
+          )}
         </div>
       </div>
 

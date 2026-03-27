@@ -109,6 +109,7 @@ export interface ProjectDetail {
   project_video?: string;
   repo_tree?: TreeNode;
   repo_tree_status?: string;
+  downloadCount: number;
   scheduled_deletion_at?: string | null;
   slug?: string;
   userid: {
@@ -138,6 +139,7 @@ export interface PublicProjectDetail {
   project_images: string[];
   project_images_detail?: string[];
   project_video?: string;
+  downloadCount: number;
   slug?: string;
   userid: {
     username: string;

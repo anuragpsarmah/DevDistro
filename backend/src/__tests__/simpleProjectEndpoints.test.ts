@@ -39,6 +39,12 @@ vi.mock("../models/purchase.model", () => ({
   },
 }));
 
+vi.mock("../models/projectDownload.model", () => ({
+  ProjectDownload: {
+    aggregate: vi.fn(),
+  },
+}));
+
 vi.mock("../models/githubAppInstallation.model", () => ({
   GitHubAppInstallation: {
     findOne: vi.fn(),
@@ -97,6 +103,7 @@ import {
   getTotalActiveProjects,
 } from "../controllers/projects.controller";
 import { Project } from "../models/project.model";
+import { ProjectDownload } from "../models/projectDownload.model";
 import { User } from "../models/user.model";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -234,9 +241,7 @@ describe("getInitialProjectData", () => {
   it("returns 500 when database query throws", async () => {
     vi.mocked(Project.find).mockReturnValue({
       select: vi.fn().mockReturnValue({
-        lean: vi.fn().mockReturnValue({
-          then: vi.fn().mockRejectedValue(new Error("DB error")),
-        }),
+        lean: vi.fn().mockRejectedValue(new Error("DB error")),
       }),
     } as any);
 
@@ -262,9 +267,15 @@ describe("getInitialProjectData", () => {
       },
     ];
 
+    vi.mocked(ProjectDownload.aggregate).mockResolvedValue([
+      { _id: VALID_PROJECT_ID, count: 7 },
+    ] as any);
+
     vi.mocked(Project.find).mockReturnValue({
       select: vi.fn().mockReturnValue({
-        lean: vi.fn().mockResolvedValue(rawProjects),
+        lean: vi
+          .fn()
+          .mockResolvedValue([{ ...rawProjects[0], _id: VALID_PROJECT_ID }]),
       }),
     } as any);
 
@@ -276,6 +287,7 @@ describe("getInitialProjectData", () => {
     const callArg = res.json.mock.calls[0][0];
     // project_images should be the first URL string, not the full array
     expect(callArg.data[0].project_images).toBe(`${CDN_URL}/img1.jpg`);
+    expect(callArg.data[0].downloadCount).toBe(7);
   });
 
   it("includes _id in the response so sellers can look up reviews by project id", async () => {
@@ -298,6 +310,7 @@ describe("getInitialProjectData", () => {
         lean: vi.fn().mockResolvedValue(rawProjects),
       }),
     } as any);
+    vi.mocked(ProjectDownload.aggregate).mockResolvedValue([] as any);
 
     const req = makeReq();
     getInitialProjectData(req as any, res, next);
@@ -311,6 +324,7 @@ describe("getInitialProjectData", () => {
   it("returns empty string for project_images when project has no images", async () => {
     const rawProjects = [
       {
+        _id: VALID_PROJECT_ID,
         github_repo_id: VALID_REPO_ID,
         title: "No Image Project",
         description: "No images",
@@ -328,6 +342,7 @@ describe("getInitialProjectData", () => {
         lean: vi.fn().mockResolvedValue(rawProjects),
       }),
     } as any);
+    vi.mocked(ProjectDownload.aggregate).mockResolvedValue([] as any);
 
     const req = makeReq();
     getInitialProjectData(req as any, res, next);
@@ -336,6 +351,35 @@ describe("getInitialProjectData", () => {
     expect(res.status).toHaveBeenCalledWith(200);
     const callArg = res.json.mock.calls[0][0];
     expect(callArg.data[0].project_images).toBe("");
+  });
+
+  it("returns downloadCount = 0 when no unique downloads exist for a project", async () => {
+    const rawProjects = [
+      {
+        _id: VALID_PROJECT_ID,
+        github_repo_id: VALID_REPO_ID,
+        title: "Legacy Project",
+        description: "Older record",
+        tech_stack: [],
+        isActive: true,
+        price: 0,
+        project_images: [`${CDN_URL}/img.jpg`],
+      },
+    ];
+
+    vi.mocked(Project.find).mockReturnValue({
+      select: vi.fn().mockReturnValue({
+        lean: vi.fn().mockResolvedValue(rawProjects),
+      }),
+    } as any);
+    vi.mocked(ProjectDownload.aggregate).mockResolvedValue([] as any);
+
+    const req = makeReq();
+    getInitialProjectData(req as any, res, next);
+    await flushPromises();
+
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.json.mock.calls[0][0].data[0].downloadCount).toBe(0);
   });
 });
 

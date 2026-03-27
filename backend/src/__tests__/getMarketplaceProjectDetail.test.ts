@@ -41,6 +41,12 @@ vi.mock("../models/purchase.model", () => ({
   },
 }));
 
+vi.mock("../models/projectDownload.model", () => ({
+  ProjectDownload: {
+    countDocuments: vi.fn(),
+  },
+}));
+
 vi.mock("../models/githubAppInstallation.model", () => ({
   GitHubAppInstallation: {
     findOne: vi.fn(),
@@ -91,6 +97,7 @@ vi.mock("../utils/redisPrefixGenerator.util", () => ({
 
 import { getMarketplaceProjectDetail } from "../controllers/projects.controller";
 import { Project } from "../models/project.model";
+import { ProjectDownload } from "../models/projectDownload.model";
 import { Purchase } from "../models/purchase.model";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -171,6 +178,7 @@ describe("getMarketplaceProjectDetail", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     res = makeRes();
+    vi.mocked(ProjectDownload.countDocuments).mockResolvedValue(12);
   });
 
   // ── Auth guard ────────────────────────────────────────────────────────────
@@ -278,9 +286,25 @@ describe("getMarketplaceProjectDetail", () => {
       expect.objectContaining({
         data: expect.objectContaining({
           title: "My Project",
+          downloadCount: 12,
         }),
       })
     );
+  });
+
+  it("returns downloadCount = 0 when the unique download count lookup fails", async () => {
+    vi.mocked(Purchase.exists).mockResolvedValue(null as any);
+    vi.mocked(ProjectDownload.countDocuments).mockRejectedValue(
+      new Error("count failed")
+    );
+    stubProjectFindOne(mockProjectDetail());
+
+    const req = makeReq();
+    getMarketplaceProjectDetail(req as any, res, next);
+    await flushPromises();
+
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.json.mock.calls[0][0].data.downloadCount).toBe(0);
   });
 
   // ── Buyer bypass logic ────────────────────────────────────────────────────

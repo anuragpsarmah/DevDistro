@@ -356,6 +356,7 @@ export interface InitialProjectData {
   repo_zip_status?: "PROCESSING" | "SUCCESS" | "FAILED";
   price: number;
   live_link?: string;
+  downloadCount: number;
 }
 
 export interface ListedProjectsProps {

@@ -128,6 +128,8 @@ const ListedProjects = ({
     return text.length > maxLength ? `${text.slice(0, maxLength)}...` : text;
   };
 
+  const formatCompactDownloadCount = (count: number) => `${count}↓`;
+
   const handleEditProject = (idx: number) => {
     const { project_images, ...other_props } = initialProjectData[idx];
     setFormProps((prev) => {
@@ -485,6 +487,11 @@ const ListedProjects = ({
                   <div className="flex items-end justify-between gap-2">
                     {RenderTechStack(project.tech_stack)}
                     <div className="flex items-center gap-2 flex-shrink-0">
+                      {(project.downloadCount ?? 0) > 0 && (
+                        <span className="px-3 py-1.5 bg-red-500 text-white font-space font-bold uppercase tracking-wider text-sm border-2 border-red-500">
+                          {formatCompactDownloadCount(project.downloadCount)}
+                        </span>
+                      )}
                       <span className="px-3 py-1.5 bg-white dark:bg-black text-black dark:text-white font-space font-bold uppercase tracking-wider text-sm border-2 border-black dark:border-white">
                         {project.price === 0 ? "Free" : `$ ${project.price}`}
                       </span>

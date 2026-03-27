@@ -412,6 +412,7 @@ const useConfirmPurchaseMutation = ({ logout }: mutationParameter) => {
 };
 
 const useDownloadProjectMutation = ({ logout }: mutationParameter) => {
+  const queryClient = useQueryClient();
   const { handleError } = useHandleError({ logout });
 
   return useMutation({
@@ -429,7 +430,11 @@ const useDownloadProjectMutation = ({ logout }: mutationParameter) => {
 
       return response.data.data;
     },
-    onSuccess: (data) => {
+    onSuccess: (data, project_id) => {
+      queryClient.invalidateQueries({
+        queryKey: ["projectDetail", project_id],
+      });
+      queryClient.invalidateQueries({ queryKey: ["initialProjectDataQuery"] });
       const a = document.createElement("a");
       a.href = data.download_url;
       a.download = "";

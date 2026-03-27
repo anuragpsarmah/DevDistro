@@ -28,6 +28,7 @@ import { MAX_ALLOWED_IMAGES } from "../types/constants";
 import { tryCatch } from "../utils/tryCatch.util";
 import { enrichContext } from "../utils/asyncContext";
 import { Purchase } from "../models/purchase.model";
+import { ProjectDownload } from "../models/projectDownload.model";
 import { performProjectHardDelete } from "../utils/projectCleanup.util";
 import { MARKETPLACE_VISIBLE_FILTER } from "../utils/projectVisibility.util";
 
@@ -1122,12 +1123,6 @@ const getInitialProjectData = asyncHandler(
           live_link: 1,
         })
         .lean()
-        .then((result) => {
-          return result.map((project) => ({
-            ...project,
-            project_images: project.project_images?.[0] ?? "",
-          }));
-        })
     );
     enrichContext({
       db_latency_ms: Math.round(performance.now() - dbStartTime),
@@ -1140,15 +1135,59 @@ const getInitialProjectData = asyncHandler(
       return;
     }
 
+    const projectIds = (projectData ?? []).map((project) => project._id);
+    const [downloadCounts, downloadCountsError] =
+      projectIds.length === 0
+        ? [[], null]
+        : await tryCatch(
+            ProjectDownload.aggregate([
+              {
+                $match: {
+                  projectId: {
+                    $in: projectIds,
+                  },
+                },
+              },
+              {
+                $group: {
+                  _id: "$projectId",
+                  count: { $sum: 1 },
+                },
+              },
+            ])
+          );
+
+    if (downloadCountsError) {
+      logger.error(
+        "Failed to fetch project download counts",
+        downloadCountsError
+      );
+    }
+
+    const downloadCountMap = new Map(
+      (
+        (downloadCounts as Array<{
+          _id: mongoose.Types.ObjectId;
+          count: number;
+        }>) ?? []
+      ).map((entry) => [entry._id.toString(), entry.count])
+    );
+
+    const normalizedProjectData = (projectData ?? []).map((project) => ({
+      ...project,
+      downloadCount: downloadCountMap.get(project._id.toString()) ?? 0,
+      project_images: project.project_images?.[0] ?? "",
+    }));
+
     enrichContext({
       outcome: "success",
-      projects_count: projectData?.length || 0,
+      projects_count: normalizedProjectData.length || 0,
     });
     response(
       res,
       200,
       "Initial project data fetched successfully",
-      projectData
+      normalizedProjectData
     );
   }
 );
@@ -1962,8 +2001,22 @@ const getMarketplaceProjectDetail = asyncHandler(
       projectData.userid = { ...publicFields, profile_visibility: false };
     }
 
+    const [downloadCount, downloadCountError] = await tryCatch(
+      ProjectDownload.countDocuments({ projectId: projectObjectId })
+    );
+
+    if (downloadCountError) {
+      logger.error(
+        "Failed to fetch marketplace project download count",
+        downloadCountError
+      );
+    }
+
     enrichContext({ outcome: "success" });
-    response(res, 200, "Project detail fetched successfully", projectData);
+    response(res, 200, "Project detail fetched successfully", {
+      ...projectData,
+      downloadCount: downloadCount ?? 0,
+    });
   }
 );
 
@@ -2041,13 +2094,24 @@ const getPublicProjectDetail = asyncHandler(
       projectData.userid = { ...publicFields, profile_visibility: false };
     }
 
-    enrichContext({ outcome: "success" });
-    response(
-      res,
-      200,
-      "Public project detail fetched successfully",
-      projectData
+    const [downloadCount, downloadCountError] = await tryCatch(
+      ProjectDownload.countDocuments({
+        projectId: (projectData as any)._id,
+      })
     );
+
+    if (downloadCountError) {
+      logger.error(
+        "Failed to fetch public project download count",
+        downloadCountError
+      );
+    }
+
+    enrichContext({ outcome: "success" });
+    response(res, 200, "Public project detail fetched successfully", {
+      ...projectData,
+      downloadCount: downloadCount ?? 0,
+    });
   }
 );
 

@@ -62,6 +62,10 @@ vi.mock("../models/purchase.model", () => ({
   Purchase: { findOne: vi.fn(), find: vi.fn(), create: vi.fn() },
 }));
 
+vi.mock("../models/projectDownload.model", () => ({
+  ProjectDownload: { updateOne: vi.fn() },
+}));
+
 vi.mock("../models/sales.model", () => {
   return {
     Sales: Object.assign(vi.fn(), {
@@ -140,6 +144,7 @@ import { Project } from "../models/project.model";
 import { User } from "../models/user.model";
 import { GitHubAppInstallation } from "../models/githubAppInstallation.model";
 import { Purchase } from "../models/purchase.model";
+import { ProjectDownload } from "../models/projectDownload.model";
 import { Sales } from "../models/sales.model";
 import {
   getSolanaUsdRate,
@@ -1272,6 +1277,7 @@ describe("downloadProject", () => {
     vi.mocked(Project.findById).mockReturnValue(
       mockSelectLean({
         isActive: true,
+        userid: SELLER_ID,
         github_access_revoked: false,
         scheduled_deletion_at: null,
         repo_zip_status: "SUCCESS",
@@ -1280,6 +1286,13 @@ describe("downloadProject", () => {
         price: 99,
       }) as any
     );
+    vi.mocked(ProjectDownload.updateOne).mockResolvedValue({
+      acknowledged: true,
+      matchedCount: 0,
+      modifiedCount: 0,
+      upsertedCount: 1,
+      upsertedId: "download-1",
+    } as any);
 
     // S3 URL generated successfully
     vi.mocked(s3Service.createSignedDownloadUrl).mockResolvedValue(
@@ -1297,6 +1310,20 @@ describe("downloadProject", () => {
     expect(res.status).toHaveBeenCalledWith(200);
     const { download_url } = vi.mocked(res.json).mock.calls[0][0].data;
     expect(download_url).toContain("s3.example.com");
+    expect(ProjectDownload.updateOne).toHaveBeenCalledWith(
+      {
+        projectId: expect.any(Object),
+        userId: expect.any(Object),
+      },
+      {
+        $setOnInsert: expect.objectContaining({
+          projectId: expect.any(Object),
+          userId: expect.any(Object),
+          sellerId: expect.any(Object),
+        }),
+      },
+      { upsert: true }
+    );
   });
 
   it("calls S3 with the correct key, 900-second expiry, and a sanitised filename", async () => {
@@ -1378,12 +1405,14 @@ describe("downloadProject", () => {
 
     expect(res.status).toHaveBeenCalledWith(500);
     expect(s3Service.createSignedDownloadUrl).not.toHaveBeenCalled();
+    expect(ProjectDownload.updateOne).not.toHaveBeenCalled();
   });
 
   it("allows a free project download without requiring any purchase record", async () => {
     vi.mocked(Project.findById).mockReturnValue(
       mockSelectLean({
         isActive: true,
+        userid: SELLER_ID,
         github_access_revoked: false,
         scheduled_deletion_at: null,
         repo_zip_status: "SUCCESS",
@@ -1406,6 +1435,7 @@ describe("downloadProject", () => {
       900,
       "free-project.zip"
     );
+    expect(ProjectDownload.updateOne).toHaveBeenCalledTimes(1);
   });
 
   it("blocks a free project download when the project is no longer marketplace-visible", async () => {
@@ -1433,6 +1463,7 @@ describe("downloadProject", () => {
     );
     expect(Purchase.findOne).not.toHaveBeenCalled();
     expect(s3Service.createSignedDownloadUrl).not.toHaveBeenCalled();
+    expect(ProjectDownload.updateOne).not.toHaveBeenCalled();
   });
 
   it("treats free-project downloads as project-specific and does not let the frontend override which file is signed", async () => {
@@ -1489,6 +1520,7 @@ describe("downloadProject", () => {
     expect(res.status).toHaveBeenCalledWith(400);
     expect(Purchase.findOne).not.toHaveBeenCalled();
     expect(s3Service.createSignedDownloadUrl).not.toHaveBeenCalled();
+    expect(ProjectDownload.updateOne).not.toHaveBeenCalled();
   });
 
   it("blocks a paid project download when it is no longer marketplace-visible and not purchased", async () => {
@@ -1516,12 +1548,14 @@ describe("downloadProject", () => {
       /not currently available for download/i
     );
     expect(s3Service.createSignedDownloadUrl).not.toHaveBeenCalled();
+    expect(ProjectDownload.updateOne).not.toHaveBeenCalled();
   });
 
   it("allows a paid project download for an already purchased project even when it is no longer marketplace-visible", async () => {
     vi.mocked(Project.findById).mockReturnValue(
       mockSelectLean({
         isActive: false,
+        userid: SELLER_ID,
         github_access_revoked: false,
         scheduled_deletion_at: new Date("2026-03-27T00:00:00.000Z"),
         repo_zip_status: "SUCCESS",
@@ -1540,6 +1574,7 @@ describe("downloadProject", () => {
     expect(res.status).toHaveBeenCalledWith(200);
     expect(Purchase.findOne).toHaveBeenCalledTimes(1);
     expect(s3Service.createSignedDownloadUrl).toHaveBeenCalledTimes(1);
+    expect(ProjectDownload.updateOne).toHaveBeenCalledTimes(1);
   });
 
   it("returns 404 when the project has been deleted after purchase", async () => {
@@ -1573,6 +1608,7 @@ describe("downloadProject", () => {
     expect(vi.mocked(res.json).mock.calls[0][0].message).toMatch(
       /not available/i
     );
+    expect(ProjectDownload.updateOne).not.toHaveBeenCalled();
   });
 
   it("returns 500 when S3 presigned URL generation fails", async () => {
@@ -1587,6 +1623,46 @@ describe("downloadProject", () => {
     await flushPromises();
 
     expect(res.status).toHaveBeenCalledWith(500);
+    expect(ProjectDownload.updateOne).not.toHaveBeenCalled();
+  });
+
+  it("still returns 200 when recording the unique download fails", async () => {
+    vi.mocked(ProjectDownload.updateOne).mockRejectedValue(
+      new Error("download tracking write failed")
+    );
+
+    const req = makeReq({ query: { project_id: PROJECT_ID } });
+    const res = makeRes();
+
+    downloadProject(req, res, next);
+    await flushPromises();
+
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(s3Service.createSignedDownloadUrl).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not record a counted download when the seller downloads their own project", async () => {
+    vi.mocked(Project.findById).mockReturnValue(
+      mockSelectLean({
+        isActive: true,
+        userid: BUYER_ID,
+        github_access_revoked: false,
+        scheduled_deletion_at: null,
+        repo_zip_status: "SUCCESS",
+        repo_zip_s3_key: "zips/free-project.zip",
+        title: "Free Project",
+        price: 0,
+      }) as any
+    );
+
+    const req = makeReq({ query: { project_id: PROJECT_ID } });
+    const res = makeRes();
+
+    downloadProject(req, res, next);
+    await flushPromises();
+
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(ProjectDownload.updateOne).not.toHaveBeenCalled();
   });
 });
 

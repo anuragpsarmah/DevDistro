@@ -42,6 +42,12 @@ vi.mock("../models/purchase.model", () => ({
   Purchase: { exists: vi.fn() },
 }));
 
+vi.mock("../models/projectDownload.model", () => ({
+  ProjectDownload: {
+    countDocuments: vi.fn(),
+  },
+}));
+
 vi.mock("../models/githubAppInstallation.model", () => ({
   GitHubAppInstallation: {
     findOne: vi.fn(),
@@ -92,6 +98,7 @@ vi.mock("../utils/redisPrefixGenerator.util", () => ({
 
 import { getPublicProjectDetail } from "../controllers/projects.controller";
 import { Project } from "../models/project.model";
+import { ProjectDownload } from "../models/projectDownload.model";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -165,6 +172,7 @@ describe("getPublicProjectDetail", () => {
     vi.clearAllMocks();
     res = makeRes();
     vi.mocked(Project.updateOne).mockResolvedValue({ modifiedCount: 1 } as any);
+    vi.mocked(ProjectDownload.countDocuments).mockResolvedValue(18);
   });
 
   // ── Identifier validation ─────────────────────────────────────────────────
@@ -295,6 +303,7 @@ describe("getPublicProjectDetail", () => {
         message: "Public project detail fetched successfully",
         data: expect.objectContaining({
           title: "Next.js Ecommerce Boilerplate",
+          downloadCount: 18,
           slug: VALID_SLUG,
         }),
       })
@@ -344,6 +353,20 @@ describe("getPublicProjectDetail", () => {
     const responseData = res.json.mock.calls[0][0];
     expect(typeof responseData.data.slug).toBe("string");
     expect(responseData.data.slug.length).toBeGreaterThan(0);
+  });
+
+  it("returns downloadCount = 0 when the unique download count lookup fails", async () => {
+    vi.mocked(ProjectDownload.countDocuments).mockRejectedValue(
+      new Error("count failed")
+    );
+    stubProjectFindOne(makeProjectDoc());
+
+    const req = makeReq(VALID_SLUG);
+    getPublicProjectDetail(req as any, res, next);
+    await flushPromises();
+
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.json.mock.calls[0][0].data.downloadCount).toBe(0);
   });
 
   it("generates a slug derived from the project title during backfill", async () => {
